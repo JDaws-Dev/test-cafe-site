@@ -2244,43 +2244,26 @@
 
     function updateChildCheckboxes() {
       const children = document.querySelectorAll('.child-section');
+  
+      document.querySelectorAll('.child-checkboxes').forEach(function(container) {
+        const parts = container.id.split('-');
+        const day = parts[parts.length - 2];
+        const itemId = parts.slice(0, -2).join('-');
+    
+        container.innerHTML = '';
+    
+        children.forEach(function(child) {
+          const childId = child.dataset.child;
+          const firstName = child.querySelector('.child-first-name').value || ('Child ' + childId);
       
-      document.querySelectorAll('.menu-item').forEach(function(menuItem) {
-        const itemId = menuItem.querySelector('.item-price').dataset.itemId;
-        
-        days.forEach(function(day) {
-          const checkboxesContainer = document.getElementById(`${itemId}-${day}-checkboxes`);
-          if (checkboxesContainer) {
-            checkboxesContainer.innerHTML = '';
-            
-            children.forEach(function(child) {
-              const childId = child.dataset.child;
-              const firstName = child.querySelector('.child-first-name').value.trim();
-              const lastName = child.querySelector('.child-last-name').value.trim();
-              
-              if (firstName && lastName) {
-                const fullName = `${firstName} ${lastName}`;
-                
-                const checkboxDiv = document.createElement('div');
-                checkboxDiv.className = 'child-checkbox';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `${itemId}-${childId}-${day}`;
-                checkbox.dataset.item = itemId;
-                checkbox.dataset.childId = childId;
-                checkbox.dataset.day = day;
-                
-                const label = document.createElement('label');
-                label.htmlFor = checkbox.id;
-                label.textContent = fullName;
-                
-                checkboxDiv.appendChild(checkbox);
-                checkboxDiv.appendChild(label);
-                checkboxesContainer.appendChild(checkboxDiv);
-              }
-            });
-          }
+          const checkboxContainer = document.createElement('div');
+          checkboxContainer.className = 'child-checkbox';
+      
+          const checkboxId = itemId + '-' + day + '-child-' + childId;
+      
+          checkboxContainer.innerHTML = '<input type="checkbox" id="' + checkboxId + '" data-item="' + itemId + '" data-day="' + day + '" data-child-id="' + childId + '"><label for="' + checkboxId + '">' + firstName + '</label>';
+      
+          container.appendChild(checkboxContainer);
         });
       });
     }
@@ -2544,37 +2527,34 @@
           });
         });
         
-        orderData.children.push(childData);
-      });
+        orderData.total = currentTotal;
       
-      orderData.total = currentTotal;
-      
-      // Send data to Google Sheets
-      fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderData)
-      })
-      .then(response => {
-        console.log('Order submitted successfully:', orderData);
+        // Send data to Google Sheets
+        fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(orderData)
+        })
+        .then(response => {
+          console.log('Order submitted successfully:', orderData);
         
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
         
-        openConfirmationModal();
-        resetForm();
-      })
-      .catch(error => {
-        console.error('Error submitting order:', error);
+          openConfirmationModal();
+          resetForm();
+        })
+        .catch(error => {
+          console.error('Error submitting order:', error);
         
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
-        showNotification('Error submitting order. Please try again.', 'error');
-      });
-    }
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
+          showNotification('Error submitting order. Please try again.', 'error');
+        });
+      }
 
     // ============================================
     // FORM RESET
