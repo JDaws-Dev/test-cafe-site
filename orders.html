@@ -2527,34 +2527,37 @@
           });
         });
         
-        orderData.total = currentTotal;
+        orderData.children.push(childData);
+      });
       
-        // Send data to Google Sheets
-        fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(orderData)
-        })
-        .then(response => {
-          console.log('Order submitted successfully:', orderData);
-        
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
-        
-          openConfirmationModal();
-          resetForm();
-        })
-        .catch(error => {
-          console.error('Error submitting order:', error);
-        
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
-          showNotification('Error submitting order. Please try again.', 'error');
-        });
-      }
+      orderData.total = currentTotal;
+    
+      // Send data to Google Sheets
+      fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+      })
+      .then(response => {
+        console.log('Order submitted successfully:', orderData);
+      
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
+      
+        openConfirmationModal();
+        resetForm();
+      })
+      .catch(error => {
+        console.error('Error submitting order:', error);
+      
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
+        showNotification('Error submitting order. Please try again.', 'error');
+      });
+    }
 
     // ============================================
     // FORM RESET
