@@ -1613,49 +1613,28 @@
     // STORE HOURS LOGIC
     // ============================================
     function checkStoreHours() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, 5 = Friday, 6 = Saturday
-      const storeStatus = document.getElementById('store-status');
-      
-      // Check if it's a weekday (Monday = 1, Friday = 5)
-      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
-      
-      // Check if it's 8:15 AM or later (closing time with grace period)
-      const isPastCutoff = (hours > 8) || (hours === 8 && minutes >= 15);
-      
-      // Check if it's Friday after noon (next week opens)
-      const isFridayAfterNoon = (dayOfWeek === 5 && hours >= 12);
-      
-      // Store closure logic: Close between 8:15 AM - 1:00 PM on weekdays ONLY
-      if (isWeekday && isPastCutoff && hours < 13 && !isFridayAfterNoon) {
-        storeIsOpen = false;
-        storeStatus.textContent = '🔒 Store Closed (8:00 AM - 1:00 PM)';
-        storeStatus.style.background = 'rgba(244, 67, 54, 0.8)';
-        
-        document.body.style.pointerEvents = 'none';
-        document.body.style.opacity = '0.7';
-        
-        const notice = document.querySelector('.notice');
-        notice.innerHTML = '<strong style="color: #ff5722;">⚠️ ORDERING CLOSED</strong><br>Form reopens daily at 1:00 PM (12:00 PM on Fridays for next week)<br>Current time: ' + now.toLocaleTimeString() + '<br>Contact: CRivers@artiosacademies.com';
-        
-        return;
-      }
-      
-      // Set week logic for Friday afternoon
-      if (isFridayAfterNoon) {
-        isNextWeek = true;
-      } else {
-        isNextWeek = false;
-      }
-      
-      // Store is open (including all weekend hours)
-      storeIsOpen = true;
-      const statusText = isWeekday ? '✅ Store Open - Orders Accepted' : '✅ Weekend Ordering Open';
-      storeStatus.textContent = statusText;
-      storeStatus.style.background = 'rgba(76, 175, 80, 0.8)';
-    }
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, 5 = Friday, 6 = Saturday
+  const storeStatus = document.getElementById('store-status');
+  
+  // Check if it's Friday after 1pm (next week opens)
+  const isFridayAfterOne = (dayOfWeek === 5 && hours >= 13);
+  
+  // Set week logic for Friday afternoon
+  if (isFridayAfterOne) {
+    isNextWeek = true;
+  } else {
+    isNextWeek = false;
+  }
+  
+  // Store is always open - just individual days have cutoffs
+  storeIsOpen = true;
+  const statusText = '✅ Store Open - Orders Accepted';
+  storeStatus.textContent = statusText;
+  storeStatus.style.background = 'rgba(76, 175, 80, 0.8)';
+}
 
     function getCurrentWeekMonday(date) {
       const d = new Date(date);
