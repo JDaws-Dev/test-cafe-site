@@ -1426,16 +1426,16 @@
     // ============================================
     // STATE MANAGEMENT
     // ============================================
+    let currentDay = 'monday';
+    let isNextWeek = false;
+    let storeIsOpen = true;
+    let currentWeekMonday = null;
     let currentTotal = 0;
     let currentSubtotal = 0;
     let currentDiscount = 0;
     let orderItems = [];
-    let currentDay = 'monday';
-    let storeIsOpen = true;
-    let childCount = 1;
     let discountType = 'none';
-    let currentWeekMonday = null;
-    let isNextWeek = false;
+    let childCount = 1;
 
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -1548,12 +1548,6 @@
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
   try {
-    // Initialize required variables
-    let currentDay = 'monday';
-    let isNextWeek = false;
-    let storeIsOpen = true;
-    let currentWeekMonday = null;
-    
     console.log('Starting menu initialization...');
     
     checkStoreHours();
