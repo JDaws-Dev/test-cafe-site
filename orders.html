@@ -1553,11 +1553,20 @@
     checkStoreHours();
     console.log('Store hours checked');
     
-    generateDayTabs();
+    const dayToActivate = generateDayTabs();
     console.log('Day tabs generated');
     
     generateMenus();
     console.log('Menus generated');
+    
+    // Now switch to the first available day after menus exist
+    const firstAvailableTab = document.querySelector('.day-tab:not(.disabled)');
+    if (firstAvailableTab) {
+      switchDay(firstAvailableTab.dataset.day);
+    } else {
+      switchDay('monday'); // fallback
+    }
+    console.log('Day switched to:', currentDay);
     
     setupEventListeners();
     console.log('Event listeners set up');
@@ -1566,6 +1575,8 @@
     setupAutoSave();
     updateCart();
     validateForm();
+    
+    console.log('Initialization complete');
   } catch (error) {
     console.error('Error during initialization:', error);
     // Fallback: show a simple message if menu fails to load
@@ -1626,7 +1637,7 @@
 
       const dayToActivate = firstAvailableDay || 'monday';
       currentDay = dayToActivate;
-      switchDay(dayToActivate);
+      return dayToActivate;
     }
 
     function generateMenus() {
@@ -1681,21 +1692,19 @@
               priceDisplay = '$' + item.price.toFixed(2);
             }
             
-            // Create menu item with image (skip drinks)
-            let imageHtml = '';
-            if (category !== 'drinks' && item.image) {
-              imageHtml = `<img src="${item.image}" alt="${item.name}" class="menu-item-image" onerror="this.style.display='none'">`;
-            }
-            
             itemDiv.innerHTML = `
-              ${imageHtml}
-              <div class="menu-item-content">
-                <div class="item-header">
-                  <div class="item-name">${item.name}</div>
-                  <div class="item-price" data-item-id="${item.id}">${priceDisplay}</div>
+              <div class="menu-item-image">
+                <img src="${item.image}" alt="${item.name}" onerror="this.src='/placeholder.svg?height=80&width=80'">
+              </div>
+              <div class="menu-item-info">
+                <div class="menu-item-header">
+                  <h5>${item.name}</h5>
+                  <span class="menu-item-price">${priceDisplay}</span>
                 </div>
-                <div class="item-desc">${item.desc}</div>
-                <div class="child-checkboxes" id="${item.id}-${day}-checkboxes"></div>
+                <p class="menu-item-desc">${item.desc}</p>
+                <div class="child-checkboxes" data-item-id="${item.id}">
+                  <!-- Child checkboxes will be populated here -->
+                </div>
               </div>
             `;
             
@@ -1704,10 +1713,6 @@
           
           categoryDiv.appendChild(headerDiv);
           categoryDiv.appendChild(itemsDiv);
-          
-          // Setup collapse functionality
-          setupCategoryToggle(categoryDiv, category);
-          
           dayMenu.appendChild(categoryDiv);
         });
         
