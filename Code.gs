@@ -1,6 +1,6 @@
 /**
  * Artios Academies Cafe System - Google Apps Script
- * Version: 3.1 - FIXED SETUP - August 12, 2025
+ * Version: 3.0 - August 12, 2025
  * 
  * Complete system with family authentication, order management,
  * cancellation processing, and automated daily reports
@@ -96,7 +96,7 @@ function doGet(e) {
           success: true,
           message: 'Google Apps Script is working correctly!',
           timestamp: new Date().toISOString(),
-          version: '3.1'
+          version: '3.0'
         }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -163,7 +163,7 @@ function doGet(e) {
       }
     }
     
-    if (action === 'reset_family_passcode') {
+    if (action === 'reset_passcode') {
       const email = e.parameter.email;
       
       if (!email) {
@@ -270,7 +270,6 @@ function doGet(e) {
       
       try {
         const dateParam = e.parameter.date;
-        const workerRecipients = e.parameter.worker_recipients;
         let reportDate;
         
         if (dateParam) {
@@ -283,11 +282,6 @@ function doGet(e) {
         }
         
         const result = generateEmailOnlyReport(reportDate);
-        
-        // Send email to worker if specified
-        if (workerRecipients) {
-          sendWorkerDailyReport(result, reportDate, workerRecipients);
-        }
         
         return ContentService
           .createTextOutput(JSON.stringify({
@@ -303,54 +297,6 @@ function doGet(e) {
           .createTextOutput(JSON.stringify({
             success: false,
             error: `Report generation failed: ${reportError.toString()}`
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-    
-    if (action === 'generate_financial_report') {
-      const secret = e.parameter.secret;
-      if (secret !== 'cafe2025') {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Invalid secret key'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
-      }
-      
-      try {
-        const startDate = e.parameter.start_date;
-        const endDate = e.parameter.end_date;
-        const adminRecipients = e.parameter.admin_recipients;
-        
-        if (!startDate || !endDate) {
-          throw new Error('Start date and end date required');
-        }
-        
-        const result = generateFinancialReport(startDate, endDate);
-        
-        // Send email to admin recipients if specified
-        if (adminRecipients) {
-          sendFinancialReportEmail(result, startDate, endDate, adminRecipients.split(','));
-        }
-        
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: true,
-            startDate: startDate,
-            endDate: endDate,
-            totalRevenue: result.totalRevenue,
-            totalOrders: result.totalOrders,
-            reportData: result
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
-      } catch (reportError) {
-        console.error('Financial report error:', reportError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: `Financial report failed: ${reportError.toString()}`
           }))
           .setMimeType(ContentService.MimeType.JSON);
       }
@@ -375,61 +321,8 @@ function doGet(e) {
 }
 
 // ============================================
-// SHEET MANAGEMENT FUNCTIONS
+// AUTHENTICATION FUNCTIONS
 // ============================================
-
-/**
- * Get or create the Orders sheet with proper structure
- */
-function getOrdersSheet() {
-  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
-  let ordersSheet;
-  
-  try {
-    ordersSheet = spreadsheet.getSheetByName(ORDERS_SHEET);
-  } catch (e) {
-    // Sheet doesn't exist, create it
-    console.log('Creating Orders sheet...');
-    ordersSheet = spreadsheet.insertSheet(ORDERS_SHEET);
-    
-    // Set up headers
-    const headers = [
-      'Order_ID',           // A
-      'Parent_Email',       // B
-      'Child_First_Name',   // C
-      'Child_Last_Name',    // D
-      'Grade',              // E
-      'Items_JSON',         // F
-      'Item_Price',         // G
-      'Reserved',           // H
-      'Timestamp',          // I
-      'Parent_Phone',       // J
-      'Child_ID',           // K
-      'Item_Date',          // L
-      'Day_Name',           // M
-      'Subtotal',           // N
-      'Discount',           // O
-      'Total',              // P
-      'Promo_Code',         // Q
-      'Item_Status',        // R
-      'Cancellation_Date',  // S
-      'Refund_Amount',      // T
-      'Cancellation_Reason' // U
-    ];
-    
-    ordersSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    
-    // Format the header row
-    const headerRange = ordersSheet.getRange(1, 1, 1, headers.length);
-    headerRange.setBackground('#4285f4');
-    headerRange.setFontColor('#ffffff');
-    headerRange.setFontWeight('bold');
-    
-    console.log('✅ Orders sheet created with proper structure');
-  }
-  
-  return ordersSheet;
-}
 
 /**
  * Get or create the Family Accounts sheet
@@ -473,9 +366,57 @@ function getFamilyAccountsSheet() {
   return familySheet;
 }
 
-// ============================================
-// AUTHENTICATION FUNCTIONS
-// ============================================
+/**
+ * Get or create the Orders sheet
+ */
+function getOrdersSheet() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let ordersSheet;
+  
+  try {
+    ordersSheet = spreadsheet.getSheetByName(ORDERS_SHEET);
+  } catch (e) {
+    // Sheet doesn't exist, create it
+    ordersSheet = spreadsheet.insertSheet(ORDERS_SHEET);
+    
+    // Set up headers
+    const headers = [
+      'Order_ID',           // A
+      'Parent_Email',       // B
+      'Child_First_Name',   // C
+      'Child_Last_Name',    // D
+      'Grade',              // E
+      'Items_JSON',         // F
+      'Item_Price',         // G
+      'Reserved',           // H
+      'Timestamp',          // I
+      'Parent_Phone',       // J
+      'Child_ID',           // K
+      'Item_Date',          // L
+      'Day_Name',           // M
+      'Subtotal',           // N
+      'Discount',           // O
+      'Total',              // P
+      'Promo_Code',         // Q
+      'Item_Status',        // R
+      'Cancellation_Date',  // S
+      'Refund_Amount',      // T
+      'Cancellation_Reason' // U
+    ];
+    
+    ordersSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    
+    // Format the header row
+    const headerRange = ordersSheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground('#4285f4');
+    headerRange.setFontColor('#ffffff');
+    headerRange.setFontWeight('bold');
+    
+    console.log('Created new Orders sheet');
+  }
+  
+  return ordersSheet;
+}
 
 /**
  * Hash a passcode for secure storage
@@ -1141,83 +1082,6 @@ function generateEmailOnlyReport(reportDate) {
 }
 
 /**
- * Generate financial report for date range
- */
-function generateFinancialReport(startDate, endDate) {
-  try {
-    console.log(`Generating financial report from ${startDate} to ${endDate}`);
-    
-    const sheet = getOrdersSheet();
-    const data = sheet.getDataRange().getValues();
-    
-    const start = new Date(startDate + 'T00:00:00');
-    const end = new Date(endDate + 'T23:59:59');
-    
-    let totalRevenue = 0;
-    let totalOrders = 0;
-    let totalDiscounts = 0;
-    const familiesServed = new Set();
-    const itemCounts = {};
-    const dailyBreakdown = {};
-    
-    // Process orders within date range
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      const itemDateStr = row[11]; // Item date column
-      const itemStatus = row[17] || 'active'; // Status column
-      
-      // Skip cancelled items
-      if (itemStatus === 'cancelled') {
-        continue;
-      }
-      
-      const itemDate = new Date(itemDateStr + 'T00:00:00');
-      
-      if (itemDate >= start && itemDate <= end) {
-        const items = JSON.parse(row[5] || '[]');
-        
-        items.forEach(item => {
-          totalOrders++;
-          totalRevenue += parseFloat(row[15]) || 0; // Total column
-          totalDiscounts += parseFloat(row[14]) || 0; // Discount column
-          familiesServed.add(row[1]); // Email
-          
-          // Count items
-          const itemName = item.name;
-          if (!itemCounts[itemName]) {
-            itemCounts[itemName] = { count: 0, revenue: 0 };
-          }
-          itemCounts[itemName].count++;
-          itemCounts[itemName].revenue += parseFloat(row[6]) || 0; // Item price
-          
-          // Daily breakdown
-          const dateKey = itemDateStr;
-          if (!dailyBreakdown[dateKey]) {
-            dailyBreakdown[dateKey] = { orders: 0, revenue: 0 };
-          }
-          dailyBreakdown[dateKey].orders++;
-          dailyBreakdown[dateKey].revenue += parseFloat(row[15]) || 0;
-        });
-      }
-    }
-    
-    return {
-      totalRevenue: totalRevenue,
-      totalOrders: totalOrders,
-      totalDiscounts: totalDiscounts,
-      familiesServed: familiesServed.size,
-      itemCounts: itemCounts,
-      dailyBreakdown: dailyBreakdown,
-      dateRange: { start: startDate, end: endDate }
-    };
-    
-  } catch (error) {
-    console.error('Error generating financial report:', error);
-    throw error;
-  }
-}
-
-/**
  * Compile and send daily orders (triggered at 8:15 AM)
  */
 function compileDailyOrders() {
@@ -1473,6 +1337,22 @@ function sendAdminRefundNotification(orderInfo) {
               <li>Reply to this email to confirm refund sent</li>
             </ol>
           </div>
+          
+          <div style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h4 style="color: #1976d2; margin: 0 0 15px 0;">🍽️ Food Order Impact:</h4>
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+              <li>✅ ${orderInfo.itemDay} daily orders automatically updated</li>
+              <li>✅ Chick-fil-A count reduced by 1 ${orderInfo.itemName}</li>
+              <li>✅ Student checklist updated (${orderInfo.childName} removed from ${orderInfo.itemDay})</li>
+              <li>✅ Worker will receive corrected food list at 8:15 AM</li>
+            </ul>
+          </div>
+          
+          <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; color: #f57c00; font-weight: 600;">
+              ℹ️ This cancellation was auto-approved because it was submitted before the ${orderInfo.itemDay} 8:15 AM deadline.
+            </p>
+          </div>
         </div>
       </body>
       </html>
@@ -1554,6 +1434,15 @@ function sendOrderConfirmationEmail(orderData) {
             <p style="margin: 5px 0;">Include order ID <strong>${orderData.orderId}</strong> in the payment note.</p>
           </div>
           
+          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #1976d2;">ℹ️ Important Information:</h4>
+            <ul style="margin: 0; padding-left: 20px;">
+              <li>Orders can be cancelled until 8:15 AM on the day of service</li>
+              <li>Login to your family account to view or manage orders</li>
+              <li>Refunds are processed within 24 hours via Venmo</li>
+            </ul>
+          </div>
+          
           <p style="text-align: center; margin-top: 30px; color: #666;">
             Questions? Contact us at <strong>${NOTIFICATION_EMAIL}</strong>
           </p>
@@ -1632,6 +1521,13 @@ function sendAdminNotificationEmail(orderData) {
               ${itemsDetail}
             </tbody>
           </table>
+          
+          <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
+            <h4 style="margin: 0 0 10px 0; color: #f57c00;">⚡ Action Required:</h4>
+            <p style="margin: 5px 0;">Monitor for Venmo payment from <strong>${orderData.parentEmail}</strong></p>
+            <p style="margin: 5px 0;">Expected amount: <strong>$${orderData.total.toFixed(2)}</strong></p>
+            <p style="margin: 5px 0;">Order ID in payment note: <strong>${orderData.orderId}</strong></p>
+          </div>
         </div>
       </body>
       </html>
@@ -1651,285 +1547,6 @@ function sendAdminNotificationEmail(orderData) {
     
   } catch (error) {
     console.error('Error sending admin notification:', error);
-  }
-}
-
-/**
- * Send worker daily report email
- */
-function sendWorkerDailyReport(result, reportDate, workerEmail) {
-  try {
-    const dateStr = reportDate.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    
-    const subject = `📋 Daily Food Orders - ${dateStr} - ${result.orderCount} Items`;
-    
-    if (result.orderCount === 0) {
-      const emailBody = `
-        <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
-            <h2 style="color: #666;">No Food Orders for ${dateStr}</h2>
-            <p>There are no lunch orders scheduled for today.</p>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      GmailApp.sendEmail(
-        workerEmail,
-        subject,
-        `No orders for ${dateStr}`,
-        {
-          htmlBody: emailBody,
-          name: 'Artios Cafe Daily Report'
-        }
-      );
-      return;
-    }
-    
-    // Build item summary
-    let itemSummaryHtml = '';
-    const sortedItems = Object.entries(result.reportData.itemCounts)
-      .sort((a, b) => b[1].count - a[1].count);
-    
-    sortedItems.forEach(([itemName, data]) => {
-      itemSummaryHtml += `
-        <tr>
-          <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${data.count}</td>
-        </tr>
-      `;
-    });
-    
-    // Build student list by item
-    let studentListHtml = '';
-    const itemStudentMap = {};
-    
-    result.reportData.itemsForThisDate.forEach(order => {
-      const itemName = order.item.name;
-      if (!itemStudentMap[itemName]) {
-        itemStudentMap[itemName] = [];
-      }
-      itemStudentMap[itemName].push({
-        name: order.childName,
-        grade: order.grade
-      });
-    });
-    
-    Object.keys(itemStudentMap).sort().forEach(itemName => {
-      const students = itemStudentMap[itemName]
-        .sort((a, b) => a.name.localeCompare(b.name));
-      
-      studentListHtml += `
-        <div style="margin: 20px 0;">
-          <h4 style="color: #4285f4; margin: 10px 0;">
-            ${itemName} (${students.length} orders)
-          </h4>
-          <ol style="margin: 0; padding-left: 25px; line-height: 1.6;">
-      `;
-      
-      students.forEach(student => {
-        studentListHtml += `<li>${student.name} (Grade ${student.grade})</li>`;
-      });
-      
-      studentListHtml += `
-          </ol>
-        </div>
-      `;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">🍽️ Daily Food Orders</h1>
-          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateStr}</p>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <!-- Summary Box -->
-          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h3 style="color: #f57c00; margin: 0 0 15px 0;">📊 Quick Summary</h3>
-            <p><strong>Total Orders:</strong> ${result.orderCount} items</p>
-            <p><strong>Families Served:</strong> ${result.reportData.familiesServed}</p>
-          </div>
-          
-          <!-- Chick-fil-A Order Summary -->
-          <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
-            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">🍗 Chick-fil-A Order Summary</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #c8e6c9;">
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemSummaryHtml}
-              </tbody>
-              <tfoot>
-                <tr style="background: #f5f5f5; font-weight: bold;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">TOTAL</td>
-                  <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${result.orderCount}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          
-          <!-- Student Checklist -->
-          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <h3 style="color: #1976d2; margin: 0 0 15px 0;">✅ Student Checklist by Item</h3>
-            ${studentListHtml}
-          </div>
-          
-          <!-- Footer -->
-          <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-            <p><strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      workerEmail,
-      subject,
-      `Daily food orders: ${result.orderCount} items for ${dateStr}`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Cafe Daily Report'
-      }
-    );
-    
-    console.log(`Worker daily report sent to ${workerEmail}: ${result.orderCount} items for ${dateStr}`);
-    
-  } catch (error) {
-    console.error('Error sending worker daily report:', error);
-    throw error;
-  }
-}
-
-/**
- * Send financial report email
- */
-function sendFinancialReportEmail(reportData, startDate, endDate, recipients) {
-  try {
-    const subject = `💰 Financial Report - ${startDate} to ${endDate}`;
-    
-    // Build daily breakdown
-    let dailyBreakdownHtml = '';
-    Object.entries(reportData.dailyBreakdown).forEach(([date, data]) => {
-      dailyBreakdownHtml += `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${new Date(date).toLocaleDateString()}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${data.orders}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${data.revenue.toFixed(2)}</td>
-        </tr>
-      `;
-    });
-    
-    // Build item breakdown
-    let itemBreakdownHtml = '';
-    Object.entries(reportData.itemCounts).forEach(([itemName, data]) => {
-      itemBreakdownHtml += `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${itemName}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${data.count}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${data.revenue.toFixed(2)}</td>
-        </tr>
-      `;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">💰 Financial Report</h1>
-          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${startDate} to ${endDate}</p>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <!-- Summary Box -->
-          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
-            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">📊 Financial Summary</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-              <div>
-                <strong>Total Revenue:</strong> $${reportData.totalRevenue.toFixed(2)}<br>
-                <strong>Total Orders:</strong> ${reportData.totalOrders}<br>
-              </div>
-              <div>
-                <strong>Total Discounts:</strong> $${reportData.totalDiscounts.toFixed(2)}<br>
-                <strong>Families Served:</strong> ${reportData.familiesServed}<br>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Daily Breakdown -->
-          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <h3 style="color: #1976d2; margin: 0 0 15px 0;">📅 Daily Breakdown</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #bbdefb;">
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Date</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Orders</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${dailyBreakdownHtml}
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Item Breakdown -->
-          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h3 style="color: #f57c00; margin: 0 0 15px 0;">🍗 Item Performance</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #ffe0b2;">
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity Sold</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemBreakdownHtml}
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Footer -->
-          <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-            <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-            <p><strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    recipients.forEach(recipient => {
-      GmailApp.sendEmail(
-        recipient.trim(),
-        subject,
-        `Financial report for ${startDate} to ${endDate}. Total revenue: $${reportData.totalRevenue.toFixed(2)}`,
-        {
-          htmlBody: emailBody,
-          name: 'Artios Cafe Financial Reports'
-        }
-      );
-    });
-    
-    console.log(`Financial report sent to ${recipients.length} recipients`);
-    
-  } catch (error) {
-    console.error('Error sending financial report:', error);
-    throw error;
   }
 }
 
@@ -2086,6 +1703,17 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
             ${studentListHtml}
           </div>
           
+          <!-- Action Items -->
+          <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
+            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">⚡ Action Required</h3>
+            <ol style="margin: 0; padding-left: 25px; line-height: 1.8;">
+              <li>Place Chick-fil-A order for <strong>${result.orderCount} total items</strong></li>
+              <li>Print this email or access student checklist on tablet</li>
+              <li>Prepare labels for each student's order</li>
+              <li>Set up distribution area before lunch period</li>
+            </ol>
+          </div>
+          
           <!-- Footer -->
           <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
             <p>
@@ -2123,7 +1751,7 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
 // ============================================
 
 /**
- * FIXED: Run this ONCE to set up the complete system with family authentication
+ * Run this ONCE to set up the complete system with family authentication
  */
 function setupFamilyAuthentication() {
   try {
@@ -2135,7 +1763,7 @@ function setupFamilyAuthentication() {
     const familySheet = getFamilyAccountsSheet();
     console.log('✅ Family Accounts sheet ready');
     
-    // 2. Create or verify Orders sheet
+    // 2. Create the Orders sheet
     console.log('📊 Step 2: Setting up Orders sheet...');
     const ordersSheet = getOrdersSheet();
     console.log('✅ Orders sheet ready');
