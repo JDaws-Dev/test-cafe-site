@@ -108,16 +108,6 @@
       font-size: 0.8em;
     }
 
-    .store-status {
-      position: absolute;
-      top: 10px;
-      left: 20px;
-      background: rgba(255,255,255,0.2);
-      padding: 5px 10px;
-      border-radius: 15px;
-      font-size: 0.8em;
-    }
-
     /* NEW: Order Management Integration Styles */
     .quick-actions-section {
       background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
@@ -1188,7 +1178,7 @@
         object-fit: contain;
       }
 
-      .sync-status, .store-status {
+      .sync-status {
         position: relative;
         top: auto;
         left: auto;
@@ -1248,9 +1238,6 @@
 <body>
   <div class="container">
     <div class="header">
-      <div class="store-status" id="store-status">
-        Checking store hours...
-      </div>
       <div class="sync-status">
         ☁️ Cloud Sync Active
       </div>
@@ -1277,36 +1264,6 @@
       <div class="welcome-back">
         👋 <span id="welcome-message">Welcome back!</span>
         <a href="#" id="view-orders-link">View your recent orders</a>
-      </div>
-    </div>
-
-    <!-- NEW: Main quick actions section -->
-    <div class="quick-actions-section">
-      <div class="quick-actions-header">
-        <h3>🍽️ Artios Cafe Lunch Orders</h3>
-      </div>
-      
-      <div class="quick-actions-content">
-        <div class="action-option">
-          <span class="action-icon">📝</span>
-          <div class="action-title">Place New Order</div>
-          <div class="action-desc">Order lunch for your children for this week</div>
-          <button class="action-btn" onclick="scrollToOrderForm()">Start New Order</button>
-        </div>
-        
-        <div class="action-option">
-          <span class="action-icon">📋</span>
-          <div class="action-title">Manage Orders</div>
-          <div class="action-desc">Cancel items, request refunds, or view order history</div>
-          <a href="manage-orders.html" class="action-btn secondary">Manage Orders</a>
-        </div>
-        
-        <div class="action-option">
-          <span class="action-icon">❓</span>
-          <div class="action-title">Need Help?</div>
-          <div class="action-desc">Questions about orders, payments, or menu items</div>
-          <a href="mailto:CRivers@artiosacademies.com" class="action-btn">Contact Us</a>
-        </div>
       </div>
     </div>
 
@@ -1504,8 +1461,7 @@
     // ============================================
     const GOOGLE_SHEETS_CONFIG = {
       webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
-      useGoogleSheets: true,
-      fallbackToLocalStorage: true
+      useGoogleSheets: true
     };
 
     // ============================================
@@ -1562,12 +1518,6 @@
     // ============================================
     // NEW: ORDER MANAGEMENT FUNCTIONS
     // ============================================
-    function scrollToOrderForm() {
-      const formSection = document.querySelector('.form-section');
-      if (formSection) {
-        formSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
 
     function checkForReturningUser() {
       try {
@@ -1614,13 +1564,10 @@
     // ============================================
     function checkStoreHours() {
   const now = new Date();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
   const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, 5 = Friday, 6 = Saturday
-  const storeStatus = document.getElementById('store-status');
   
   // Check if it's Friday after 1pm (next week opens)
-  const isFridayAfterOne = (dayOfWeek === 5 && hours >= 13);
+  const isFridayAfterOne = (dayOfWeek === 5 && now.getHours() >= 13);
   
   // Set week logic for Friday afternoon
   if (isFridayAfterOne) {
@@ -1631,9 +1578,6 @@
   
   // Store is always open - just individual days have cutoffs
   storeIsOpen = true;
-  const statusText = '✅ Store Open - Orders Accepted';
-  storeStatus.textContent = statusText;
-  storeStatus.style.background = 'rgba(76, 175, 80, 0.8)';
 }
 
     function getCurrentWeekMonday(date) {
@@ -2574,7 +2518,7 @@
       const itemsByDay = {};
       const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
       
-      order.items.forEach(function(item) {
+      order.forEach(function(item) {
         if (!itemsByDay[item.day]) {
           itemsByDay[item.day] = [];
         }
@@ -2679,20 +2623,11 @@
           },
           body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
         })
-        .then(function(response) {
-          if (!response.ok) {
-            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
-          }
-          return response.json();
-        })
         .then(function(result) {
           if (result.success) {
-            if (GOOGLE_SHEETS_CONFIG.fallbackToLocalStorage) {
-              saveToLocalStorage(orderData);
-            }
             closePaymentModal();
             showDetailedOrderConfirmation(orderData);
-            showNotification('Order ' + orderId + ' submitted to cloud successfully!', 'success');
+            showNotification('Order ' + orderId + ' submitted successfully!', 'success');
             resetForm();
           } else {
             throw new Error(result.error || 'Unknown error from Google Sheets');
@@ -2701,12 +2636,6 @@
         .catch(function(error) {
           handleSubmissionFailure(orderData, orderId, error.message);
         });
-      } else {
-        saveToLocalStorage(orderData);
-        closePaymentModal();
-        showDetailedOrderConfirmation(orderData);
-        showNotification('Order ' + orderId + ' saved locally!', 'success');
-        resetForm();
       }
     }
 
@@ -2716,26 +2645,8 @@
         confirmBtn.disabled = false;
         confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
       }
-      
-      if (GOOGLE_SHEETS_CONFIG.fallbackToLocalStorage) {
-        saveToLocalStorage(orderData);
-        closePaymentModal();
-        showDetailedOrderConfirmation(orderData);
-        showNotification('Order saved locally (cloud sync failed)', 'warning');
-        resetForm();
-      } else {
-        showNotification('Error submitting order. Please try again.', 'error');
-      }
-    }
-
-    function saveToLocalStorage(orderData) {
-      try {
-        const orders = JSON.parse(localStorage.getItem('cafeOrders') || '[]');
-        orders.push(orderData);
-        localStorage.setItem('cafeOrders', JSON.stringify(orders));
-      } catch (e) {
-        console.error('Error saving to localStorage:', e);
-      }
+     
+      showNotification('Error submitting order: ' + errorMessage + '. Please try again.', 'error');
     }
 
     function resetForm() {
