@@ -313,7 +313,7 @@
   </div>
 
   <script>
-    // FIXED: Configuration to match your Google Apps Script
+    // Configuration
     const GOOGLE_SHEETS_CONFIG = {
       webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
       useGoogleSheets: true
@@ -444,7 +444,7 @@
       
       showStatus(`Generating ${reportDescription} for ${adminRecipients.length} recipient${adminRecipients.length > 1 ? 's' : ''}...`, 'info');
 
-      // FIXED: Build API URL to match your Google Apps Script endpoints
+      // Build API URL
       const apiUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_financial_report&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&admin_recipients=${encodeURIComponent(adminRecipients.join(','))}`;
 
       console.log('Calling URL:', apiUrl);
@@ -460,7 +460,7 @@
           if (data.success) {
             let message = `Financial Report Generated Successfully!\n\n`;
             message += `Date Range: ${startDate} to ${endDate}\n`;
-            message += `Total Revenue: $${(data.totalRevenue || 0).toFixed(2)}\n`;
+            message += `Total Revenue: ${(data.totalRevenue || 0).toFixed(2)}\n`;
             message += `Total Orders: ${data.totalOrders || 0}\n`;
             message += `Detailed report sent to:\n`;
             
