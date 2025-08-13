@@ -2244,80 +2244,18 @@
       totalSpan.textContent = currentTotal.toFixed(2);
     }
 
-    function updateChildCheckboxes() {
-      const children = document.querySelectorAll('.child-section');
-  
-      document.querySelectorAll('.child-checkboxes').forEach(function(container) {
-        const parts = container.id.split('-');
-        const day = parts[parts.length - 2];
-        const itemId = parts.slice(0, -2).join('-');
-    
-        container.innerHTML = '';
-    
-        children.forEach(function(child) {
-          const childId = child.dataset.child;
-          const firstName = child.querySelector('.child-first-name').value || ('Child ' + childId);
-      
-          const checkboxContainer = document.createElement('div');
-          checkboxContainer.className = 'child-checkbox';
-      
-          const checkboxId = itemId + '-' + day + '-child-' + childId;
-      
-          checkboxContainer.innerHTML = '<input type="checkbox" id="' + checkboxId + '" data-item="' + itemId + '" data-day="' + day + '" data-child-id="' + childId + '"><label for="' + checkboxId + '">' + firstName + '</label>';
-      
-          container.appendChild(checkboxContainer);
-        });
-      });
-    }
+    // Keep only the first version and remove the second duplicate
 
     // ============================================
     // PROMO CODE VALIDATION
     // ============================================
     function validatePromoCode(code) {
-      const promoStatus = document.getElementById('promo-status');
-      const discountLine = document.getElementById('discount-line');
-      const discountAmountSpan = document.getElementById('discount-amount');
+      const validCodes = {
+        'STAFF2025': 0.10,  // 10% discount
+        'JOHN': 0.50        // 50% discount
+      };
       
-      // Reset promo status and discount
-      promoStatus.className = 'promo-status';
-      promoStatus.textContent = '';
-      discountType = 'none';
-      
-      if (!code) {
-        discountLine.style.display = 'none';
-        updateTotalAmount();
-        return;
-      }
-      
-      code = code.trim().toUpperCase();
-      
-      if (code === 'STAFF2025') {
-        discountType = 'staff';
-        const discount = currentSubtotal * 0.10;
-        currentDiscount += discount;
-        
-        promoStatus.classList.add('valid');
-        promoStatus.textContent = 'Valid code applied! (10% off)';
-        
-        discountAmountSpan.textContent = discount.toFixed(2);
-        discountLine.style.display = 'block';
-      } else if (code === 'JOHN') {
-        discountType = 'john';
-        const discount = currentSubtotal * 0.50;
-        currentDiscount += discount;
-        
-        promoStatus.classList.add('valid');
-        promoStatus.textContent = 'Valid code applied! (50% off)';
-        
-        discountAmountSpan.textContent = discount.toFixed(2);
-        discountLine.style.display = 'block';
-      } else {
-        promoStatus.classList.add('invalid');
-        promoStatus.textContent = 'Invalid code';
-        discountLine.style.display = 'none';
-      }
-      
-      updateTotalAmount();
+      return validCodes[code.toUpperCase()] || 0;
     }
 
     // ============================================
