@@ -1624,11 +1624,7 @@
 
       const dayToActivate = firstAvailableDay || 'monday';
       currentDay = dayToActivate;
-      
-      const tabToActivate = document.querySelector('[data-day="' + dayToActivate + '"]');
-      if (tabToActivate) {
-        tabToActivate.classList.add('active');
-      }
+      switchDay(dayToActivate);
     }
 
     function generateMenus() {
