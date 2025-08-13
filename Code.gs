@@ -1121,7 +1121,7 @@ function compileDailyOrders() {
  */
 function sendWelcomeEmail(email) {
   try {
-    const subject = '🎉 Welcome to Artios Cafe Family Portal!';
+    const subject = 'Welcome to Artios Cafe Family Portal!';
     
     const emailBody = `
       <html>
@@ -1138,11 +1138,11 @@ function sendWelcomeEmail(email) {
           <p>Thank you for creating your secure family account. You can now:</p>
           
           <ul style="line-height: 1.8;">
-            <li>✅ Order lunch for your children online</li>
-            <li>📋 View your complete order history</li>
-            <li>❌ Cancel items up to 8:15 AM on the day of service</li>
-            <li>💰 Track refunds and payments</li>
-            <li>🔒 Keep your family's information private and secure</li>
+            <li>Order lunch for your children online</li>
+            <li>View your complete order history</li>
+            <li>Cancel items up to 8:15 AM on the day of service</li>
+            <li>Track refunds and payments</li>
+            <li>Keep your family's information private and secure</li>
           </ul>
           
           <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -1240,13 +1240,13 @@ function sendPasswordResetEmail(email, tempPasscode) {
  */
 function sendParentCancellationConfirmation(orderInfo) {
   try {
-    const subject = `✅ Cancellation Confirmed - ${orderInfo.itemName}`;
+    const subject = `Cancellation Confirmed - ${orderInfo.itemName}`;
     
     const emailBody = `
       <html>
       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); color: white; padding: 25px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0; font-size: 1.8em;">✅ Cancellation Confirmed</h1>
+          <h1 style="margin: 0; font-size: 1.8em;">Cancellation Confirmed</h1>
         </div>
         
         <div style="padding: 25px; background: white;">
@@ -1263,7 +1263,7 @@ function sendParentCancellationConfirmation(orderInfo) {
           </div>
           
           <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <h4>💰 Refund Information:</h4>
+            <h4>Refund Information:</h4>
             <ul>
               <li><strong>Amount:</strong> $${orderInfo.refundAmount.toFixed(2)}</li>
               <li><strong>Method:</strong> Venmo refund to your payment account</li>
@@ -1301,23 +1301,23 @@ function sendParentCancellationConfirmation(orderInfo) {
  */
 function sendAdminRefundNotification(orderInfo) {
   try {
-    const subject = `⚡ ACTION REQUIRED: Process Refund - ${orderInfo.childName}`;
+    const subject = `ACTION REQUIRED: Process Refund - ${orderInfo.childName}`;
     
     const emailBody = `
       <html>
       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #f44336 0%, #ff5722 100%); color: white; padding: 25px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">💰 Refund Required</h1>
+          <h1 style="margin: 0;">Refund Required</h1>
         </div>
         
         <div style="padding: 25px; background: white;">
           <div style="background: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">⚡ ACTION REQUIRED</h3>
+            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">ACTION REQUIRED</h3>
             <p style="margin: 0; font-size: 1.1em; font-weight: 600;">Send $${orderInfo.refundAmount.toFixed(2)} via Venmo to parent</p>
           </div>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 15px 0; color: #333;">📋 Cancellation Details:</h4>
+            <h4 style="margin: 0 0 15px 0; color: #333;">Cancellation Details:</h4>
             <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
               <li><strong>Parent:</strong> ${orderInfo.email}</li>
               <li><strong>Order ID:</strong> ${orderInfo.orderId}</li>
@@ -1330,7 +1330,7 @@ function sendAdminRefundNotification(orderInfo) {
           </div>
           
           <div style="background: #e8f5e8; border: 2px solid #4caf50; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h4 style="color: #2e7d32; margin: 0 0 15px 0;">💳 Venmo Payment Instructions:</h4>
+            <h4 style="color: #2e7d32; margin: 0 0 15px 0;">Venmo Payment Instructions:</h4>
             <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
               <li>Send <strong>$${orderInfo.refundAmount.toFixed(2)}</strong> via Venmo to <strong>${orderInfo.email}</strong></li>
               <li>Use note: <strong>"Artios Cafe refund - Order ${orderInfo.orderId}"</strong></li>
@@ -1339,18 +1339,18 @@ function sendAdminRefundNotification(orderInfo) {
           </div>
           
           <div style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h4 style="color: #1976d2; margin: 0 0 15px 0;">🍽️ Food Order Impact:</h4>
+            <h4 style="color: #1976d2; margin: 0 0 15px 0;">Food Order Impact:</h4>
             <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-              <li>✅ ${orderInfo.itemDay} daily orders automatically updated</li>
-              <li>✅ Chick-fil-A count reduced by 1 ${orderInfo.itemName}</li>
-              <li>✅ Student checklist updated (${orderInfo.childName} removed from ${orderInfo.itemDay})</li>
-              <li>✅ Worker will receive corrected food list at 8:15 AM</li>
+              <li>Monday daily orders automatically updated</li>
+              <li>Chick-fil-A count reduced by 1 ${orderInfo.itemName}</li>
+              <li>Student checklist updated (${orderInfo.childName} removed from ${orderInfo.itemDay})</li>
+              <li>Worker will receive corrected food list at 8:15 AM</li>
             </ul>
           </div>
           
           <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
             <p style="margin: 0; color: #f57c00; font-weight: 600;">
-              ℹ️ This cancellation was auto-approved because it was submitted before the ${orderInfo.itemDay} 8:15 AM deadline.
+              This cancellation was auto-approved because it was submitted before the ${orderInfo.itemDay} 8:15 AM deadline.
             </p>
           </div>
         </div>
@@ -1380,7 +1380,7 @@ function sendAdminRefundNotification(orderInfo) {
  */
 function sendOrderConfirmationEmail(orderData) {
   try {
-    const subject = `✅ Cafe Order Confirmed - ${orderData.orderId}`;
+    const subject = `Cafe Order Confirmed - ${orderData.orderId}`;
     
     let itemsList = '';
     const dayGroups = {};
@@ -1429,13 +1429,13 @@ function sendOrderConfirmationEmail(orderData) {
           </div>
           
           <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h4 style="margin: 0 0 10px 0; color: #f57c00;">💳 Payment Instructions:</h4>
+            <h4 style="margin: 0 0 10px 0; color: #f57c00;">Payment Instructions:</h4>
             <p style="margin: 5px 0;">Please send payment via <strong>Venmo</strong> to complete your order.</p>
             <p style="margin: 5px 0;">Include order ID <strong>${orderData.orderId}</strong> in the payment note.</p>
           </div>
           
           <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 10px 0; color: #1976d2;">ℹ️ Important Information:</h4>
+            <h4 style="margin: 0 0 10px 0; color: #1976d2;">Important Information:</h4>
             <ul style="margin: 0; padding-left: 20px;">
               <li>Orders can be cancelled until 8:15 AM on the day of service</li>
               <li>Login to your family account to view or manage orders</li>
@@ -1473,7 +1473,7 @@ function sendOrderConfirmationEmail(orderData) {
  */
 function sendAdminNotificationEmail(orderData) {
   try {
-    const subject = `🔔 New Cafe Order - ${orderData.orderId}`;
+    const subject = `New Cafe Order - ${orderData.orderId}`;
     
     let itemsDetail = '';
     orderData.items.forEach(item => {
@@ -1503,7 +1503,7 @@ function sendAdminNotificationEmail(orderData) {
             <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${orderData.parentEmail}</p>
             <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
             <p style="margin: 5px 0;"><strong>Total Amount:</strong> $${orderData.total.toFixed(2)}</p>
-            ${orderData.promoCode ? `<p style="margin: 5px 0;"><strong>Promo Code:</strong> ${orderData.promoCode}</p>` : ''}
+            ${orderData.promoCode ? `<p style="margin: 5px 0;"><strong>Promo Code:</strong> ${orderData.promoCode}</strong></p>` : ''}
           </div>
           
           <h3 style="color: #333;">Items Ordered:</h3>
@@ -1523,7 +1523,7 @@ function sendAdminNotificationEmail(orderData) {
           </table>
           
           <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
-            <h4 style="margin: 0 0 10px 0; color: #f57c00;">⚡ Action Required:</h4>
+            <h4 style="margin: 0 0 10px 0; color: #f57c00;">Action Required:</h4>
             <p style="margin: 5px 0;">Monitor for Venmo payment from <strong>${orderData.parentEmail}</strong></p>
             <p style="margin: 5px 0;">Expected amount: <strong>$${orderData.total.toFixed(2)}</strong></p>
             <p style="margin: 5px 0;">Order ID in payment note: <strong>${orderData.orderId}</strong></p>
@@ -1565,8 +1565,8 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
     });
     
     const subject = isOnDemand 
-      ? `📊 Cafe Report (On-Demand) - ${dateStr}`
-      : `📊 Daily Cafe Orders - ${dateStr} - ${result.orderCount} Items`;
+      ? `Cafe Report (On-Demand) - ${dateStr}`
+      : `Daily Cafe Orders - ${dateStr} - ${result.orderCount} Items`;
     
     if (result.orderCount === 0) {
       const emailBody = `
@@ -1656,7 +1656,7 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
         <div style="padding: 25px; background: white;">
           <!-- Summary Box -->
           <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <h3 style="color: #1976d2; margin: 0 0 15px 0;">📊 Quick Summary</h3>
+            <h3 style="color: #1976d2; margin: 0 0 15px 0;">Quick Summary</h3>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
               <div>
                 <strong>Total Orders:</strong> ${result.orderCount} items<br>
@@ -1671,7 +1671,7 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
           
           <!-- Chick-fil-A Order Summary -->
           <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h3 style="color: #f57c00; margin: 0 0 15px 0;">🍗 Chick-fil-A Order Summary</h3>
+            <h3 style="color: #f57c00; margin: 0 0 15px 0;">Chick-fil-A Order Summary</h3>
             <table style="width: 100%; border-collapse: collapse;">
               <thead>
                 <tr style="background: #ffe0b2;">
@@ -1699,13 +1699,13 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
           
           <!-- Student Checklist -->
           <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
-            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">✅ Student Checklist by Item</h3>
+            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">Student Checklist by Item</h3>
             ${studentListHtml}
           </div>
           
           <!-- Action Items -->
           <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
-            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">⚡ Action Required</h3>
+            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">Action Required</h3>
             <ol style="margin: 0; padding-left: 25px; line-height: 1.8;">
               <li>Place Chick-fil-A order for <strong>${result.orderCount} total items</strong></li>
               <li>Print this email or access student checklist on tablet</li>
