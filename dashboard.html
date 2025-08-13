@@ -253,30 +253,6 @@
       font-size: 1.1em;
     }
 
-    /* Store Status */
-    .store-status {
-      background: #e8f5e8;
-      border: 2px solid #4caf50;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 25px;
-      text-align: center;
-    }
-
-    .store-status.closed {
-      background: #ffebee;
-      border-color: #f44336;
-    }
-
-    .store-status h4 {
-      margin: 0 0 5px 0;
-      color: #2e7d32;
-    }
-
-    .store-status.closed h4 {
-      color: #d32f2f;
-    }
-
     /* Responsive Design */
     @media (max-width: 768px) {
       .auth-header {
@@ -323,12 +299,6 @@
     </div>
 
     <div class="dashboard-content">
-      <!-- Store Status -->
-      <div class="store-status" id="store-status">
-        <h4>🕐 Checking store hours...</h4>
-        <p>Please wait while we verify ordering availability...</p>
-      </div>
-
       <!-- Welcome Section -->
       <div class="welcome-section">
         <div class="welcome-title">🍽️ Artios Academies Cafe Dashboard</div>
@@ -405,7 +375,6 @@
 
       // Initialize dashboard
       initializeDashboard();
-      checkStoreHours();
       loadRecentOrders();
       updateSessionTimer();
     });
@@ -442,34 +411,6 @@
       // Set family avatar initial
       const familyInitial = authenticatedEmail.charAt(0).toUpperCase();
       document.getElementById('family-avatar').textContent = familyInitial;
-    }
-
-    function checkStoreHours() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const dayOfWeek = now.getDay();
-      const statusDiv = document.getElementById('store-status');
-      
-      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
-      const isPastCutoff = (hours > 8) || (hours === 8 && minutes >= 15);
-      const isFridayAfterNoon = (dayOfWeek === 5 && hours >= 12);
-      
-      if (isWeekday && isPastCutoff && hours < 13 && !isFridayAfterNoon) {
-        statusDiv.className = 'store-status closed';
-        statusDiv.innerHTML = `
-          <h4>🔒 Ordering Currently Closed</h4>
-          <p>Daily ordering closes at 8:00 AM and reopens at 1:00 PM (12:00 PM on Fridays)</p>
-          <p><strong>Current time:</strong> ${now.toLocaleTimeString()}</p>
-        `;
-      } else {
-        statusDiv.className = 'store-status';
-        const statusText = isWeekday ? 'Ordering Open - Place Orders Now!' : 'Weekend Ordering Available';
-        statusDiv.innerHTML = `
-          <h4>✅ ${statusText}</h4>
-          <p>Orders accepted • Payments via Venmo • Questions? <a href="mailto:CRivers@artiosacademies.com" style="color: inherit;">CRivers@artiosacademies.com</a></p>
-        `;
-      }
     }
 
     function loadRecentOrders() {
