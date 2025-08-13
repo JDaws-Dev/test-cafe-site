@@ -2052,172 +2052,229 @@
           }
         });
       });
-      
-      // Restore checkbox states from orderItems
-      orderItems.forEach(function(item) {
-        const checkbox = document.getElementById(`${item.itemId}-${item.childId}-${item.day}`);
-        if (checkbox) {
-          checkbox.checked = true;
-        }
-      });
     }
 
     // ============================================
     // CART MANAGEMENT
     // ============================================
     function updateCart() {
-      const cartItemsContainer = document.getElementById('cart-items');
-      cartItemsContainer.innerHTML = '';
+      orderItems = [];
       currentSubtotal = 0;
-      currentDiscount = 0;
       
-      const children = document.querySelectorAll('.child-section');
+      const childDayDrinks = {};
       
-      children.forEach(function(child) {
-        const childId = parseInt(child.dataset.child);
-        const firstName = child.querySelector('.child-first-name').value.trim();
-        const lastName = child.querySelector('.child-last-name').value.trim();
+      document.querySelectorAll('input[type="checkbox"]:checked').forEach(function(checkbox) {
+        const itemId = checkbox.dataset.item;
+        const day = checkbox.dataset.day;
+        const childId = checkbox.dataset.childId;
         
-        if (firstName && lastName) {
-          const childFullName = `${firstName} ${lastName}`;
+        const child = document.querySelector('[data-child="' + childId + '"]');
+        if (!child) {
+          return;
+        }
+        
+        const childFirstName = child.querySelector('.child-first-name').value;
+        const childLastName = child.querySelector('.child-last-name').value;
+        const childGrade = child.querySelector('.child-grade').value;
+        
+        let item = null;
+        let category = null;
+        Object.keys(menuData).forEach(function(cat) {
+          const found = menuData[cat].find(function(i) { return i.id === itemId; });
+          if (found) {
+            item = found;
+            category = cat;
+          }
+        });
+        
+        if (item) {
+          let finalPrice = item.price || item.basePrice;
+          let isDiscounted = false;
+          let discountAmount = 0;
           
-          const childCartSection = document.createElement('div');
-          childCartSection.className = 'child-cart-section';
-          childCartSection.innerHTML = `<div class="child-cart-header">${childFullName}</div>`;
-          cartItemsContainer.appendChild(childCartSection);
-          
-          days.forEach(function(day) {
-            document.querySelectorAll(`.menu-item .child-checkbox input[type="checkbox"][data-child-id="${childId}"][data-day="${day}"]`).forEach(function(checkbox) {
-              if (checkbox.checked) {
-                const itemId = checkbox.dataset.item;
-                const menuItem = document.querySelector(`.menu-item .item-price[data-item-id="${itemId}"]`);
-                const itemName = menuItem.parentNode.querySelector('.item-name').textContent;
-                let itemPrice = parseFloat(menuItem.textContent.replace('$', ''));
-                
-                // Check if the item is already in the orderItems array
-                const existingItemIndex = orderItems.findIndex(item => item.itemId === itemId && item.childId === childId && item.day === day);
-                
-                if (existingItemIndex === -1) {
-                  // Add the item to the orderItems array
-                  orderItems.push({
-                    itemId: itemId,
-                    childId: childId,
-                    day: day,
-                    price: itemPrice,
-                    name: itemName
-                  });
-                }
+          if (category === 'drinks') {
+            const hasEntreeOrSaladAndSide = checkChildHasEntreeOrSaladAndSide(childId, day);
+            const childDayKey = childId + '-' + day;
+            
+            if (!childDayDrinks[childDayKey]) {
+              childDayDrinks[childDayKey] = { discountedDrinks: 0, hasCombo: hasEntreeOrSaladAndSide };
+            }
+            
+            if (hasEntreeOrSaladAndSide && childDayDrinks[childDayKey].discountedDrinks === 0) {
+              if (item.category === 'regular') {
+                discountAmount = item.basePrice;
+                finalPrice = 0;
+                isDiscounted = true;
+              } else if (item.category === 'premium') {
+                discountAmount = item.basePrice - 1.50;
+                finalPrice = 1.50;
+                isDiscounted = true;
               }
-            });
-            
-            // Filter orderItems to only include checked items
-            orderItems = orderItems.filter(item => {
-              const checkbox = document.querySelector(`.menu-item .child-checkbox input[type="checkbox"][data-item="${item.itemId}"][data-child-id="${item.childId}"][data-day="${item.day}"]`);
-              return checkbox && checkbox.checked;
-            });
-            
-            // Display cart items for this child and day
-            orderItems.filter(item => item.childId === childId && item.day === day).forEach(function(item) {
-              const cartItemDiv = document.createElement('div');
-              cartItemDiv.className = 'cart-item';
-              
-              const dayDisplay = day.charAt(0).toUpperCase() + day.slice(1);
-              
-              cartItemDiv.innerHTML = `
-                <div class="cart-item-content">
-                  <div class="cart-item-name">${item.name}</div>
-                  <div class="cart-item-price">$${item.price.toFixed(2)}</div>
-                  <div style="font-size: 0.8em; color: #777;">${dayDisplay}</div>
-                </div>
-                <button class="remove-item-btn" onclick="removeItemFromCart('${item.itemId}', '${item.childId}', '${item.day}')">✕</button>
-              `;
-              
-              childCartSection.appendChild(cartItemDiv);
-              currentSubtotal += item.price;
-            });
-          });
+              childDayDrinks[childDayKey].discountedDrinks++;
+            } else {
+              finalPrice = item.basePrice;
+            }
+          }
+          
+          const orderItem = {
+            itemId: itemId,
+            childId: childId,
+            childName: childFirstName + ' ' + childLastName,
+            firstName: childFirstName,
+            lastName: childLastName,
+            grade: childGrade,
+            name: item.name,
+            price: finalPrice,
+            originalPrice: item.price || item.basePrice,
+            day: day.charAt(0).toUpperCase() + day.slice(1),
+            category: category,
+            isDiscounted: isDiscounted,
+            discountAmount: discountAmount
+          };
+          
+          orderItems.push(orderItem);
+          currentSubtotal += finalPrice;
         }
       });
       
-      // Apply drink discounts
-      applyDrinkDiscounts();
-      
-      // Display empty cart message if no items
-      if (cartItemsContainer.children.length === 0 || cartItemsContainer.innerHTML === '<div class="child-cart-header"></div>') {
-        cartItemsContainer.innerHTML = '<div class="empty-cart">No items selected</div>';
+      if (discountType === 'staff') {
+        currentDiscount = currentSubtotal * 0.10;
+      } else if (discountType === 'john') {
+        currentDiscount = currentSubtotal * 0.50;
+      } else {
+        currentDiscount = 0;
       }
       
-      // Validate promo code
-      const promoCodeInput = document.getElementById('promo-code');
-      if (promoCodeInput) {
-        validatePromoCode(promoCodeInput.value);
-      }
+      currentTotal = currentSubtotal - currentDiscount;
       
-      // Update total amount
-      updateTotalAmount();
-      
-      // Save user data
-      saveUserDataQuietly();
+      displayCart();
+      validateForm();
     }
 
-    function applyDrinkDiscounts() {
-      const children = document.querySelectorAll('.child-section');
+    function checkChildHasEntreeOrSaladAndSide(childId, day) {
+      let hasEntreeOrSalad = false;
+      let hasSide = false;
       
-      children.forEach(function(child) {
-        const childId = parseInt(child.dataset.child);
+      document.querySelectorAll('input[type="checkbox"][data-child-id="' + childId + '"][data-day="' + day + '"]:checked').forEach(function(checkbox) {
+        const itemId = checkbox.dataset.item;
         
-        days.forEach(function(day) {
-          const childItems = orderItems.filter(item => item.childId === childId && item.day === day);
-          
-          // Check for entree/salad + side combo
-          const hasEntreeOrSalad = childItems.some(item => menuData.entrees.find(entree => entree.id === item.itemId) || menuData.salads.find(salad => salad.id === item.itemId));
-          const hasSide = childItems.some(item => menuData.sides.find(side => side.id === item.itemId));
-          
-          if (hasEntreeOrSalad && hasSide) {
-            // Apply drink discounts
-            childItems.filter(item => menuData.drinks.find(drink => drink.id === item.itemId)).forEach(function(drinkItem) {
-              const drink = menuData.drinks.find(drink => drink.id === drinkItem.itemId);
-              
-              if (drink.category === 'regular') {
-                // Free regular drink
-                currentDiscount += drinkItem.price;
-                drinkItem.discount = drinkItem.price;
-                drinkItem.isDiscounted = true;
-                drinkItem.discountReason = 'Combo Meal (Free Regular Drink)';
-              } else if (drink.category === 'premium') {
-                // $1.50 premium drink
-                const discountAmount = drinkItem.price - 1.50;
-                currentDiscount += discountAmount;
-                drinkItem.discount = discountAmount;
-                drinkItem.price = 1.50;
-                drinkItem.isDiscounted = true;
-                drinkItem.discountReason = 'Combo Meal ($1.50 Premium Drink)';
-              }
-            });
+        Object.keys(menuData).forEach(function(category) {
+          const found = menuData[category].find(function(i) { return i.id === itemId; });
+          if (found) {
+            if (category === 'entrees' || category === 'salads') {
+              hasEntreeOrSalad = true;
+            } else if (category === 'sides') {
+              hasSide = true;
+            }
           }
         });
       });
       
-      // Update cart item display with discounts
-      const cartItemsContainer = document.getElementById('cart-items');
-      cartItemsContainer.querySelectorAll('.child-cart-section').forEach(function(childCartSection) {
-        const childId = parseInt(childCartSection.querySelector('.child-cart-header').textContent.split(' ')[0]);
+      return hasEntreeOrSalad && hasSide;
+    }
+
+    function displayCart() {
+      const cartItemsDiv = document.getElementById('cart-items');
+      const totalSpan = document.getElementById('total-amount');
+      
+      if (orderItems.length === 0) {
+        cartItemsDiv.innerHTML = '<div class="empty-cart">No items selected</div>';
+        totalSpan.textContent = '0.00';
+        return;
+      }
+      
+      const itemsByChild = {};
+      orderItems.forEach(function(item) {
+        if (!itemsByChild[item.childId]) {
+          itemsByChild[item.childId] = {
+            name: item.childName,
+            items: []
+          };
+        }
+        itemsByChild[item.childId].items.push(item);
+      });
+      
+      let html = '';
+      Object.keys(itemsByChild).sort(function(a, b) {
+        return parseInt(a) - parseInt(b);
+      }).forEach(function(childId) {
+        const child = itemsByChild[childId];
+        html += '<div class="child-cart-section">';
+        html += '<div class="child-cart-header">' + child.name + '</div>';
         
-        childCartSection.querySelectorAll('.cart-item').forEach(function(cartItemDiv) {
-          const itemName = cartItemDiv.querySelector('.cart-item-name').textContent;
-          const item = orderItems.find(item => item.childId === childId && item.name === itemName);
+        child.items.forEach(function(item) {
+          let extraClass = '';
+          let priceDisplay = '$' + item.price.toFixed(2);
+          let discountDisplay = '';
           
-          if (item && item.isDiscounted) {
-            cartItemDiv.classList.add('discounted-item');
-            
-            if (item.discountReason) {
-              const discountLine = document.createElement('div');
-              discountLine.className = 'discount-line';
-              discountLine.textContent = item.discountReason;
-              cartItemDiv.querySelector('.cart-item-content').appendChild(discountLine);
+          if (item.category === 'drinks' && item.isDiscounted) {
+            if (item.price === 0) {
+              extraClass = 'free-item';
+              priceDisplay = 'FREE';
+              discountDisplay = '<div class="discount-line">Was $' + item.originalPrice.toFixed(2) + ' - Combo discount -$' + item.discountAmount.toFixed(2) + '</div>';
+            } else {
+              extraClass = 'discounted-item';
+              priceDisplay = '$' + item.price.toFixed(2);
+              discountDisplay = '<div class="discount-line">Was $' + item.originalPrice.toFixed(2) + ' - Combo discount -$' + item.discountAmount.toFixed(2) + '</div>';
             }
+          }
+          
+          html += '<div class="cart-item ' + extraClass + '">';
+          html += '<div class="cart-item-content">';
+          html += '<div class="cart-item-name">' + item.name + ' (' + item.day + ')</div>';
+          html += discountDisplay;
+          html += '<div class="cart-item-price">' + priceDisplay + '</div>';
+          html += '</div>';
+          html += '<button class="remove-item-btn" onclick="removeItemFromCart(\'' + 
+                 item.itemId + '\', \'' + item.childId + '\', \'' + 
+                 item.day.toLowerCase() + '\')" title="Remove this item">✕</button>';
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+      
+      cartItemsDiv.innerHTML = html;
+      totalSpan.textContent = currentTotal.toFixed(2);
+    }
+
+    function updateChildCheckboxes() {
+      const children = document.querySelectorAll('.child-section');
+      
+      document.querySelectorAll('.menu-item').forEach(function(menuItem) {
+        const itemId = menuItem.querySelector('.item-price').dataset.itemId;
+        
+        days.forEach(function(day) {
+          const checkboxesContainer = document.getElementById(`${itemId}-${day}-checkboxes`);
+          if (checkboxesContainer) {
+            checkboxesContainer.innerHTML = '';
             
-            cartItemDiv.querySelector('.cart-item-price').textContent = '$' + item.price.toFixed(2);
+            children.forEach(function(child) {
+              const childId = child.dataset.child;
+              const firstName = child.querySelector('.child-first-name').value.trim();
+              const lastName = child.querySelector('.child-last-name').value.trim();
+              
+              if (firstName && lastName) {
+                const fullName = `${firstName} ${lastName}`;
+                
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'child-checkbox';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `${itemId}-${childId}-${day}`;
+                checkbox.dataset.item = itemId;
+                checkbox.dataset.childId = childId;
+                checkbox.dataset.day = day;
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = fullName;
+                
+                checkboxDiv.appendChild(checkbox);
+                checkboxDiv.appendChild(label);
+                checkboxesContainer.appendChild(checkboxDiv);
+              }
+            });
           }
         });
       });
