@@ -1543,6 +1543,14 @@
       generateDayTabs();
       generateMenus();
       
+      // Now switch to the first available day
+      const firstAvailableTab = document.querySelector('.day-tab:not(.disabled)');
+      if (firstAvailableTab) {
+        switchDay(firstAvailableTab.dataset.day);
+      } else {
+        switchDay('monday');
+      }
+      
       setupEventListeners();
       loadUserDataFromCookies();
       setupAutoSave();
@@ -2638,7 +2646,6 @@
       setInterval(saveUserDataToCookies, 15000); // Save every 15 seconds
     }
 
-      
     function showSavedIndicator() {
       const indicator = document.createElement('div');
       indicator.style.position = 'fixed';
