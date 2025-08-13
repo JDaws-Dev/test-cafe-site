@@ -1440,33 +1440,30 @@
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-    // ============================================
-    // MENU DATA WITH IMAGES
-    // ============================================
     const menuData = {
       entrees: [
-        { id: 'chicken-sandwich', name: 'Chicken Sandwich', price: 6.50, desc: 'Classic boneless breast of chicken', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'spicy-chicken', name: 'Spicy Chicken Sandwich', price: 6.75, desc: 'Boneless breast with spicy seasoning', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'nuggets-8', name: 'Nuggets (8ct)', price: 6.50, desc: 'Bite-sized boneless chicken pieces', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'grilled-nuggets', name: 'Grilled Nuggets (8ct)', price: 7.50, desc: 'Grilled boneless chicken pieces', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'grilled-sandwich', name: 'Grilled Sandwich', price: 8.25, desc: 'Grilled chicken breast sandwich', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'grilled-gf', name: 'Grilled Sandwich (GF Bun)', price: 9.50, desc: 'Grilled chicken with gluten-free bun', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'chicken-wrap', name: 'Chicken Wrap', price: 9.75, desc: 'Grilled chicken in tortilla wrap', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'veggie-wrap', name: 'Southwest Veggie Wrap', price: 9.50, desc: 'Vegetarian wrap with southwest flavors', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: '/placeholder.svg?height=80&width=80' }
+        { id: 'chicken-sandwich', name: 'Chicken Sandwich', price: 6.50, desc: 'Classic boneless breast of chicken', image: 'assets/chickensandwich.png' },
+        { id: 'spicy-chicken', name: 'Spicy Chicken Sandwich', price: 6.75, desc: 'Boneless breast with spicy seasoning', image: 'assets/spicysandwich.png' },
+        { id: 'nuggets-8', name: 'Nuggets (8ct)', price: 6.50, desc: 'Bite-sized boneless chicken pieces', image: 'assets/nuggets.png' },
+        { id: 'grilled-nuggets', name: 'Grilled Nuggets (8ct)', price: 7.50, desc: 'Grilled boneless chicken pieces', image: 'assets/grillednuggets.png' },
+        { id: 'grilled-sandwich', name: 'Grilled Sandwich', price: 8.25, desc: 'Grilled chicken breast sandwich', image: 'assets/grilledsandwich.png' },
+        { id: 'grilled-gf', name: 'Grilled Sandwich (GF Bun)', price: 9.50, desc: 'Grilled chicken with gluten-free bun', image: 'assets/grilledsandwich.png' },
+        { id: 'chicken-wrap', name: 'Chicken Wrap', price: 9.75, desc: 'Grilled chicken in tortilla wrap', image: 'assets/chickenwrap.png' },
+        { id: 'veggie-wrap', name: 'Southwest Veggie Wrap', price: 9.50, desc: 'Vegetarian wrap with southwest flavors', image: 'assets/veggiewrap.png' },
+        { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' }
       ],
       salads: [
-        { id: 'cobb-salad', name: 'Cobb Salad', price: 11.25, desc: 'Mixed greens with chicken, bacon, cheese, and more', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'southwest-salad', name: 'Southwest Salad', price: 11.50, desc: 'Mixed greens with chicken, corn, peppers', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'market-salad', name: 'Market Fresh Salad', price: 11.50, desc: 'Mixed greens with chicken and seasonal toppings', image: '/placeholder.svg?height=80&width=80' }
+        { id: 'cobb-salad', name: 'Cobb Salad', price: 11.25, desc: 'Mixed greens with chicken, bacon, cheese, and more', image: 'assets/cobbsalad.png' },
+        { id: 'southwest-salad', name: 'Southwest Salad', price: 11.50, desc: 'Mixed greens with chicken, corn, peppers', image: 'assets/southwestsalad.png' },
+        { id: 'market-salad', name: 'Market Fresh Salad', price: 11.50, desc: 'Mixed greens with chicken and seasonal toppings', image: 'assets/marketsalad.png' }
       ],
       sides: [
-        { id: 'fries-only', name: 'Fries', price: 3.75, desc: 'Waffle potato fries', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'fruit-only', name: 'Fruit Cup', price: 5.50, desc: 'Fresh seasonal fruit', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'mac-only', name: 'Mac & Cheese', price: 5.50, desc: 'Creamy macaroni and cheese', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'salad-only', name: 'Side Salad', price: 5.50, desc: 'Mixed greens with toppings', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'parfait-only', name: 'Berry Parfait w/ Cookie Crumbs', price: 5.75, desc: 'Cookie pieces with cream', image: '/placeholder.svg?height=80&width=80' },
-        { id: 'chips-only', name: 'Chips', price: 1.50, desc: 'Variety of chips (provided by Artios)', image: '/placeholder.svg?height=80&width=80' }
+        { id: 'fries-only', name: 'Fries', price: 3.75, desc: 'Waffle potato fries', image: 'assets/fries.png' },
+        { id: 'fruit-only', name: 'Fruit Cup', price: 5.50, desc: 'Fresh seasonal fruit', image: 'assets/fruitcup.png' },
+        { id: 'mac-only', name: 'Mac & Cheese', price: 5.50, desc: 'Creamy macaroni and cheese', image: 'assets/MacnCheese_5oz_pdp.png' },
+        { id: 'salad-only', name: 'Side Salad', price: 5.50, desc: 'Mixed greens with toppings', image: 'assets/sidesalad.png' },
+        { id: 'parfait-only', name: 'Cookie Parfait', price: 5.75, desc: 'Cookie pieces with cream', image: 'assets/berryparfaitcookiecrumble.png' },
+        { id: 'chips-only', name: 'Chips', price: 1.50, desc: 'Variety of chips (provided by Artios)', image: 'assets/chips.jpg' }
       ],
       drinks: [
         { id: 'regular-drink', name: 'Regular Drink', basePrice: 1.50, desc: 'Water, Sodas (choose at pickup)', category: 'regular' },
@@ -1475,29 +1472,25 @@
     };
 
     // ============================================
-    // NEW: ORDER MANAGEMENT FUNCTIONS
-    // ============================================
-
-    // ============================================
     // STORE HOURS LOGIC
     // ============================================
     function checkStoreHours() {
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, 5 = Friday, 6 = Saturday
-  
-  // Check if it's Friday after 1pm (next week opens)
-  const isFridayAfterOne = (dayOfWeek === 5 && now.getHours() >= 13);
-  
-  // Set week logic for Friday afternoon
-  if (isFridayAfterOne) {
-    isNextWeek = true;
-  } else {
-    isNextWeek = false;
-  }
-  
-  // Store is always open - just individual days have cutoffs
-  storeIsOpen = true;
-}
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, 5 = Friday, 6 = Saturday
+      
+      // Check if it's Friday after 1pm (next week opens)
+      const isFridayAfterOne = (dayOfWeek === 5 && now.getHours() >= 13);
+      
+      // Set week logic for Friday afternoon
+      if (isFridayAfterOne) {
+        isNextWeek = true;
+      } else {
+        isNextWeek = false;
+      }
+      
+      // Store is always open - just individual days have cutoffs
+      storeIsOpen = true;
+    }
 
     function getCurrentWeekMonday(date) {
       const d = new Date(date);
@@ -1543,49 +1536,21 @@
       }
     }
 
-    // ============================================
-    // INITIALIZATION
-    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-  try {
-    console.log('Starting menu initialization...');
-    
-    checkStoreHours();
-    console.log('Store hours checked');
-    
-    const dayToActivate = generateDayTabs();
-    console.log('Day tabs generated');
-    
-    generateMenus();
-    console.log('Menus generated');
-    
-    // Now switch to the first available day after menus exist
-    const firstAvailableTab = document.querySelector('.day-tab:not(.disabled)');
-    if (firstAvailableTab) {
-      switchDay(firstAvailableTab.dataset.day);
-    } else {
-      switchDay('monday'); // fallback
-    }
-    console.log('Day switched to:', currentDay);
-    
-    setupEventListeners();
-    console.log('Event listeners set up');
-    
-    loadUserDataFromCookies();
-    setupAutoSave();
-    updateCart();
-    validateForm();
-    
-    console.log('Initialization complete');
-  } catch (error) {
-    console.error('Error during initialization:', error);
-    // Fallback: show a simple message if menu fails to load
-    const menuContainer = document.getElementById('menu-container');
-    if (menuContainer && menuContainer.innerHTML.trim() === '') {
-      menuContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Menu is temporarily unavailable. Please refresh the page.</div>';
-    }
-  }
-});
+      console.log('DOM loaded, starting initialization...');
+      
+      checkStoreHours();
+      generateDayTabs();
+      generateMenus();
+      
+      setupEventListeners();
+      loadUserDataFromCookies();
+      setupAutoSave();
+      updateCart();
+      validateForm();
+      
+      console.log('Initialization complete');
+    });
 
     function generateDayTabs() {
       const tabsContainer = document.getElementById('day-tabs');
@@ -1637,7 +1602,11 @@
 
       const dayToActivate = firstAvailableDay || 'monday';
       currentDay = dayToActivate;
-      return dayToActivate;
+      
+      const tabToActivate = document.querySelector('[data-day="' + dayToActivate + '"]');
+      if (tabToActivate) {
+        tabToActivate.classList.add('active');
+      }
     }
 
     function generateMenus() {
@@ -1651,7 +1620,6 @@
         if (day === currentDay) {
           dayMenu.classList.add('active');
         }
-        
         
         Object.keys(menuData).forEach(function(category) {
           const categoryDiv = document.createElement('div');
@@ -1692,19 +1660,21 @@
               priceDisplay = '$' + item.price.toFixed(2);
             }
             
+            // Create menu item with image (skip drinks)
+            let imageHtml = '';
+            if (category !== 'drinks' && item.image) {
+              imageHtml = `<img src="${item.image}" alt="${item.name}" class="menu-item-image" onerror="this.style.display='none'">`;
+            }
+            
             itemDiv.innerHTML = `
-              <div class="menu-item-image">
-                <img src="${item.image}" alt="${item.name}" onerror="this.src='/placeholder.svg?height=80&width=80'">
-              </div>
-              <div class="menu-item-info">
-                <div class="menu-item-header">
-                  <h5>${item.name}</h5>
-                  <span class="menu-item-price">${priceDisplay}</span>
+              ${imageHtml}
+              <div class="menu-item-content">
+                <div class="item-header">
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-price" data-item-id="${item.id}">${priceDisplay}</div>
                 </div>
-                <p class="menu-item-desc">${item.desc}</p>
-                <div class="child-checkboxes" data-item-id="${item.id}">
-                  <!-- Child checkboxes will be populated here -->
-                </div>
+                <div class="item-desc">${item.desc}</div>
+                <div class="child-checkboxes" id="${item.id}-${day}-checkboxes"></div>
               </div>
             `;
             
@@ -1713,6 +1683,10 @@
           
           categoryDiv.appendChild(headerDiv);
           categoryDiv.appendChild(itemsDiv);
+          
+          // Setup collapse functionality
+          setupCategoryToggle(categoryDiv, category);
+          
           dayMenu.appendChild(categoryDiv);
         });
         
