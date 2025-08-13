@@ -1185,7 +1185,7 @@ function sendWelcomeEmail(email) {
  */
 function sendPasswordResetEmail(email, tempPasscode) {
   try {
-    const subject = '🔑 Your Artios Cafe Passcode Reset';
+    const subject = 'Your Artios Cafe Passcode Reset';
     
     const emailBody = `
       <html>
@@ -1205,7 +1205,7 @@ function sendPasswordResetEmail(email, tempPasscode) {
           <p><strong>Important:</strong></p>
           <ul>
             <li>This temporary passcode will work for your next login</li>
-            <li>Please change it to something memorable after logging in</li>
+            <li>This code will become your new permanent passcode</li>
             <li>For security, this email should be deleted after use</li>
           </ul>
           
