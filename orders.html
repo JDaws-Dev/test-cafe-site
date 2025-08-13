@@ -2533,13 +2533,9 @@
       showNotification('Submitting order to cloud...', 'info');
       
       if (GOOGLE_SHEETS_CONFIG.useGoogleSheets && GOOGLE_SHEETS_CONFIG.webAppUrl) {
-        fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderData)
-        })
+        const submitUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=submit_order&data=${encodeURIComponent(JSON.stringify(orderData))}`;
+        
+        fetch(submitUrl)
         .then(function(response) {
           return response.json();
         })
