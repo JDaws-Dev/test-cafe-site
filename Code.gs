@@ -1185,7 +1185,7 @@ function sendWelcomeEmail(email) {
  */
 function sendPasswordResetEmail(email, tempPasscode) {
   try {
-    const subject = 'Your Artios Cafe Passcode Reset';
+    const subject = 'Artios Cafe Passcode Reset';
     
     const emailBody = `
       <html>
