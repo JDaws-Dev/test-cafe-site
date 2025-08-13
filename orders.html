@@ -1547,19 +1547,38 @@
     // INITIALIZATION
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, starting initialization...');
-      
-      checkStoreHours();
-      generateDayTabs();
-      generateMenus();
-      loadUserDataFromCookies();
-      setupAutoSave();
-      updateCart();
-      validateForm();
-      loadMenuData();
-      
-      console.log('Initialization complete');
-    });
+  try {
+    // Initialize required variables
+    let currentDay = 'monday';
+    let isNextWeek = false;
+    let storeIsOpen = true;
+    let currentWeekMonday = null;
+    
+    console.log('Starting menu initialization...');
+    
+    checkStoreHours();
+    console.log('Store hours checked');
+    
+    generateDayTabs();
+    console.log('Day tabs generated');
+    
+    generateMenus();
+    console.log('Menus generated');
+    
+    loadUserDataFromCookies();
+    setupAutoSave();
+    updateCart();
+    validateForm();
+    loadMenuData();
+  } catch (error) {
+    console.error('Error during initialization:', error);
+    // Fallback: show a simple message if menu fails to load
+    const menuContainer = document.getElementById('menu-container');
+    if (menuContainer && menuContainer.innerHTML.trim() === '') {
+      menuContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Menu is temporarily unavailable. Please refresh the page.</div>';
+    }
+  }
+});
 
     function generateDayTabs() {
       const tabsContainer = document.getElementById('day-tabs');
