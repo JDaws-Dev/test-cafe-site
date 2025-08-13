@@ -558,7 +558,7 @@ function createFamilyAccount(email, passcode) {
  */
 function resetFamilyPasscode(email) {
   try {
-    console.log(`Processing passcode reset for: ${email}`);
+    console.log('Processing passcode reset for: ' + email);
     
     const familySheet = getFamilyAccountsSheet();
     const data = familySheet.getDataRange().getValues();
@@ -577,7 +577,7 @@ function resetFamilyPasscode(email) {
         // Send reset email
         sendPasswordResetEmail(email, tempPasscode);
         
-        console.log(`✅ Passcode reset for ${email}`);
+        console.log('SUCCESS: Passcode reset for ' + email);
         return {
           success: true,
           message: 'Reset instructions sent to your email'
@@ -585,7 +585,7 @@ function resetFamilyPasscode(email) {
       }
     }
     
-    console.log(`❌ Family not found for reset: ${email}`);
+    console.log('ERROR: Family not found for reset: ' + email);
     return {
       success: false,
       error: 'Email not found. Please create an account first.'
@@ -1185,7 +1185,7 @@ function sendWelcomeEmail(email) {
  */
 function sendPasswordResetEmail(email, tempPasscode) {
   try {
-    const subject = 'Artios Cafe Passcode Reset';
+    const subject = 'Artios Cafe - Passcode Reset';
     
     const emailBody = `
       <html>
@@ -1220,14 +1220,14 @@ function sendPasswordResetEmail(email, tempPasscode) {
     GmailApp.sendEmail(
       email,
       subject,
-      `Your temporary passcode is: ${tempPasscode}`,
+      'Your temporary passcode is: ' + tempPasscode,
       {
         htmlBody: emailBody,
         name: 'Artios Academies Cafe'
       }
     );
     
-    console.log(`Password reset email sent to ${email}`);
+    console.log('Password reset email sent to ' + email);
     
   } catch (error) {
     console.error('Error sending password reset email:', error);
