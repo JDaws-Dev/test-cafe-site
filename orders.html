@@ -88,14 +88,15 @@
       opacity: 0.9;
     }
 
-    .header .notice {
-      background: rgba(255,255,255,0.15);
-      padding: 20px;
-      border-radius: 12px;
-      font-size: 0.95em;
-      margin-top: 25px;
-      border: 1px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
+    .notice {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      border: 2px solid #ffc107;
+      border-radius: 8px;
+      padding: 15px 25px;
+      margin: 20px 30px;
+      text-align: center;
+      font-weight: 500;
+      color: #856404;
     }
 
     .sync-status {
@@ -203,36 +204,6 @@
       background: #f57c00;
     }
 
-    .returning-user-banner {
-      background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-      border: 2px solid #4caf50;
-      border-radius: 8px;
-      padding: 15px 25px;
-      margin: 20px 30px;
-      text-align: center;
-      animation: slideIn 0.5s ease;
-    }
-
-    .welcome-back {
-      color: #2e7d32;
-      font-weight: 600;
-    }
-
-    .welcome-back a {
-      color: #1976d2;
-      text-decoration: none;
-      font-weight: 600;
-      margin-left: 10px;
-    }
-
-    .welcome-back a:hover {
-      text-decoration: underline;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
     /* END NEW STYLES */
 
     .main-content {
@@ -1217,9 +1188,6 @@
       .quick-actions-section {
         margin: 20px 10px;
       }
-      .returning-user-banner {
-        margin: 20px 10px;
-      }
 
       /* Mobile menu item layout */
       .menu-item {
@@ -1251,20 +1219,12 @@
         </div>
       </div>
       
+      <!-- NEW: Notice Section -->
       <div class="notice">
         <strong>Order Cutoff: Daily at 8:00 AM</strong><br>
-        ONE FORM PER FAMILY • Order for multiple children with one email<br>
-        Questions? Contact CRivers@artiosacademies.com
+        <strong>ONE FORM PER FAMILY</strong> • Order for multiple children with one email<br>
+        Questions? Contact <a href="mailto:CRivers@artiosacademies.com">CRivers@artiosacademies.com</a>
       </div>
-    </div>
-
-    <!-- NEW: Returning user banner (shown dynamically) -->
-    <div class="returning-user-banner" id="returning-user-banner" style="display: none;">
-      <div class="welcome-back">
-        👋 <span id="welcome-message">Welcome back!</span>
-        <a href="#" id="view-orders-link">View your recent orders</a>
-      </div>
-    </div>
 
     <div class="main-content">
       <div class="form-section">
@@ -1518,46 +1478,6 @@
     // NEW: ORDER MANAGEMENT FUNCTIONS
     // ============================================
 
-    function checkForReturningUser() {
-      try {
-        const cookies = document.cookie.split(';');
-        let familyData = null;
-        
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          const parts = cookie.split('=');
-          if (parts[0] === 'artios_family_data') {
-            familyData = JSON.parse(decodeURIComponent(parts[1]));
-            break;
-          }
-        }
-        
-        if (familyData && familyData.email) {
-          showReturningUserBanner(familyData.email, familyData.children);
-        }
-      } catch (error) {
-        console.log('No previous order data found');
-      }
-    }
-
-    function showReturningUserBanner(email, children) {
-      const banner = document.getElementById('returning-user-banner');
-      const welcomeMessage = document.getElementById('welcome-message');
-      const viewOrdersLink = document.getElementById('view-orders-link');
-      
-      if (children && children.length > 0) {
-        const firstChild = children[0].firstName;
-        const childCount = children.length;
-        const childText = childCount === 1 ? firstChild : `${firstChild} and ${childCount - 1} other${childCount > 2 ? 's' : ''}`;
-        welcomeMessage.textContent = `Welcome back! We remember ${childText}.`;
-      } else {
-        welcomeMessage.textContent = 'Welcome back!';
-      }
-      
-      viewOrdersLink.href = `manage-orders.html?email=${encodeURIComponent(email)}`;
-      banner.style.display = 'block';
-    }
-
     // ============================================
     // STORE HOURS LOGIC
     // ============================================
@@ -1637,9 +1557,7 @@
       setupAutoSave();
       updateCart();
       validateForm();
-      
-      // NEW: Check for returning user
-      setTimeout(checkForReturningUser, 500);
+      loadMenuData();
       
       console.log('Initialization complete');
     });
@@ -1994,7 +1912,7 @@
           updateChildCheckboxes();
         }
         
-        showNotification('Welcome back! Your family info has been loaded.', 'info');
+        showNotification('Family info has been loaded.', 'info');
         
       } catch (error) {
         console.error('Error loading family data from cookies:', error);
