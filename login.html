@@ -587,7 +587,7 @@
       forgotBtn.textContent = '📧 Sending...';
       showStatus('Sending reset code to your email...', 'info');
 
-      const resetUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=reset_family_passcode&email=${encodeURIComponent(email)}`;
+      const resetUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=reset_passcode&email=${encodeURIComponent(email)}`;
 
       fetch(resetUrl)
         .then(response => response.json())
