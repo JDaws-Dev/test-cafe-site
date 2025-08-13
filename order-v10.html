@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Lunch - Artios Academies Cafe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .menu-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .cart-section {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .day-tabs {
+            display: flex;
+            margin-bottom: 25px;
+            background: white;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .day-tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .day-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .menu-items {
+            display: grid;
+            gap: 20px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .menu-item h3 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.3em;
+        }
+
+        .menu-item p {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .menu-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .price {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);
+        }
+
+        .add-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cart h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .child-selector {
+            margin-bottom: 20px;
+        }
+
+        .child-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .cart-items {
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .cart-item-details {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:hover {
+            background: #c0392b;
+        }
+
+        .quantity {
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .total {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .promo-section {
+            margin-bottom: 20px;
+        }
+
+        .promo-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .promo-input input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+
+        .promo-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .promo-applied {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .checkout-section {
+            border-top: 2px solid #e9ecef;
+            padding-top: 20px;
+        }
+
+        .parent-info {
+            margin-bottom: 20px;
+        }
+
+        .parent-info input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkout-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .checkout-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .store-closed {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-message.show {
+            opacity: 1;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .day-tabs {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .day-tab {
+                min-width: auto;
+            }
+
+            .cart-section {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+            <h1>🍽️ Order Lunch</h1>
+            <p>Fresh, delicious meals for your children</p>
+        </div>
+
+        <div id="store-status"></div>
+
+        <div class="main-content">
+            <div class="menu-section">
+                <div class="day-tabs">
+                    <button class="day-tab active" data-day="Monday">Monday</button>
+                    <button class="day-tab" data-day="Tuesday">Tuesday</button>
+                    <button class="day-tab" data-day="Wednesday">Wednesday</button>
+                    <button class="day-tab" data-day="Thursday">Thursday</button>
+                    <button class="day-tab" data-day="Friday">Friday</button>
+                </div>
+                <div class="menu-items" id="menu-items"></div>
+            </div>
+
+            <div class="cart-section">
+                <div class="cart">
+                    <h2>🛒 Your Order</h2>
+                    
+                    <div class="child-selector">
+                        <select id="child-select">
+                            <option value="">Select Child</option>
+                        </select>
+                    </div>
+
+                    <div class="cart-items" id="cart-items">
+                        <p style="text-align: center; color: #7f8c8d; font-style: italic;">Your cart is empty</p>
+                    </div>
+
+                    <div class="promo-section">
+                        <div class="promo-input">
+                            <input type="text" id="promo-code" placeholder="Enter promo code">
+                            <button class="promo-btn" onclick="applyPromoCode()">Apply</button>
+                        </div>
+                        <div id="promo-status"></div>
+                    </div>
+
+                    <div class="total" id="total">Total: $0.00</div>
+
+                    <div class="checkout-section">
+                        <div class="parent-info">
+                            <input type="email" id="parent-email" placeholder="Parent Email" readonly>
+                            <input type="tel" id="parent-phone" placeholder="Parent Phone (optional)">
+                        </div>
+
+                        <button class="checkout-btn" id="checkout-btn" onclick="proceedToCheckout()" disabled>
+                            Place Order
+                        </button>
+                    </div>
+
+                    <div class="status-message" id="status-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const GOOGLE_SHEETS_CONFIG = {
+            webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
+            useGoogleSheets: true
+        };
+
+        // Comprehensive menu data organized by day
+        const menuData = {
+            Monday: [
+                { id: 'mon-1', name: "Chick-fil-A Chicken Sandwich", description: "Original chicken breast filet with pickles on a toasted bun", price: 6.50 },
+                { id: 'mon-2', name: "Chick-fil-A Nuggets (8-count)", description: "Bite-sized pieces of boneless breast of chicken", price: 5.85 },
+                { id: 'mon-3', name: "Chick-fil-A Grilled Chicken Sandwich", description: "Grilled chicken breast with lettuce and tomato", price: 7.25 },
+                { id: 'mon-4', name: "Chick-fil-A Waffle Fries", description: "Waffle-shaped potatoes cooked in canola oil", price: 2.95 },
+                { id: 'mon-5', name: "Artios Fresh Salad", description: "Mixed greens with choice of dressing (prepared at school)", price: 4.50 }
+            ],
+            Tuesday: [
+                { id: 'tue-1', name: "Chick-fil-A Spicy Chicken Sandwich", description: "Spicy chicken breast filet with pickles", price: 6.75 },
+                { id: 'tue-2', name: "Chick-fil-A Nuggets (12-count)", description: "Twelve bite-sized pieces of boneless breast of chicken", price: 8.15 },
+                { id: 'tue-3', name: "Chick-fil-A Chicken Strips (3-count)", description: "Tender strips of chicken breast", price: 6.95 },
+                { id: 'tue-4', name: "Chick-fil-A Mac & Cheese", description: "Creamy macaroni and cheese", price: 3.25 },
+                { id: 'tue-5', name: "Artios Fruit Cup", description: "Fresh seasonal fruit (prepared at school)", price: 3.25 }
+            ],
+            Wednesday: [
+                { id: 'wed-1', name: "Chick-fil-A Chicken Deluxe Sandwich", description: "Chicken breast with lettuce, tomato, and cheese", price: 7.45 },
+                { id: 'wed-2', name: "Chick-fil-A Nuggets (8-count)", description: "Bite-sized pieces of boneless breast of chicken", price: 5.85 },
+                { id: 'wed-3', name: "Chick-fil-A Grilled Nuggets (8-count)", description: "Grilled bite-sized pieces of chicken breast", price: 6.25 },
+                { id: 'wed-4', name: "Chick-fil-A Fruit Cup", description: "Fresh fruit medley", price: 3.45 },
+                { id: 'wed-5', name: "Artios Veggie Wrap", description: "Fresh vegetables in a tortilla wrap (prepared at school)", price: 5.25 }
+            ],
+            Thursday: [
+                { id: 'thu-1', name: "Chick-fil-A Chicken Sandwich", description: "Original chicken breast filet with pickles", price: 6.50 },
+                { id: 'thu-2', name: "Chick-fil-A Nuggets (12-count)", description: "Twelve bite-sized pieces of boneless breast of chicken", price: 8.15 },
+                { id: 'thu-3', name: "Chick-fil-A Chicken Salad Sandwich", description: "Chicken salad with lettuce on wheat bread", price: 6.95 },
+                { id: 'thu-4', name: "Chick-fil-A Waffle Fries", description: "Waffle-shaped potatoes cooked in canola oil", price: 2.95 },
+                { id: 'thu-5', name: "Artios Sandwich Combo", description: "Turkey and cheese sandwich with chips (prepared at school)", price: 5.75 }
+            ],
+            Friday: [
+                { id: 'fri-1', name: "Chick-fil-A Spicy Chicken Deluxe", description: "Spicy chicken with lettuce, tomato, and cheese", price: 7.65 },
+                { id: 'fri-2', name: "Chick-fil-A Nuggets (8-count)", description: "Bite-sized pieces of boneless breast of chicken", price: 5.85 },
+                { id: 'fri-3', name: "Chick-fil-A Chicken Strips (4-count)", description: "Four tender strips of chicken breast", price: 8.45 },
+                { id: 'fri-4', name: "Chick-fil-A Cookies & Cream Milkshake", description: "Hand-spun milkshake with cookies & cream", price: 4.25 },
+                { id: 'fri-5', name: "Artios Pizza Slice", description: "Cheese pizza slice (prepared at school)", price: 4.25 }
+            ]
+        };
+
+        // Global variables
+        let currentDay = 'Monday';
+        let cart = [];
+        let children = [];
+        let selectedChild = '';
+        let appliedPromo = null;
+        let authenticatedEmail = '';
+
+        // Store hours (24-hour format)
+        const storeHours = {
+            cutoffHour: 8,
+            cutoffMinute: 15,
+            days: [1, 2, 3, 4, 5] // Monday to Friday
+        };
+
+        // Promo codes
+        const promoCodes = {
+            'EARLYBIRD': { discount: 0.10, description: '10% Early Bird Discount' },
+            'FAMILY5': { discount: 0.05, description: '5% Family Discount' },
+            'WELCOME15': { discount: 0.15, description: '15% Welcome Discount' }
+        };
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuthentication()) {
+                return;
+            }
+            
+            loadUserData();
+            checkStoreHours();
+            loadMenu();
+            setupEventListeners();
+            updateCartDisplay();
+        });
+
+        function checkAuthentication() {
+            authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
+            const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
+            
+            if (!authenticatedEmail || !authExpiry || Date.now() >= authExpiry) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            return true;
+        }
+
+        function loadUserData() {
+            // Set parent email from authentication
+            document.getElementById('parent-email').value = authenticatedEmail;
+            
+            // For demo purposes, create some sample children
+            // In a real app, this would come from the family account data
+            children = ['Emma Johnson', 'Liam Johnson', 'Sophia Johnson'];
+            populateChildSelector();
+        }
+
+        function populateChildSelector() {
+            const childSelect = document.getElementById('child-select');
+            childSelect.innerHTML = '<option value="">Select Child</option>';
+            
+            children.forEach(child => {
+                const option = document.createElement('option');
+                option.value = child;
+                option.textContent = child;
+                childSelect.appendChild(option);
+            });
+
+            childSelect.addEventListener('change', function() {
+                selectedChild = this.value;
+                updateCheckoutButton();
+            });
+        }
+
+        function checkStoreHours() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentDay = now.getDay();
+            
+            const isWeekday = storeHours.days.includes(currentDay);
+            const isPastCutoff = (currentHour > storeHours.cutoffHour) || 
+                               (currentHour === storeHours.cutoffHour && currentMinute >= storeHours.cutoffMinute);
+            
+            const statusDiv = document.getElementById('store-status');
+            
+            if (!isWeekday) {
+                statusDiv.innerHTML = `
+                    <div class="store-closed">
+                        🕐 Weekend Ordering - Orders placed now are for next week
+                    </div>
+                `;
+            } else if (isPastCutoff) {
+                statusDiv.innerHTML = `
+                    <div class="store-closed">
+                        🕐 Daily ordering cutoff passed (8:15 AM) - Orders placed now are for tomorrow
+                    </div>
+                `;
+            }
+        }
+
+        function setupEventListeners() {
+            // Day tab listeners
+            document.querySelectorAll('.day-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentDay = this.dataset.day;
+                    loadMenu();
+                });
+            });
+        }
+
+        function loadMenu() {
+            const menuContainer = document.getElementById('menu-items');
+            const items = menuData[currentDay] || [];
+            
+            menuContainer.innerHTML = items.map(item => `
+                <div class="menu-item">
+                    <h3>${item.name}</h3>
+                    <p>${item.description}</p>
+                    <div class="menu-item-footer">
+                        <span class="price">$${item.price.toFixed(2)}</span>
+                        <button class="add-btn" onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${currentDay}')" ${!selectedChild ? 'disabled' : ''}>
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id, name, price, day) {
+            if (!selectedChild) {
+                showStatus('Please select a child first!', 'error');
+                return;
+            }
+
+            const existingItem = cart.find(item => 
+                item.id === id && 
+                item.child === selectedChild && 
+                item.day === day
+            );
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    id: id,
+                    name: name,
+                    price: price,
+                    quantity: 1,
+                    child: selectedChild,
+                    day: day,
+                    childId: children.indexOf(selectedChild) + 1
+                });
+            }
+            
+            updateCartDisplay();
+            showStatus(`Added ${name} for ${selectedChild}`, 'success');
+        }
+
+        function removeFromCart(id, child, day) {
+            const itemIndex = cart.findIndex(item => 
+                item.id === id && 
+                item.child === child && 
+                item.day === day
+            );
+            
+            if (itemIndex > -1) {
+                if (cart[itemIndex].quantity > 1) {
+                    cart[itemIndex].quantity -= 1;
+                } else {
+                    cart.splice(itemIndex, 1);
+                }
+            }
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartContainer = document.getElementById('cart-items');
+            
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; font-style: italic;">Your cart is empty</p>';
+            } else {
+                cartContainer.innerHTML = cart.map(item => `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-details">${item.child} • ${item.day}</div>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="qty-btn" onclick="removeFromCart('${item.id}', '${item.child}', '${item.day}')">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="qty-btn" onclick="addToCart('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, '${item.day}')">+</button>
+                            <span style="margin-left: 10px; font-weight: 600;">$${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            updateTotal();
+            updateCheckoutButton();
+            
+            // Update add buttons based on child selection
+            document.querySelectorAll('.add-btn').forEach(btn => {
+                btn.disabled = !selectedChild;
+            });
+        }
+
+        function updateTotal() {
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let discount = 0;
+            
+            if (appliedPromo) {
+                discount = subtotal * appliedPromo.discount;
+            }
+            
+            const total = subtotal - discount;
+            
+            let totalHTML = `Subtotal: $${subtotal.toFixed(2)}`;
+            if (discount > 0) {
+                totalHTML += `<br><span style="color: #e74c3c;">Discount: -$${discount.toFixed(2)}</span>`;
+                totalHTML += `<br><strong>Total: $${total.toFixed(2)}</strong>`;
+            } else {
+                totalHTML = `Total: $${total.toFixed(2)}`;
+            }
+            
+            document.getElementById('total').innerHTML = totalHTML;
+        }
+
+        function updateCheckoutButton() {
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const canCheckout = cart.length > 0;
+            checkoutBtn.disabled = !canCheckout;
+        }
+
+        function applyPromoCode() {
+            const promoInput = document.getElementById('promo-code');
+            const promoCode = promoInput.value.trim().toUpperCase();
+            const promoStatus = document.getElementById('promo-status');
+            
+            if (promoCodes[promoCode]) {
+                appliedPromo = promoCodes[promoCode];
+                promoStatus.innerHTML = `
+                    <div class="promo-applied">
+                        ✅ ${appliedPromo.description} applied!
+                    </div>
+                `;
+                promoInput.value = '';
+                updateTotal();
+            } else {
+                promoStatus.innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 8px; text-align: center;">
+                        ❌ Invalid promo code
+                    </div>
+                `;
+                setTimeout(() => {
+                    promoStatus.innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        function proceedToCheckout() {
+            if (cart.length === 0) {
+                showStatus('Please add items to cart!', 'error');
+                return;
+            }
+
+            const parentEmail = document.getElementById('parent-email').value;
+            const parentPhone = document.getElementById('parent-phone').value;
+
+            if (!parentEmail) {
+                showStatus('Parent email is required!', 'error');
+                return;
+            }
+
+            // Calculate totals
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let discount = appliedPromo ? subtotal * appliedPromo.discount : 0;
+            let total = subtotal - discount;
+
+            // Prepare order data
+            const orderData = {
+                orderId: generateOrderId(),
+                parentEmail: parentEmail,
+                parentPhone: parentPhone,
+                children: getUniqueChildren(),
+                items: cart.map(item => ({
+                    ...item,
+                    date: getDateForDay(item.day)
+                })),
+                subtotal: subtotal,
+                discount: discount,
+                total: total,
+                promoCode: appliedPromo ? Object.keys(promoCodes).find(key => promoCodes[key] === appliedPromo) : '',
+                timestamp: new Date().toISOString()
+            };
+
+            // Submit order
+            submitOrder(orderData);
+        }
+
+        function getUniqueChildren() {
+            const uniqueChildren = [...new Set(cart.map(item => item.child))];
+            return uniqueChildren.map((childName, index) => {
+                const nameParts = childName.split(' ');
+                return {
+                    id: (index + 1).toString(),
+                    firstName: nameParts[0] || childName,
+                    lastName: nameParts.slice(1).join(' ') || '',
+                    grade: 'K-12' // Default grade, could be enhanced
+                };
+            });
+        }
+
+        function getDateForDay(dayName) {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const targetDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(dayName);
+            
+            let daysUntilTarget = targetDay - currentDay;
+            if (daysUntilTarget <= 0) {
+                daysUntilTarget += 7; // Next week
+            }
+            
+            const targetDate = new Date(today);
+            targetDate.setDate(today.getDate() + daysUntilTarget);
+            
+            return targetDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
+
+        function generateOrderId() {
+            const timestamp = Date.now();
+            const random = Math.floor(Math.random() * 1000);
+            return `ORD-${timestamp}-${random}`;
+        }
+
+        function submitOrder(orderData) {
+            const checkoutBtn = document.getElementById('checkout-btn');
+            checkoutBtn.disabled = true;
+            checkoutBtn.textContent = 'Placing Order...';
+            
+            showStatus('Submitting your order...', 'info');
+
+            fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus(`✅ Order placed successfully! Order ID: ${data.orderId}`, 'success');
+                    
+                    // Clear cart
+                    cart = [];
+                    updateCartDisplay();
+                    
+                    // Show success message with payment instructions
+                    setTimeout(() => {
+                        alert(`Order placed successfully!\n\nOrder ID: ${data.orderId}\nTotal: $${orderData.total.toFixed(2)}\n\nPlease send payment via Venmo and include the order ID in the payment note.\n\nYou will receive a confirmation email shortly.`);
+                    }, 1000);
+                    
+                } else {
+                    showStatus(`❌ Order failed: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Order submission error:', error);
+                showStatus('❌ Network error. Please try again.', 'error');
+            })
+            .finally(() => {
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = 'Place Order';
+            });
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type} show`;
+
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

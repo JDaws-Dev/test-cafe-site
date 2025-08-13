@@ -274,7 +274,7 @@
   </div>
 
   <script>
-    // Configuration
+    // FIXED: Configuration to match your Google Apps Script
     const GOOGLE_SHEETS_CONFIG = {
       webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
       useGoogleSheets: true
@@ -352,7 +352,7 @@
       
       showDailyOrdersStatus(`Preparing daily food orders for ${dateInput}...`, 'info');
 
-      // Build URL for daily orders
+      // FIXED: Build URL for daily orders to match your Google Apps Script
       const reportUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_report&date=${encodeURIComponent(dateInput)}&worker_recipients=${encodeURIComponent(workerEmail)}`;
 
       console.log('Calling daily orders URL:', reportUrl);
@@ -368,10 +368,10 @@
           if (data.success) {
             let message = `✅ Daily Food Orders Sent Successfully!\n\n`;
             message += `📅 Date: ${dateInput}\n`;
-            message += `🍽️ Orders Found: ${data.ordersProcessed || 0}\n`;
+            message += `🍽️ Orders Found: ${data.orderCount || 0}\n`;
             message += `📧 Email sent to: ${workerEmail}\n\n`;
             
-            if (data.ordersProcessed > 0) {
+            if (data.orderCount > 0) {
               message += `Your email includes:\n`;
               message += `• Chick-fil-A orders organized by categories\n`;
               message += `• Student checklist sorted by last name\n`;
