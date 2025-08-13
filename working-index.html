@@ -1,0 +1,2815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artios Academies of Sugar Hill - Cafe Lunch Order System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      color: #202124;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .artios-logo {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      object-fit: contain;
+    }
+
+    .header-text {
+      text-align: left;
+    }
+
+    .header h1 {
+      font-size: 2.2em;
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .header .subtitle {
+      font-size: 1.1em;
+      font-weight: 300;
+      margin: 5px 0 0 0;
+      opacity: 0.9;
+    }
+
+    .header .notice {
+      background: rgba(255,255,255,0.15);
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 0.95em;
+      margin-top: 25px;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .sync-status {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      background: rgba(255,255,255,0.2);
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.8em;
+    }
+
+    .store-status {
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      background: rgba(255,255,255,0.2);
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.8em;
+    }
+
+    /* NEW: Order Management Integration Styles */
+    .quick-actions-section {
+      background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
+      border: 2px solid #2196f3;
+      border-radius: 12px;
+      margin: 20px 30px;
+      padding: 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+    }
+
+    .quick-actions-header {
+      background: #2196f3;
+      color: white;
+      padding: 15px 25px;
+      text-align: center;
+    }
+
+    .quick-actions-header h3 {
+      margin: 0;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+
+    .quick-actions-content {
+      display: flex;
+      padding: 0;
+    }
+
+    .action-option {
+      flex: 1;
+      padding: 25px;
+      text-align: center;
+      transition: all 0.3s ease;
+      border-right: 1px solid rgba(33, 150, 243, 0.2);
+    }
+
+    .action-option:last-child {
+      border-right: none;
+    }
+
+    .action-option:hover {
+      background: rgba(33, 150, 243, 0.05);
+    }
+
+    .action-icon {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .action-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #1976d2;
+      margin-bottom: 8px;
+    }
+
+    .action-desc {
+      color: #666;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+      line-height: 1.4;
+    }
+
+    .action-btn {
+      background: #2196f3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .action-btn:hover {
+      background: #1976d2;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+      text-decoration: none;
+      color: white;
+    }
+
+    .action-btn.secondary {
+      background: #ff9800;
+    }
+
+    .action-btn.secondary:hover {
+      background: #f57c00;
+    }
+
+    .returning-user-banner {
+      background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      padding: 15px 25px;
+      margin: 20px 30px;
+      text-align: center;
+      animation: slideIn 0.5s ease;
+    }
+
+    .welcome-back {
+      color: #2e7d32;
+      font-weight: 600;
+    }
+
+    .welcome-back a {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .welcome-back a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    /* END NEW STYLES */
+
+    .main-content {
+      display: flex;
+      min-height: calc(100vh - 140px);
+    }
+
+    .form-section {
+      flex: 2;
+      padding: 30px;
+      background: white;
+    }
+
+    /* Shared Email Section */
+    .shared-email {
+      background: #e8f5e8;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .shared-email h3 {
+      color: #2e7d32;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Child Section Styles */
+    .child-section {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .child-section:hover {
+      border-color: #4285f4;
+    }
+
+    .child-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .child-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #4285f4;
+      display: flex;
+      align-items: center;
+    }
+
+    .child-icon {
+      background: #4285f4;
+      color: white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+
+    .remove-child {
+      background: #ff5722;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .remove-child:hover {
+      background: #d32f2f;
+      transform: scale(1.1);
+    }
+
+    /* Form Elements */
+    .form-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #444;
+    }
+
+    .required {
+      color: #d32f2f;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+    }
+
+    .add-child-btn {
+      background: #34a853;
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 30px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .add-child-btn:hover {
+      background: #2e7d32;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+    }
+
+    /* Menu Section */
+    .menu-section {
+      margin-top: 30px;
+    }
+
+    .menu-section h3 {
+      color: #4285f4;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+    }
+
+    .day-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+      overflow-x: auto;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .day-tab {
+      padding: 15px 25px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      font-weight: 500;
+      color: #666;
+    }
+
+    .day-tab:hover {
+      background: rgba(66, 133, 244, 0.1);
+      color: #4285f4;
+    }
+
+    .day-tab.active {
+      color: #4285f4;
+      border-bottom-color: #4285f4;
+      background: rgba(66, 133, 244, 0.1);
+    }
+
+    .day-tab.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      color: #999;
+    }
+
+    .day-tab.disabled:hover {
+      background: none;
+      color: #999;
+    }
+
+    .menu-for-day {
+      display: none;
+    }
+
+    .menu-for-day.active {
+      display: block;
+    }
+
+    .menu-category {
+      margin-bottom: 30px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .menu-category.collapsed .menu-items {
+      display: none;
+    }
+
+    .menu-category-header {
+      background: linear-gradient(135deg, rgba(52, 168, 83, 0.15) 0%, rgba(52, 168, 83, 0.05) 100%);
+      border-left: 4px solid #34a853;
+      padding: 15px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .menu-category-header:hover {
+      background: linear-gradient(135deg, rgba(52, 168, 83, 0.25) 0%, rgba(52, 168, 83, 0.15) 100%);
+    }
+
+    .menu-category-header h4 {
+      color: #34a853;
+      font-size: 1.3em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+
+    .collapse-icon {
+      color: #34a853;
+      font-size: 1.2em;
+      font-weight: bold;
+      transition: transform 0.3s ease;
+    }
+
+    .menu-category.collapsed .collapse-icon {
+      transform: rotate(-90deg);
+    }
+
+    .menu-items {
+      padding: 20px;
+      background: white;
+    }
+
+    .drink-discount-notice {
+      margin-bottom: 15px;
+    }
+
+    .menu-item {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+    }
+
+    .menu-item:hover {
+      border-color: #4285f4;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* NEW: Menu item image styles */
+    .menu-item-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid #e0e0e0;
+      transition: all 0.3s ease;
+    }
+
+    .menu-item:hover .menu-item-image {
+      border-color: #4285f4;
+      transform: scale(1.05);
+    }
+
+    .menu-item-content {
+      flex: 1;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .item-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .item-price {
+      font-weight: 700;
+      color: #34a853;
+      font-size: 1.1em;
+    }
+
+    .item-desc {
+      color: #666;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+
+    .child-checkboxes {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .child-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .child-checkbox:has(input:checked) {
+      background: rgba(66, 133, 244, 0.1);
+      border-color: #4285f4;
+    }
+
+    .child-checkbox input {
+      width: auto;
+      margin: 0;
+    }
+
+    .child-checkbox label {
+      margin: 0;
+      cursor: pointer;
+      font-weight: 500;
+      color: #4285f4;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      flex: 1;
+      background: #f8f9fa;
+      border-left: 1px solid #e0e0e0;
+      padding: 30px;
+    }
+
+    .cart-summary {
+      position: sticky;
+      top: 30px;
+    }
+
+    .cart-title {
+      font-size: 1.4em;
+      font-weight: 600;
+      color: #4285f4;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cart-items {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding-right: 10px;
+    }
+
+    .empty-cart {
+      text-align: center;
+      color: #999;
+      padding: 40px 20px;
+      font-style: italic;
+    }
+
+    .child-cart-section {
+      margin-bottom: 20px;
+    }
+
+    .child-cart-header {
+      background: #4285f4;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 6px 6px 0 0;
+      font-weight: 600;
+      font-size: 0.9em;
+    }
+
+    .cart-item {
+      background: white;
+      border: 1px solid #e0e0e0;
+      padding: 12px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .cart-item:last-child {
+      border-radius: 0 0 6px 6px;
+    }
+
+    .cart-item-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cart-item-name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .cart-item-price {
+      font-weight: 700;
+      color: #34a853;
+    }
+
+    .discount-line {
+      font-size: 0.85em;
+      color: #ff9800;
+      font-weight: 600;
+    }
+
+    .remove-item-btn {
+      background: #ff5722;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+
+    .remove-item-btn:hover {
+      background: #d32f2f;
+      transform: scale(1.1);
+    }
+
+    .cart-item.free-item {
+      background: linear-gradient(90deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
+      border-left: 4px solid #4caf50;
+    }
+
+    .cart-item.discounted-item {
+      background: linear-gradient(90deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%);
+      border-left: 4px solid #ff9800;
+    }
+
+    .cart-total {
+      background: white;
+      border: 2px solid #4285f4;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .total-label {
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #4285f4;
+      margin-bottom: 10px;
+    }
+
+    .total-amount {
+      font-size: 2em;
+      font-weight: 700;
+      color: #34a853;
+      margin-bottom: 20px;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      background: #34a853;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .checkout-btn:hover:not(:disabled) {
+      background: #2e7d32;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+    }
+
+    .checkout-btn:disabled {
+      background: #bbb;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Payment Modal */
+    .payment-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .payment-modal.show {
+      display: flex !important;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .payment-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+      animation: slideUp 0.3s ease;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    /* Confirmation Modal */
+    .confirmation-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 10001;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .confirmation-modal.show {
+      display: flex !important;
+    }
+
+    .confirmation-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      text-align: left;
+      animation: slideUp 0.3s ease;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .confirmation-header {
+      text-align: center;
+      color: #34a853;
+      font-size: 1.8em;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .confirmation-section {
+      margin-bottom: 20px;
+    }
+
+    .confirmation-section h4 {
+      color: #4285f4;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .confirmation-section p, .confirmation-section ul {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .confirmation-section ul {
+      padding-left: 20px;
+    }
+
+    .confirmation-items {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px 0;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .confirmation-day {
+      font-weight: 600;
+      color: #34a853;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .confirmation-item {
+      margin-left: 10px;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .confirmation-total {
+      background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: 600;
+      margin: 20px 0;
+    }
+
+    .confirmation-close-btn {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .confirmation-close-btn:hover {
+      background: #3367d6;
+      transform: translateY(-2px);
+    }
+
+    @keyframes slideUp {
+      from { 
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to { 
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .payment-header {
+      font-size: 1.5em;
+      font-weight: 600;
+      color: #4285f4;
+      margin-bottom: 15px;
+    }
+
+    .payment-amount {
+      font-size: 2em;
+      font-weight: 700;
+      color: #34a853;
+      margin-bottom: 25px;
+      background: #f0f9ff;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .payment-steps {
+      text-align: left;
+      margin-bottom: 25px;
+    }
+
+    .payment-step {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 15px;
+      gap: 15px;
+    }
+
+    .step-number {
+      background: #4285f4;
+      color: white;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.9em;
+      flex-shrink: 0;
+    }
+
+    .venmo-btn {
+      display: inline-block;
+      background: #3d95ce;
+      color: white;
+      text-decoration: none;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      margin: 10px 0;
+      border: none;
+      cursor: pointer;
+    }
+
+    .venmo-btn:hover {
+      background: #357ca5;
+      transform: translateY(-2px);
+      text-decoration: none;
+      color: white;
+    }
+
+    .confirmation-btn {
+      background: #34a853;
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .confirmation-btn:hover {
+      background: #2e7d32;
+      transform: translateY(-2px);
+    }
+
+    .cancel-btn {
+      background: #666;
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .cancel-btn:hover {
+      background: #555;
+      transform: translateY(-2px);
+    }
+
+    /* Promo Code Section */
+    .promo-section {
+      background: #fff3e0;
+      border: 2px solid #ff9800;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .promo-section h4 {
+      color: #f57c00;
+      margin-bottom: 10px;
+      font-size: 0.9em;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .promo-input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ffcc02;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      text-transform: uppercase;
+      background: white;
+      transition: all 0.3s ease;
+    }
+
+    .promo-input:focus {
+      outline: none;
+      border-color: #ff9800;
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+    }
+
+    .promo-status {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 0.8em;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .promo-status.valid {
+      color: #4caf50;
+      opacity: 1;
+    }
+
+    .promo-status.invalid {
+      color: #f44336;
+      opacity: 1;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      z-index: 10002;
+      animation: slideIn 0.3s ease;
+      max-width: 300px;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+      }
+
+      .form-section, .sidebar {
+        flex: none;
+      }
+
+      .sidebar {
+        border-left: none;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .day-tabs {
+        overflow-x: scroll;
+      }
+
+      .child-checkboxes {
+        flex-direction: column;
+      }
+
+      .payment-content, .confirmation-content {
+        margin: 20px;
+        width: calc(100% - 40px);
+        padding: 20px;
+      }
+
+      .header-brand {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      .header-text {
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 1.8em;
+      }
+
+      .header .subtitle {
+        font-size: 1em;
+      }
+
+      .artios-logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+      }
+
+      .sync-status, .store-status {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        display: inline-block;
+        margin: 5px;
+      }
+
+      .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .cart-item-content {
+        width: 100%;
+      }
+
+      .remove-item-btn {
+        align-self: flex-end;
+        margin-left: 0;
+        margin-top: 5px;
+      }
+
+      /* NEW: Mobile responsive for order management */
+      .quick-actions-content {
+        flex-direction: column;
+      }
+      .action-option {
+        border-right: none;
+        border-bottom: 1px solid rgba(33, 150, 243, 0.2);
+      }
+      .action-option:last-child {
+        border-bottom: none;
+      }
+      .quick-actions-section {
+        margin: 20px 10px;
+      }
+      .returning-user-banner {
+        margin: 20px 10px;
+      }
+
+      /* Mobile menu item layout */
+      .menu-item {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .menu-item-image {
+        width: 100%;
+        height: 150px;
+        align-self: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="store-status" id="store-status">
+        Checking store hours...
+      </div>
+      <div class="sync-status">
+        ☁️ Cloud Sync Active
+      </div>
+      
+      <div class="header-brand">
+        <img class="artios-logo" src="artios-logo.png" alt="Artios Academies Logo">
+        <div class="header-text">
+          <h1>Artios Academies of Sugar Hill</h1>
+          <div class="subtitle">Cafe Lunch Order System 2025-2026</div>
+        </div>
+      </div>
+      
+      <div class="notice">
+        <strong>Order & Payment Cutoff: Daily at 8:00 AM</strong><br>
+        ONE FORM PER FAMILY • Order for multiple children with one email<br>
+        Form closed daily from 8:00 AM - 1:00 PM<br>
+        Contact: CRivers@artiosacademies.com | Artios Academies of Sugar Hill
+      </div>
+    </div>
+
+    <!-- NEW: Returning user banner (shown dynamically) -->
+    <div class="returning-user-banner" id="returning-user-banner" style="display: none;">
+      <div class="welcome-back">
+        👋 <span id="welcome-message">Welcome back!</span>
+        <a href="#" id="view-orders-link">View your recent orders</a>
+      </div>
+    </div>
+
+    <!-- NEW: Main quick actions section -->
+    <div class="quick-actions-section">
+      <div class="quick-actions-header">
+        <h3>🍽️ Artios Cafe Lunch Orders</h3>
+      </div>
+      
+      <div class="quick-actions-content">
+        <div class="action-option">
+          <span class="action-icon">📝</span>
+          <div class="action-title">Place New Order</div>
+          <div class="action-desc">Order lunch for your children for this week</div>
+          <button class="action-btn" onclick="scrollToOrderForm()">Start New Order</button>
+        </div>
+        
+        <div class="action-option">
+          <span class="action-icon">📋</span>
+          <div class="action-title">Manage Orders</div>
+          <div class="action-desc">Cancel items, request refunds, or view order history</div>
+          <a href="manage-orders.html" class="action-btn secondary">Manage Orders</a>
+        </div>
+        
+        <div class="action-option">
+          <span class="action-icon">❓</span>
+          <div class="action-title">Need Help?</div>
+          <div class="action-desc">Questions about orders, payments, or menu items</div>
+          <a href="mailto:CRivers@artiosacademies.com" class="action-btn">Contact Us</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="form-section">
+        <!-- Shared Email Section -->
+        <div class="shared-email">
+          <h3>📧 Family Email</h3>
+          <div class="form-group">
+            <label for="family-email">Email Address <span class="required">*</span></label>
+            <input type="email" id="family-email" required placeholder="parent@example.com">
+          </div>
+        </div>
+
+        <!-- Children Sections -->
+        <div id="children-container">
+          <div class="child-section" data-child="1">
+            <div class="child-header">
+              <div class="child-title">
+                <div class="child-icon">1</div>
+                Child 1
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>First Name <span class="required">*</span></label>
+                <input type="text" class="child-first-name" required>
+              </div>
+              <div class="form-group">
+                <label>Last Name <span class="required">*</span></label>
+                <input type="text" class="child-last-name" required>
+              </div>
+              <div class="form-group">
+                <label>Grade <span class="required">*</span></label>
+                <select class="child-grade" required>
+                  <option value="">Select Grade</option>
+                  <option value="K-2">K-2</option>
+                  <option value="3-4">3-4</option>
+                  <option value="5-6">5-6</option>
+                  <option value="7-8">7-8</option>
+                  <option value="9-12">9-12</option>
+                  <option value="Staff">Staff</option>
+                  <option value="Parent">Parent</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="add-child-btn" id="add-child-btn">
+          <span>➕ </span> Add Another Child
+        </button>
+
+        <div class="menu-section">
+          <h3>Select Days & Menu Items</h3>
+
+          <div class="day-tabs" id="day-tabs">
+            <!-- Tabs will be generated by JavaScript -->
+          </div>
+
+          <div id="menu-container">
+            <!-- Menu for each day will be generated by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="cart-summary">
+          <div class="cart-title">🛒 Your Order</div>
+
+          <div class="cart-items" id="cart-items">
+            <div class="empty-cart">No items selected</div>
+          </div>
+
+          <!-- Promo Code Section -->
+          <div class="promo-section">
+            <h4>🎟️ Discount Codes</h4>
+            <input type="text" 
+                   id="promo-code" 
+                   class="promo-input" 
+                   placeholder="Enter discount code"
+                   maxlength="20">
+            <div class="promo-status" id="promo-status"></div>
+          </div>
+
+          <div class="cart-total">
+            <div class="total-label">Order Total</div>
+            <div class="total-amount">$<span id="total-amount">0.00</span></div>
+            <div id="discount-line" style="display: none; color: #4caf50; font-weight: 600; margin-bottom: 10px;">
+              Discount Applied: -$<span id="discount-amount">0.00</span>
+            </div>
+            <button type="button" class="checkout-btn" id="checkout-btn" disabled>
+              Review & Pay Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="payment-modal" id="payment-modal">
+    <div class="payment-content">
+      <div class="payment-header">Complete Your Order</div>
+      <div class="payment-amount">
+        Total: $<span id="modal-total">0.00</span>
+      </div>
+
+      <div class="payment-steps">
+        <div class="payment-step">
+          <div class="step-number">1</div>
+          <div>Click "Pay with Venmo" to open Venmo with order details</div>
+        </div>
+        <div class="payment-step">
+          <div class="step-number">2</div>
+          <div>Complete payment to <strong>@ChanTa-Rivers</strong></div>
+        </div>
+        <div class="payment-step">
+          <div class="step-number">3</div>
+          <div>Return here and click "I've Paid" to submit your order</div>
+        </div>
+      </div>
+
+      <div style="margin: 20px 0;">
+        <a href="#" id="venmo-payment-link" class="venmo-btn">
+          💳 Pay with Venmo ($<span id="venmo-total">0.00</span>)
+        </a>
+      </div>
+
+      <div style="border-top: 1px solid #e0e0e0; padding-top: 20px;">
+        <button type="button" class="confirmation-btn" id="confirm-payment-btn">
+          ✅ I've Paid - Submit Order
+        </button>
+        <button type="button" class="cancel-btn" id="cancel-payment-btn">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="confirmation-modal" id="confirmation-modal">
+    <div class="confirmation-content">
+      <div class="confirmation-header">
+        ✅ Order Confirmed!
+      </div>
+      
+      <div class="confirmation-section">
+        <h4>📋 Order Details</h4>
+        <ul>
+          <li><strong>Order ID:</strong> <span id="conf-order-id"></span></li>
+          <li><strong>Date:</strong> <span id="conf-date"></span></li>
+          <li><strong>Family Email:</strong> <span id="conf-email"></span></li>
+          <li><strong>Children:</strong> <span id="conf-children-count"></span></li>
+        </ul>
+      </div>
+
+      <div class="confirmation-section">
+        <h4>👥 Family Information</h4>
+        <div id="conf-children-list"></div>
+      </div>
+
+      <div class="confirmation-section">
+        <h4>🍽️ Items Ordered</h4>
+        <div class="confirmation-items" id="conf-items-list"></div>
+      </div>
+
+      <div class="confirmation-total" id="conf-total">
+        Total: $0.00
+      </div>
+
+      <div class="confirmation-section">
+        <h4>💳 Payment Summary</h4>
+        <ul>
+          <li><strong>Payment Method:</strong> Venmo (@ChanTa-Rivers)</li>
+          <li><strong>Status:</strong> Confirmed</li>
+        </ul>
+      </div>
+
+      <div class="confirmation-section">
+        <h4>📧 Next Steps</h4>
+        <p>A confirmation email will be sent to your family email address.</p>
+        <p>Questions? Contact: <strong>CRivers@artiosacademies.com</strong></p>
+      </div>
+
+      <button class="confirmation-close-btn" id="confirmation-close-btn">
+        Got It! Close
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const GOOGLE_SHEETS_CONFIG = {
+      webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
+      useGoogleSheets: true,
+      fallbackToLocalStorage: true
+    };
+
+    // ============================================
+    // STATE MANAGEMENT
+    // ============================================
+    let currentTotal = 0;
+    let currentSubtotal = 0;
+    let currentDiscount = 0;
+    let orderItems = [];
+    let currentDay = 'monday';
+    let storeIsOpen = true;
+    let childCount = 1;
+    let discountType = 'none';
+    let currentWeekMonday = null;
+    let isNextWeek = false;
+
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+    // ============================================
+    // MENU DATA WITH IMAGES
+    // ============================================
+    const menuData = {
+      entrees: [
+        { id: 'chicken-sandwich', name: 'Chicken Sandwich', price: 6.50, desc: 'Classic boneless breast of chicken', image: 'assets/chickensandwich.png' },
+        { id: 'spicy-chicken', name: 'Spicy Chicken Sandwich', price: 6.75, desc: 'Boneless breast with spicy seasoning', image: 'assets/spicysandwich.png' },
+        { id: 'nuggets-8', name: 'Nuggets (8ct)', price: 6.50, desc: 'Bite-sized boneless chicken pieces', image: 'assets/nuggets.png' },
+        { id: 'grilled-nuggets', name: 'Grilled Nuggets (8ct)', price: 7.50, desc: 'Grilled boneless chicken pieces', image: 'assets/grillednuggets.png' },
+        { id: 'grilled-sandwich', name: 'Grilled Sandwich', price: 8.25, desc: 'Grilled chicken breast sandwich', image: 'assets/grilledsandwich.png' },
+        { id: 'grilled-gf', name: 'Grilled Sandwich (GF Bun)', price: 9.50, desc: 'Grilled chicken with gluten-free bun', image: 'assets/grilledsandwich.png' },
+        { id: 'chicken-wrap', name: 'Chicken Wrap', price: 9.75, desc: 'Grilled chicken in tortilla wrap', image: 'assets/chickenwrap.png' },
+        { id: 'veggie-wrap', name: 'Southwest Veggie Wrap', price: 9.50, desc: 'Vegetarian wrap with southwest flavors', image: 'assets/veggiewrap.png' },
+        { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' }
+      ],
+      salads: [
+        { id: 'cobb-salad', name: 'Cobb Salad', price: 11.25, desc: 'Mixed greens with chicken, bacon, cheese, and more', image: 'assets/cobbsalad.png' },
+        { id: 'southwest-salad', name: 'Southwest Salad', price: 11.50, desc: 'Mixed greens with chicken, corn, peppers', image: 'assets/southwestsalad.png' },
+        { id: 'market-salad', name: 'Market Fresh Salad', price: 11.50, desc: 'Mixed greens with chicken and seasonal toppings', image: 'assets/marketsalad.png' }
+      ],
+      sides: [
+        { id: 'fries-only', name: 'Fries', price: 3.75, desc: 'Waffle potato fries', image: 'assets/fries.png' },
+        { id: 'fruit-only', name: 'Fruit Cup', price: 5.50, desc: 'Fresh seasonal fruit', image: 'assets/fruitcup.png' },
+        { id: 'mac-only', name: 'Mac & Cheese', price: 5.50, desc: 'Creamy macaroni and cheese', image: 'assets/MacnCheese_5oz_pdp.png' },
+        { id: 'salad-only', name: 'Side Salad', price: 5.50, desc: 'Mixed greens with toppings', image: 'assets/sidesalad.png' },
+        { id: 'parfait-only', name: 'Cookie Parfait', price: 5.75, desc: 'Cookie pieces with cream', image: 'assets/berryparfaitcookiecrumble.png' },
+        { id: 'chips-only', name: 'Chips', price: 1.50, desc: 'Variety of chips (provided by Artios)', image: 'assets/chips.jpg' }
+      ],
+      drinks: [
+        { id: 'regular-drink', name: 'Regular Drink', basePrice: 1.50, desc: 'Water, Sodas (choose at pickup)', category: 'regular' },
+        { id: 'premium-drink', name: 'Premium Drink', basePrice: 3.00, desc: 'Iced Coffees, Vitamin Water (choose at pickup)', category: 'premium' }
+      ]
+    };
+
+    // ============================================
+    // NEW: ORDER MANAGEMENT FUNCTIONS
+    // ============================================
+    function scrollToOrderForm() {
+      const formSection = document.querySelector('.form-section');
+      if (formSection) {
+        formSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function checkForReturningUser() {
+      try {
+        const cookies = document.cookie.split(';');
+        let familyData = null;
+        
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          const parts = cookie.split('=');
+          if (parts[0] === 'artios_family_data') {
+            familyData = JSON.parse(decodeURIComponent(parts[1]));
+            break;
+          }
+        }
+        
+        if (familyData && familyData.email) {
+          showReturningUserBanner(familyData.email, familyData.children);
+        }
+      } catch (error) {
+        console.log('No previous order data found');
+      }
+    }
+
+    function showReturningUserBanner(email, children) {
+      const banner = document.getElementById('returning-user-banner');
+      const welcomeMessage = document.getElementById('welcome-message');
+      const viewOrdersLink = document.getElementById('view-orders-link');
+      
+      if (children && children.length > 0) {
+        const firstChild = children[0].firstName;
+        const childCount = children.length;
+        const childText = childCount === 1 ? firstChild : `${firstChild} and ${childCount - 1} other${childCount > 2 ? 's' : ''}`;
+        welcomeMessage.textContent = `Welcome back! We remember ${childText}.`;
+      } else {
+        welcomeMessage.textContent = 'Welcome back!';
+      }
+      
+      viewOrdersLink.href = `manage-orders.html?email=${encodeURIComponent(email)}`;
+      banner.style.display = 'block';
+    }
+
+    // ============================================
+    // STORE HOURS LOGIC
+    // ============================================
+    function checkStoreHours() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, 5 = Friday, 6 = Saturday
+      const storeStatus = document.getElementById('store-status');
+      
+      // Check if it's a weekday (Monday = 1, Friday = 5)
+      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+      
+      // Check if it's 8:15 AM or later (closing time with grace period)
+      const isPastCutoff = (hours > 8) || (hours === 8 && minutes >= 15);
+      
+      // Check if it's Friday after noon (next week opens)
+      const isFridayAfterNoon = (dayOfWeek === 5 && hours >= 12);
+      
+      // Store closure logic: Close between 8:15 AM - 1:00 PM on weekdays ONLY
+      if (isWeekday && isPastCutoff && hours < 13 && !isFridayAfterNoon) {
+        storeIsOpen = false;
+        storeStatus.textContent = '🔒 Store Closed (8:00 AM - 1:00 PM)';
+        storeStatus.style.background = 'rgba(244, 67, 54, 0.8)';
+        
+        document.body.style.pointerEvents = 'none';
+        document.body.style.opacity = '0.7';
+        
+        const notice = document.querySelector('.notice');
+        notice.innerHTML = '<strong style="color: #ff5722;">⚠️ ORDERING CLOSED</strong><br>Form reopens daily at 1:00 PM (12:00 PM on Fridays for next week)<br>Current time: ' + now.toLocaleTimeString() + '<br>Contact: CRivers@artiosacademies.com';
+        
+        return;
+      }
+      
+      // Set week logic for Friday afternoon
+      if (isFridayAfterNoon) {
+        isNextWeek = true;
+      } else {
+        isNextWeek = false;
+      }
+      
+      // Store is open (including all weekend hours)
+      storeIsOpen = true;
+      const statusText = isWeekday ? '✅ Store Open - Orders Accepted' : '✅ Weekend Ordering Open';
+      storeStatus.textContent = statusText;
+      storeStatus.style.background = 'rgba(76, 175, 80, 0.8)';
+    }
+
+    function getCurrentWeekMonday(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      d.setDate(diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function getNextMonday(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() + (8 - day); // Days to add to get to next Monday
+      d.setDate(diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    // ============================================
+    // MENU FILTERING AND COLLAPSING
+    // ============================================
+    function setupCategoryToggle(categoryDiv, categoryId) {
+      const header = categoryDiv.querySelector('.menu-category-header');
+      header.addEventListener('click', function() {
+        categoryDiv.classList.toggle('collapsed');
+      });
+    }
+
+    // ============================================
+    // CART ITEM REMOVAL
+    // ============================================
+    function removeItemFromCart(itemId, childId, day) {
+      // Find and uncheck the corresponding checkbox
+      const checkbox = document.querySelector(
+        `input[type="checkbox"][data-item="${itemId}"][data-child-id="${childId}"][data-day="${day}"]`
+      );
+      
+      if (checkbox) {
+        checkbox.checked = false;
+        updateCart();
+        showNotification(`Removed item from order`, 'info');
+      }
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, starting initialization...');
+      
+      checkStoreHours();
+      generateDayTabs();
+      generateMenus();
+      setupEventListeners();
+      loadUserDataFromCookies();
+      setupAutoSave();
+      updateCart();
+      validateForm();
+      
+      // NEW: Check for returning user
+      setTimeout(checkForReturningUser, 500);
+      
+      console.log('Initialization complete');
+    });
+
+    function generateDayTabs() {
+      const tabsContainer = document.getElementById('day-tabs');
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinutes = now.getMinutes();
+      let firstAvailableDay = null;
+
+      // Determine which Monday we're working with
+      let monday;
+      if (isNextWeek) {
+        monday = getNextMonday(now);
+      } else {
+        monday = getCurrentWeekMonday(now);
+      }
+      currentWeekMonday = monday;
+
+      days.forEach(function(day, index) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + index);
+
+        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const isToday = dateOnly.getTime() === todayOnly.getTime();
+        const isBeforeToday = dateOnly.getTime() < todayOnly.getTime();
+        
+        // For current week, check 8:15 AM cutoff for all days
+        const isPast = !isNextWeek && (isBeforeToday || (isToday && ((currentHour > 8) || (currentHour === 8 && currentMinutes >= 15))));
+
+        const tab = document.createElement('div');
+        tab.className = 'day-tab';
+        tab.dataset.day = day;
+
+        tab.innerHTML = '<div>' + dayNames[index] + '</div><div style="font-size: 0.8em; opacity: 0.8;">' + (date.getMonth() + 1) + '/' + date.getDate() + '</div>';
+
+        if (isPast) {
+          tab.classList.add('disabled');
+          tab.title = 'Orders for ' + dayNames[index] + ' are closed (8:00 AM cutoff passed)';
+        } else {
+          tab.addEventListener('click', function() { switchDay(day); });
+          if (!firstAvailableDay) {
+            firstAvailableDay = day;
+          }
+        }
+
+        tabsContainer.appendChild(tab);
+      });
+
+      const dayToActivate = firstAvailableDay || 'monday';
+      currentDay = dayToActivate;
+      
+      const tabToActivate = document.querySelector('[data-day="' + dayToActivate + '"]');
+      if (tabToActivate) {
+        tabToActivate.classList.add('active');
+      }
+    }
+
+    function generateMenus() {
+      const container = document.getElementById('menu-container');
+      
+      days.forEach(function(day) {
+        const dayMenu = document.createElement('div');
+        dayMenu.className = 'menu-for-day';
+        dayMenu.dataset.day = day;
+        
+        if (day === currentDay) {
+          dayMenu.classList.add('active');
+        }
+        
+        Object.keys(menuData).forEach(function(category) {
+          const categoryDiv = document.createElement('div');
+          categoryDiv.className = 'menu-category';
+          categoryDiv.dataset.category = category;
+          
+          let categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
+          if (category === 'drinks') {
+            categoryTitle = 'Drinks';
+          }
+          
+          // Create collapsible header
+          const headerDiv = document.createElement('div');
+          headerDiv.className = 'menu-category-header';
+          headerDiv.innerHTML = `
+            <h4>${categoryTitle}</h4>
+            <span class="collapse-icon">▼</span>
+          `;
+          
+          const itemsDiv = document.createElement('div');
+          itemsDiv.className = 'menu-items';
+          
+          if (category === 'drinks') {
+            const discountNotice = document.createElement('div');
+            discountNotice.className = 'drink-discount-notice';
+            discountNotice.innerHTML = '<div style="background: #e8f5e8; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #34a853;"><strong>💡 Combo Meal Drink Discount!</strong><br>Order an <strong>Entree or Salad + Side</strong> to get drink discounts applied in your cart!<br>• Regular Drink = <strong>FREE!</strong><br>• Premium Drink = <strong>$1.50</strong> (save $1.50!)<br></div>';
+            itemsDiv.appendChild(discountNotice);
+          }
+          
+          menuData[category].forEach(function(item) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'menu-item';
+            
+            let priceDisplay;
+            if (category === 'drinks') {
+              priceDisplay = '$' + item.basePrice.toFixed(2);
+            } else {
+              priceDisplay = '$' + item.price.toFixed(2);
+            }
+            
+            // Create menu item with image (skip drinks)
+            let imageHtml = '';
+            if (category !== 'drinks' && item.image) {
+              imageHtml = `<img src="${item.image}" alt="${item.name}" class="menu-item-image" onerror="this.style.display='none'">`;
+            }
+            
+            itemDiv.innerHTML = `
+              ${imageHtml}
+              <div class="menu-item-content">
+                <div class="item-header">
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-price" data-item-id="${item.id}">${priceDisplay}</div>
+                </div>
+                <div class="item-desc">${item.desc}</div>
+                <div class="child-checkboxes" id="${item.id}-${day}-checkboxes"></div>
+              </div>
+            `;
+            
+            itemsDiv.appendChild(itemDiv);
+          });
+          
+          categoryDiv.appendChild(headerDiv);
+          categoryDiv.appendChild(itemsDiv);
+          
+          // Setup collapse functionality
+          setupCategoryToggle(categoryDiv, category);
+          
+          dayMenu.appendChild(categoryDiv);
+        });
+        
+        container.appendChild(dayMenu);
+      });
+      
+      updateChildCheckboxes();
+    }
+
+    function switchDay(day) {
+      document.querySelectorAll('.day-tab').forEach(function(tab) {
+        tab.classList.remove('active');
+        if (tab.dataset.day === day) {
+          tab.classList.add('active');
+        }
+      });
+
+      document.querySelectorAll('.menu-for-day').forEach(function(menu) {
+        menu.classList.remove('active');
+        if (menu.dataset.day === day) {
+          menu.classList.add('active');
+        }
+      });
+
+      currentDay = day;
+    }
+
+    function setupEventListeners() {
+      document.getElementById('add-child-btn').addEventListener('click', addChild);
+
+      document.addEventListener('change', function(e) {
+        if (e.target.type === 'checkbox' && e.target.dataset.item) {
+          setTimeout(function() {
+            updateCart();
+          }, 50);
+        }
+      });
+
+      document.getElementById('promo-code').addEventListener('input', function(e) {
+        validatePromoCode(e.target.value);
+      });
+
+      document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('child-first-name') || 
+            e.target.classList.contains('child-last-name')) {
+          updateChildCheckboxes();
+        }
+        validateForm();
+      });
+
+      const checkoutBtn = document.getElementById('checkout-btn');
+      if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (validateForm() && storeIsOpen) {
+            openPaymentModal();
+          } else {
+            if (!storeIsOpen) {
+              showNotification('Store is closed. Orders cannot be placed now.', 'error');
+            } else {
+              showNotification('Please complete all required fields and add items to your order.', 'warning');
+            }
+          }
+        });
+      }
+
+      const cancelBtn = document.getElementById('cancel-payment-btn');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closePaymentModal();
+        });
+      }
+
+      const confirmBtn = document.getElementById('confirm-payment-btn');
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = '⏳ Submitting Order...';
+          
+          try {
+            submitOrder();
+          } catch (error) {
+            console.error('Error in submitOrder:', error);
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
+            showNotification('Error submitting order. Please try again.', 'error');
+          }
+        });
+      }
+
+      const confirmationCloseBtn = document.getElementById('confirmation-close-btn');
+      if (confirmationCloseBtn) {
+        confirmationCloseBtn.addEventListener('click', function() {
+          closeConfirmationModal();
+        });
+      }
+
+      const paymentModal = document.getElementById('payment-modal');
+      if (paymentModal) {
+        paymentModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closePaymentModal();
+          }
+        });
+      }
+
+      const confirmationModal = document.getElementById('confirmation-modal');
+      if (confirmationModal) {
+        confirmationModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeConfirmationModal();
+          }
+        });
+      }
+    }
+
+    // ============================================
+    // COOKIE FUNCTIONALITY
+    // ============================================
+    function saveUserDataToCookies(showIndicator) {
+      if (showIndicator === undefined) showIndicator = true;
+      
+      try {
+        const familyData = {
+          email: document.getElementById('family-email').value.trim(),
+          children: []
+        };
+        
+        document.querySelectorAll('.child-section').forEach(function(child) {
+          const childData = {
+            firstName: child.querySelector('.child-first-name').value.trim(),
+            lastName: child.querySelector('.child-last-name').value.trim(),
+            grade: child.querySelector('.child-grade').value
+          };
+          
+          if (childData.firstName) {
+            familyData.children.push(childData);
+          }
+        });
+        
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (30 * 24 * 60 * 60 * 1000));
+        document.cookie = 'artios_family_data=' + encodeURIComponent(JSON.stringify(familyData)) + '; expires=' + expires.toUTCString() + '; path=/';
+        
+        console.log('Family data saved to cookies:', familyData);
+        
+        if (showIndicator && Math.random() < 0.3) {
+          showSavedIndicator();
+        }
+        
+      } catch (error) {
+        console.error('Error saving family data to cookies:', error);
+      }
+    }
+
+    function saveUserDataQuietly() {
+      saveUserDataToCookies(false);
+    }
+
+    function loadUserDataFromCookies() {
+      try {
+        const cookies = document.cookie.split(';');
+        let familyData = null;
+        
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          const parts = cookie.split('=');
+          if (parts[0] === 'artios_family_data') {
+            familyData = JSON.parse(decodeURIComponent(parts[1]));
+            break;
+          }
+        }
+        
+        if (!familyData) {
+          console.log('No saved family data found');
+          return;
+        }
+        
+        console.log('Loading saved family data:', familyData);
+        
+        if (familyData.email) {
+          document.getElementById('family-email').value = familyData.email;
+        }
+        
+        if (familyData.children && familyData.children.length > 0) {
+          const defaultChild = document.querySelector('.child-section');
+          if (defaultChild && familyData.children.length > 0) {
+            const firstChild = familyData.children[0];
+            defaultChild.querySelector('.child-first-name').value = firstChild.firstName || '';
+            defaultChild.querySelector('.child-last-name').value = firstChild.lastName || '';
+            defaultChild.querySelector('.child-grade').value = firstChild.grade || '';
+            
+            for (let i = 1; i < familyData.children.length; i++) {
+              addChild();
+              const newChild = document.querySelector('[data-child="' + (i + 1) + '"]');
+              if (newChild) {
+                const childData = familyData.children[i];
+                newChild.querySelector('.child-first-name').value = childData.firstName || '';
+                newChild.querySelector('.child-last-name').value = childData.lastName || '';
+                newChild.querySelector('.child-grade').value = childData.grade || '';
+              }
+            }
+          }
+          
+          updateChildCheckboxes();
+        }
+        
+        showNotification('Welcome back! Your family info has been loaded.', 'info');
+        
+      } catch (error) {
+        console.error('Error loading family data from cookies:', error);
+      }
+    }
+
+    function showSavedIndicator() {
+      const existingIndicator = document.querySelector('.saved-indicator');
+      if (existingIndicator) {
+        existingIndicator.remove();
+      }
+      
+      const indicator = document.createElement('div');
+      indicator.className = 'saved-indicator';
+      indicator.textContent = '✓ Saved';
+      indicator.style.cssText = 'position: fixed; top: 70px; right: 20px; background: #4caf50; color: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: 600; z-index: 10003; animation: slideIn 0.2s ease, fadeOut 0.2s ease 1s forwards; pointer-events: none; opacity: 0.9;';
+      
+      document.body.appendChild(indicator);
+      
+      setTimeout(function() {
+        if (indicator.parentNode) {
+          indicator.remove();
+        }
+      }, 1200);
+    }
+
+    function setupAutoSave() {
+      document.getElementById('family-email').addEventListener('input', debounce(function() {
+        saveUserDataToCookies(false);
+      }, 3000));
+      
+      document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('child-first-name') || e.target.classList.contains('child-last-name')) {
+          debounce(function() {
+            saveUserDataToCookies(false);
+          }, 3000)();
+        }
+      });
+      
+      document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('child-grade')) {
+          saveUserDataQuietly();
+        }
+      });
+    }
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction() {
+        const args = arguments;
+        const later = function() {
+          clearTimeout(timeout);
+          func.apply(null, args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    function addChild() {
+      childCount++;
+      const container = document.getElementById('children-container');
+      
+      const childDiv = document.createElement('div');
+      childDiv.className = 'child-section';
+      childDiv.dataset.child = childCount;
+      
+      childDiv.innerHTML = '<div class="child-header"><div class="child-title"><div class="child-icon">' + childCount + '</div>Child ' + childCount + '</div><button type="button" class="remove-child" data-child-id="' + childCount + '">✕</button></div><div class="form-row"><div class="form-group"><label>First Name <span class="required">*</span></label><input type="text" class="child-first-name" required></div><div class="form-group"><label>Last Name <span class="required">*</span></label><input type="text" class="child-last-name" required></div><div class="form-group"><label>Grade <span class="required">*</span></label><select class="child-grade" required><option value="">Select Grade</option><option value="K-2">K-2</option><option value="3-4">3-4</option><option value="5-6">5-6</option><option value="7-8">7-8</option><option value="9-12">9-12</option><option value="Staff">Staff</option><option value="Parent">Parent</option></select></div></div>';
+      
+      const removeBtn = childDiv.querySelector('.remove-child');
+      removeBtn.addEventListener('click', function() {
+        const childId = this.dataset.childId;
+        removeChild(parseInt(childId));
+      });
+      
+      container.appendChild(childDiv);
+      updateChildCheckboxes();
+      validateForm();
+      
+      saveUserDataToCookies(Math.random() < 0.5);
+    }
+
+    function removeChild(childId) {
+      const childSection = document.querySelector('[data-child="' + childId + '"]');
+      if (childSection && childCount > 1) {
+        orderItems = orderItems.filter(function(item) {
+          return item.childId !== childId.toString();
+        });
+        
+        childSection.remove();
+        renumberChildren();
+        updateChildCheckboxes();
+        updateCart();
+        
+        saveUserDataQuietly();
+      }
+    }
+
+    function renumberChildren() {
+      const childSections = document.querySelectorAll('.child-section');
+      childCount = childSections.length;
+      
+      childSections.forEach(function(section, index) {
+        const newChildId = index + 1;
+        section.dataset.child = newChildId;
+        section.querySelector('.child-icon').textContent = newChildId;
+        section.querySelector('.child-title').lastChild.textContent = ' Child ' + newChildId;
+        
+        const removeBtn = section.querySelector('.remove-child');
+        if (removeBtn) {
+          removeBtn.dataset.childId = newChildId;
+          
+          const newRemoveBtn = removeBtn.cloneNode(true);
+          newRemoveBtn.addEventListener('click', function() {
+            const childId = this.dataset.childId;
+            removeChild(parseInt(childId));
+          });
+          removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
+        }
+      });
+    }
+
+    function updateChildCheckboxes() {
+      const children = document.querySelectorAll('.child-section');
+      
+      document.querySelectorAll('.child-checkboxes').forEach(function(container) {
+        const parts = container.id.split('-');
+        const day = parts[parts.length - 2];
+        const itemId = parts.slice(0, -2).join('-');
+        
+        container.innerHTML = '';
+        
+        children.forEach(function(child) {
+          const childId = child.dataset.child;
+          const firstName = child.querySelector('.child-first-name').value || ('Child ' + childId);
+          
+          const checkboxContainer = document.createElement('div');
+          checkboxContainer.className = 'child-checkbox';
+          
+          const checkboxId = itemId + '-' + day + '-child-' + childId;
+          
+          checkboxContainer.innerHTML = '<input type="checkbox" id="' + checkboxId + '" data-item="' + itemId + '" data-day="' + day + '" data-child-id="' + childId + '"><label for="' + checkboxId + '">' + firstName + '</label>';
+          
+          container.appendChild(checkboxContainer);
+        });
+      });
+    }
+
+    function validatePromoCode(code) {
+      const promoStatus = document.getElementById('promo-status');
+      const trimmedCode = code.trim().toUpperCase();
+      
+      if (trimmedCode === '') {
+        discountType = 'none';
+        promoStatus.textContent = '';
+        promoStatus.className = 'promo-status';
+      } else if (trimmedCode === 'STAFF2025') {
+        discountType = 'staff';
+        promoStatus.textContent = '✅ Staff Discount Applied (10% off)';
+        promoStatus.className = 'promo-status valid';
+      } else if (trimmedCode === 'JOHN') {
+        discountType = 'john';
+        promoStatus.textContent = '✅ JOHN Discount Applied (50% off)';
+        promoStatus.className = 'promo-status valid';
+      } else {
+        discountType = 'none';
+        promoStatus.textContent = '❌ Invalid Code';
+        promoStatus.className = 'promo-status invalid';
+      }
+      
+      updateCart();
+    }
+
+    function updateCart() {
+      orderItems = [];
+      currentSubtotal = 0;
+      
+      const childDayDrinks = {};
+      
+      document.querySelectorAll('input[type="checkbox"]:checked').forEach(function(checkbox) {
+        const itemId = checkbox.dataset.item;
+        const day = checkbox.dataset.day;
+        const childId = checkbox.dataset.childId;
+        
+        const child = document.querySelector('[data-child="' + childId + '"]');
+        if (!child) {
+          return;
+        }
+        
+        const childFirstName = child.querySelector('.child-first-name').value;
+        const childLastName = child.querySelector('.child-last-name').value;
+        const childGrade = child.querySelector('.child-grade').value;
+        
+        let item = null;
+        let category = null;
+        Object.keys(menuData).forEach(function(cat) {
+          const found = menuData[cat].find(function(i) { return i.id === itemId; });
+          if (found) {
+            item = found;
+            category = cat;
+          }
+        });
+        
+        if (item) {
+          let finalPrice = item.price || item.basePrice;
+          let isDiscounted = false;
+          let discountAmount = 0;
+          
+          if (category === 'drinks') {
+            const hasEntreeOrSaladAndSide = checkChildHasEntreeOrSaladAndSide(childId, day);
+            const childDayKey = childId + '-' + day;
+            
+            if (!childDayDrinks[childDayKey]) {
+              childDayDrinks[childDayKey] = { discountedDrinks: 0, hasCombo: hasEntreeOrSaladAndSide };
+            }
+            
+            if (hasEntreeOrSaladAndSide && childDayDrinks[childDayKey].discountedDrinks === 0) {
+              if (item.category === 'regular') {
+                discountAmount = item.basePrice;
+                finalPrice = 0;
+                isDiscounted = true;
+              } else if (item.category === 'premium') {
+                discountAmount = item.basePrice - 1.50;
+                finalPrice = 1.50;
+                isDiscounted = true;
+              }
+              childDayDrinks[childDayKey].discountedDrinks++;
+            } else {
+              finalPrice = item.basePrice;
+            }
+          }
+          
+          const orderItem = {
+            itemId: itemId,  // Add itemId to the order item
+            childId: childId,
+            childName: childFirstName + ' ' + childLastName,
+            firstName: childFirstName,
+            lastName: childLastName,
+            grade: childGrade,
+            name: item.name,
+            price: finalPrice,
+            originalPrice: item.price || item.basePrice,
+            day: day.charAt(0).toUpperCase() + day.slice(1),
+            category: category,
+            isDiscounted: isDiscounted,
+            discountAmount: discountAmount
+          };
+          
+          orderItems.push(orderItem);
+          currentSubtotal += finalPrice;
+        }
+      });
+      
+      if (discountType === 'staff') {
+        currentDiscount = currentSubtotal * 0.10;
+      } else if (discountType === 'john') {
+        currentDiscount = currentSubtotal * 0.50;
+      } else {
+        currentDiscount = 0;
+      }
+      
+      currentTotal = currentSubtotal - currentDiscount;
+      
+      displayCart();
+      validateForm();
+    }
+
+    function checkChildHasEntreeOrSaladAndSide(childId, day) {
+      let hasEntreeOrSalad = false;
+      let hasSide = false;
+      
+      document.querySelectorAll('input[type="checkbox"][data-child-id="' + childId + '"][data-day="' + day + '"]:checked').forEach(function(checkbox) {
+        const itemId = checkbox.dataset.item;
+        
+        Object.keys(menuData).forEach(function(category) {
+          const found = menuData[category].find(function(i) { return i.id === itemId; });
+          if (found) {
+            if (category === 'entrees' || category === 'salads') {
+              hasEntreeOrSalad = true;
+            } else if (category === 'sides') {
+              hasSide = true;
+            }
+          }
+        });
+      });
+      
+      return hasEntreeOrSalad && hasSide;
+    }
+
+    function displayCart() {
+      const cartItemsDiv = document.getElementById('cart-items');
+      const totalSpan = document.getElementById('total-amount');
+      
+      if (orderItems.length === 0) {
+        cartItemsDiv.innerHTML = '<div class="empty-cart">No items selected</div>';
+        totalSpan.textContent = '0.00';
+        return;
+      }
+      
+      const itemsByChild = {};
+      orderItems.forEach(function(item) {
+        if (!itemsByChild[item.childId]) {
+          itemsByChild[item.childId] = {
+            name: item.childName,
+            items: []
+          };
+        }
+        itemsByChild[item.childId].items.push(item);
+      });
+      
+      let html = '';
+      Object.keys(itemsByChild).sort(function(a, b) {
+        return parseInt(a) - parseInt(b);
+      }).forEach(function(childId) {
+        const child = itemsByChild[childId];
+        html += '<div class="child-cart-section">';
+        html += '<div class="child-cart-header">' + child.name + '</div>';
+        
+        child.items.forEach(function(item) {
+          let extraClass = '';
+          let priceDisplay = '$' + item.price.toFixed(2);
+          let discountDisplay = '';
+          
+          if (item.category === 'drinks' && item.isDiscounted) {
+            if (item.price === 0) {
+              extraClass = 'free-item';
+              priceDisplay = 'FREE';
+              discountDisplay = '<div class="discount-line">Was $' + item.originalPrice.toFixed(2) + ' - Combo discount -$' + item.discountAmount.toFixed(2) + '</div>';
+            } else {
+              extraClass = 'discounted-item';
+              priceDisplay = '$' + item.price.toFixed(2);
+              discountDisplay = '<div class="discount-line">Was $' + item.originalPrice.toFixed(2) + ' - Combo discount -$' + item.discountAmount.toFixed(2) + '</div>';
+            }
+          }
+          
+          html += '<div class="cart-item ' + extraClass + '">';
+          html += '<div class="cart-item-content">';
+          html += '<div class="cart-item-name">' + item.name + ' (' + item.day + ')</div>';
+          html += discountDisplay;
+          html += '<div class="cart-item-price">' + priceDisplay + '</div>';
+          html += '</div>';
+          html += '<button class="remove-item-btn" onclick="removeItemFromCart(\'' + 
+                 item.itemId + '\', \'' + item.childId + '\', \'' + 
+                 item.day.toLowerCase() + '\')" title="Remove this item">✕</button>';
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+      
+      cartItemsDiv.innerHTML = html;
+      totalSpan.textContent = currentTotal.toFixed(2);
+      
+      const discountLine = document.getElementById('discount-line');
+      const discountAmount = document.getElementById('discount-amount');
+      
+      if (currentDiscount > 0) {
+        discountLine.style.display = 'block';
+        discountAmount.textContent = currentDiscount.toFixed(2);
+        
+        const discountLabel = discountLine.firstChild;
+        if (discountType === 'staff') {
+          discountLabel.textContent = 'Staff Discount (10%): -$';
+        } else if (discountType === 'john') {
+          discountLabel.textContent = 'JOHN Discount (50%): -$';
+        }
+      } else {
+        discountLine.style.display = 'none';
+      }
+    }
+
+    function validateForm() {
+      const email = document.getElementById('family-email').value.trim();
+      const checkoutBtn = document.getElementById('checkout-btn');
+      
+      if (!checkoutBtn) {
+        return false;
+      }
+      
+      const hasItems = orderItems.length > 0;
+      const hasEmail = email.length > 0 && email.includes('@');
+      
+      const children = document.querySelectorAll('.child-section');
+      let allChildrenComplete = true;
+      children.forEach(function(child) {
+        const firstName = child.querySelector('.child-first-name').value.trim();
+        const lastName = child.querySelector('.child-last-name').value.trim();
+        const grade = child.querySelector('.child-grade').value;
+        if (!firstName || !lastName || !grade) {
+          allChildrenComplete = false;
+        }
+      });
+      
+      const isValid = hasItems && hasEmail && allChildrenComplete && storeIsOpen;
+      
+      checkoutBtn.disabled = !isValid;
+      
+      if (isValid) {
+        checkoutBtn.textContent = 'Review & Pay Order ($' + currentTotal.toFixed(2) + ')';
+        checkoutBtn.style.opacity = '1';
+        checkoutBtn.style.cursor = 'pointer';
+      } else {
+        if (!storeIsOpen) {
+          checkoutBtn.textContent = 'Store Closed';
+        } else if (!hasItems) {
+          checkoutBtn.textContent = 'Select Items to Continue';
+        } else if (!hasEmail) {
+          checkoutBtn.textContent = 'Enter Email to Continue';
+        } else if (!allChildrenComplete) {
+          checkoutBtn.textContent = 'Complete Child Info';
+        } else {
+          checkoutBtn.textContent = 'Review & Pay Order';
+        }
+        checkoutBtn.style.opacity = '0.6';
+        checkoutBtn.style.cursor = 'not-allowed';
+      }
+      
+      return isValid;
+    }
+
+    function openPaymentModal() {
+      if (!validateForm()) {
+        return;
+      }
+      
+      const modal = document.getElementById('payment-modal');
+      const modalTotal = document.getElementById('modal-total');
+      const venmoTotal = document.getElementById('venmo-total');
+      const venmoLink = document.getElementById('venmo-payment-link');
+      
+      if (!modal || !modalTotal || !venmoTotal || !venmoLink) {
+        showNotification('Payment system error. Please refresh the page.', 'error');
+        return;
+      }
+      
+      modalTotal.textContent = currentTotal.toFixed(2);
+      venmoTotal.textContent = currentTotal.toFixed(2);
+      
+      let orderSummary = 'Artios Academies Cafe Lunch Order - $' + currentTotal.toFixed(2);
+      const children = orderItems.map(function(item) { return item.childName; }).filter(function(value, index, self) { return self.indexOf(value) === index; });
+      if (children.length <= 2) {
+        orderSummary += ' for ' + children.join(' & ');
+      } else {
+        orderSummary += ' for ' + children.length + ' children';
+      }
+      
+      const venmoUrl = 'venmo://paycharge?txn=pay&recipients=ChanTa-Rivers&amount=' + currentTotal.toFixed(2) + '&note=' + encodeURIComponent(orderSummary);
+      const venmoWebUrl = 'https://venmo.com/ChanTa-Rivers?txn=pay&amount=' + currentTotal.toFixed(2) + '&note=' + encodeURIComponent(orderSummary);
+      
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        venmoLink.href = venmoUrl;
+      } else {
+        venmoLink.href = venmoWebUrl;
+        venmoLink.target = '_blank';
+        
+        const paymentDetails = 'Pay @ChanTa-Rivers $' + currentTotal.toFixed(2) + ' for: ' + orderSummary;
+        
+        venmoLink.onclick = function(e) {
+          e.preventDefault();
+          window.open(venmoWebUrl, '_blank');
+          
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(paymentDetails).then(function() {
+              showNotification('Payment details copied to clipboard!', 'success');
+            }).catch(function() {
+              alert('Please send payment to:\n\n' + paymentDetails);
+            });
+          } else {
+            alert('Please send payment to:\n\n' + paymentDetails);
+          }
+        };
+      }
+      
+      modal.style.display = 'flex';
+      modal.classList.add('show');
+      
+      const focusableElements = modal.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      }
+    }
+
+    function closePaymentModal() {
+      const modal = document.getElementById('payment-modal');
+      const confirmBtn = document.getElementById('confirm-payment-btn');
+      
+      if (modal) {
+        modal.classList.remove('show');
+        setTimeout(function() {
+          modal.style.display = 'none';
+        }, 300);
+      }
+      
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
+      }
+    }
+
+    function showDetailedOrderConfirmation(order) {
+      const modal = document.getElementById('confirmation-modal');
+      
+      document.getElementById('conf-order-id').textContent = order.orderId;
+      document.getElementById('conf-date').textContent = new Date(order.timestamp).toLocaleString();
+      document.getElementById('conf-email').textContent = order.email;
+      document.getElementById('conf-children-count').textContent = order.children ? order.children.length : 1;
+      
+      const childrenListDiv = document.getElementById('conf-children-list');
+      let childrenHtml = '<ul>';
+      if (order.children && order.children.length > 0) {
+        order.children.forEach(function(child) {
+          childrenHtml += '<li><strong>' + child.firstName + ' ' + child.lastName + '</strong> (' + child.grade + ')</li>';
+        });
+      }
+      childrenHtml += '</ul>';
+      childrenListDiv.innerHTML = childrenHtml;
+      
+      const itemsListDiv = document.getElementById('conf-items-list');
+      const itemsByDay = {};
+      const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      
+      order.items.forEach(function(item) {
+        if (!itemsByDay[item.day]) {
+          itemsByDay[item.day] = [];
+        }
+        itemsByDay[item.day].push(item);
+      });
+      
+      const sortedDays = Object.keys(itemsByDay).sort(function(a, b) {
+        return dayOrder.indexOf(a) - dayOrder.indexOf(b);
+      });
+      
+      let itemsHtml = '';
+      sortedDays.forEach(function(day) {
+        itemsHtml += '<div class="confirmation-day">' + day + ':</div>';
+        itemsByDay[day].forEach(function(item) {
+          let priceDisplay = '$' + item.price.toFixed(2);
+          if (item.category === 'drinks' && item.isDiscounted) {
+            if (item.price === 0) {
+              priceDisplay = 'FREE 🎉';
+            } else {
+              priceDisplay = '$' + item.price.toFixed(2) + ' 💰';
+            }
+          }
+          
+          itemsHtml += '<div class="confirmation-item"><span>• ' + item.name + ' - ' + (item.childName || 'Student') + '</span><span><strong>' + priceDisplay + '</strong></span></div>';
+        });
+      });
+      itemsListDiv.innerHTML = itemsHtml;
+      
+      let totalHtml = 'Total: $' + order.total.toFixed(2);
+      if (order.discount && order.discount > 0) {
+        let discountLabel = 'Discount';
+        if (order.promoCode === 'STAFF2025') {
+          discountLabel = 'Staff Discount (10%)';
+        } else if (order.promoCode === 'JOHN') {
+          discountLabel = 'JOHN Discount (50%)';
+        }
+        
+        totalHtml = 'Subtotal: $' + order.subtotal.toFixed(2) + '<br>' + discountLabel + ': -$' + order.discount.toFixed(2) + '<br><strong>Total: $' + order.total.toFixed(2) + '</strong>';
+      }
+      document.getElementById('conf-total').innerHTML = totalHtml;
+      
+      modal.style.display = 'flex';
+      modal.classList.add('show');
+    }
+
+    function closeConfirmationModal() {
+      const modal = document.getElementById('confirmation-modal');
+      
+      if (modal) {
+        modal.classList.remove('show');
+        setTimeout(function() {
+          modal.style.display = 'none';
+        }, 300);
+      }
+    }
+
+    function submitOrder() {
+      const now = new Date();
+      const familyEmail = document.getElementById('family-email').value.trim();
+      const firstChild = document.querySelector('.child-section');
+      const lastName = firstChild ? firstChild.querySelector('.child-last-name').value.trim().toUpperCase() : 'FAMILY';
+      
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hour = String(now.getHours()).padStart(2, '0');
+      const minute = String(now.getMinutes()).padStart(2, '0');
+      
+      const orderId = lastName + '-' + month + day + '-' + hour + minute;
+      
+      const orderData = {
+        orderId: orderId,
+        timestamp: new Date().toISOString(),
+        email: familyEmail,
+        children: [],
+        items: orderItems,
+        subtotal: currentSubtotal,
+        discount: currentDiscount,
+        total: currentTotal,
+        promoCode: discountType === 'staff' ? 'STAFF2025' : (discountType === 'john' ? 'JOHN' : ''),
+        paymentMethod: 'Venmo',
+        paymentStatus: 'confirmed',
+        sendConfirmation: true,
+        weekStart: currentWeekMonday ? currentWeekMonday.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+      };
+
+      document.querySelectorAll('.child-section').forEach(function(child) {
+        orderData.children.push({
+          id: child.dataset.child,
+          firstName: child.querySelector('.child-first-name').value.trim(),
+          lastName: child.querySelector('.child-last-name').value.trim(),
+          grade: child.querySelector('.child-grade').value
+        });
+      });
+      
+      showNotification('Submitting order to cloud...', 'info');
+      
+      if (GOOGLE_SHEETS_CONFIG.useGoogleSheets && GOOGLE_SHEETS_CONFIG.webAppUrl) {
+        fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
+        })
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+          }
+          return response.json();
+        })
+        .then(function(result) {
+          if (result.success) {
+            if (GOOGLE_SHEETS_CONFIG.fallbackToLocalStorage) {
+              saveToLocalStorage(orderData);
+            }
+            closePaymentModal();
+            showDetailedOrderConfirmation(orderData);
+            showNotification('Order ' + orderId + ' submitted to cloud successfully!', 'success');
+            resetForm();
+          } else {
+            throw new Error(result.error || 'Unknown error from Google Sheets');
+          }
+        })
+        .catch(function(error) {
+          handleSubmissionFailure(orderData, orderId, error.message);
+        });
+      } else {
+        saveToLocalStorage(orderData);
+        closePaymentModal();
+        showDetailedOrderConfirmation(orderData);
+        showNotification('Order ' + orderId + ' saved locally!', 'success');
+        resetForm();
+      }
+    }
+
+    function handleSubmissionFailure(orderData, orderId, errorMessage) {
+      const confirmBtn = document.getElementById('confirm-payment-btn');
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
+      }
+      
+      if (GOOGLE_SHEETS_CONFIG.fallbackToLocalStorage) {
+        saveToLocalStorage(orderData);
+        closePaymentModal();
+        showDetailedOrderConfirmation(orderData);
+        showNotification('Order saved locally (cloud sync failed)', 'warning');
+        resetForm();
+      } else {
+        showNotification('Error submitting order. Please try again.', 'error');
+      }
+    }
+
+    function saveToLocalStorage(orderData) {
+      try {
+        const orders = JSON.parse(localStorage.getItem('cafeOrders') || '[]');
+        orders.push(orderData);
+        localStorage.setItem('cafeOrders', JSON.stringify(orders));
+      } catch (e) {
+        console.error('Error saving to localStorage:', e);
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('family-email').value = '';
+      document.querySelectorAll('.child-first-name').forEach(function(input) { input.value = ''; });
+      document.querySelectorAll('.child-last-name').forEach(function(input) { input.value = ''; });
+      document.querySelectorAll('.child-grade').forEach(function(select) { select.value = ''; });
+      document.getElementById('promo-code').value = '';
+      
+      document.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
+        cb.checked = false;
+      });
+      
+      discountType = 'none';
+      document.getElementById('promo-status').textContent = '';
+      document.getElementById('promo-status').className = 'promo-status';
+      
+      orderItems = [];
+      currentTotal = 0;
+      currentSubtotal = 0;
+      currentDiscount = 0;
+      updateCart();
+      validateForm();
+    }
+
+    function showNotification(message, type) {
+      const existingNotif = document.querySelector('.notification');
+      if (existingNotif) {
+        existingNotif.remove();
+      }
+      
+      let bgColor, textColor, borderColor, icon;
+      switch(type) {
+        case 'success':
+          bgColor = '#d4edda';
+          textColor = '#155724';
+          borderColor = '#c3e6cb';
+          icon = '✅ ';
+          break;
+        case 'error':
+          bgColor = '#f8d7da';
+          textColor = '#721c24';
+          borderColor = '#f5c6cb';
+          icon = '❌ ';
+          break;
+        case 'warning':
+          bgColor = '#fff3cd';
+          textColor = '#856404';
+          borderColor = '#ffeaa7';
+          icon = '⚠️ ';
+          break;
+        default:
+          bgColor = '#e3f2fd';
+          textColor = '#1976d2';
+          borderColor = '#bbdefb';
+          icon = 'ℹ️ ';
+      }
+      
+      const notif = document.createElement('div');
+      notif.className = 'notification';
+      notif.style.cssText = 'background: ' + bgColor + '; color: ' + textColor + '; border: 2px solid ' + borderColor + ';';
+      notif.textContent = icon + message;
+      
+      document.body.appendChild(notif);
+      
+      setTimeout(function() {
+        if (notif.parentNode) {
+          notif.remove();
+        }
+      }, 5000);
+    }
+
+    // Make removeItemFromCart available globally
+    window.removeItemFromCart = removeItemFromCart;
+    window.removeChild = removeChild;
+  </script>
+</body>
+</html>
