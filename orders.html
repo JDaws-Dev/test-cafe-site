@@ -1559,6 +1559,9 @@
     generateMenus();
     console.log('Menus generated');
     
+    setupEventListeners();
+    console.log('Event listeners set up');
+    
     loadUserDataFromCookies();
     setupAutoSave();
     updateCart();
@@ -2027,14 +2030,23 @@
               if (firstName && lastName) {
                 const fullName = `${firstName} ${lastName}`;
                 
-                const checkbox = document.createElement('div');
-                checkbox.className = 'child-checkbox';
-                checkbox.innerHTML = `
-                  <input type="checkbox" id="${itemId}-${childId}-${day}" data-item="${itemId}" data-child-id="${childId}" data-day="${day}">
-                  <label for="${itemId}-${childId}-${day}">${fullName}</label>
-                `;
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'child-checkbox';
                 
-                checkboxesContainer.appendChild(checkbox);
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `${itemId}-${childId}-${day}`;
+                checkbox.dataset.item = itemId;
+                checkbox.dataset.childId = childId;
+                checkbox.dataset.day = day;
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = fullName;
+                
+                checkboxDiv.appendChild(checkbox);
+                checkboxDiv.appendChild(label);
+                checkboxesContainer.appendChild(checkboxDiv);
               }
             });
           }
