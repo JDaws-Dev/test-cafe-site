@@ -2467,32 +2467,38 @@
           });
         });
         
-        orderData.total = currentTotal;
+        orderData.children.push(childData);
+      }); // Added missing closing brace for child forEach loop
+      
+      orderData.total = currentTotal;
     
       // Send data to Google Sheets
       fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
         method: 'POST',
-        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(orderData)
       })
       .then(response => {
-        console.log('Order submitted successfully:', orderData);
-      
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.text();
+      })
+      .then(data => {
+        console.log('Order submitted successfully:', data);
         confirmBtn.disabled = false;
         confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
-      
+        
         openConfirmationModal();
         resetForm();
       })
       .catch(error => {
         console.error('Error submitting order:', error);
-      
         confirmBtn.disabled = false;
-        confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
-        showNotification('Error submitting order. Please try again.', 'error');
+        confirmBtn.textContent = '❌ Upload Failed - Try Again';
+        alert('Failed to submit order. Please try again.');
       });
     }
 
