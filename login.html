@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artios Academies Cafe - Family Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      padding: 20px;
+    }
+
+    .auth-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .auth-header {
+      margin-bottom: 30px;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .artios-logo {
+      width: 60px;
+      height: 60px;
+      background: #4285f4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 24px;
+    }
+
+    .auth-title {
+      font-size: 2.2em;
+      font-weight: 700;
+      color: #4285f4;
+      margin-bottom: 5px;
+    }
+
+    .auth-subtitle {
+      color: #666;
+      font-size: 1.1em;
+      margin-bottom: 10px;
+    }
+
+    .privacy-notice {
+      background: #e8f5e8;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .privacy-notice h4 {
+      color: #2e7d32;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .privacy-notice ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #333;
+    }
+
+    .privacy-notice li {
+      margin-bottom: 5px;
+      font-size: 0.9em;
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+    }
+
+    .passcode-input {
+      font-size: 24px;
+      text-align: center;
+      letter-spacing: 0.5em;
+      font-weight: bold;
+    }
+
+    .auth-btn {
+      background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+      color: white;
+      border: none;
+      padding: 18px 35px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    .auth-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .secondary-btn {
+      background: #666;
+      font-size: 16px;
+      padding: 12px 25px;
+    }
+
+    .secondary-btn:hover:not(:disabled) {
+      background: #555;
+    }
+
+    .toggle-link {
+      color: #4285f4;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .toggle-link:hover {
+      text-decoration: underline;
+    }
+
+    .status-message {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .status-message.show {
+      opacity: 1;
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-message.info {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #bbdefb;
+    }
+
+    .help-section {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .help-section h4 {
+      color: #4285f4;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .help-section ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #666;
+    }
+
+    .help-section li {
+      margin-bottom: 8px;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 768px) {
+      .auth-container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+
+      .auth-title {
+        font-size: 1.8em;
+      }
+
+      .logo-section {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <div class="logo-section">
+        <div class="artios-logo">A</div>
+        <div>
+          <h1 class="auth-title">Artios Academies Cafe</h1>
+          <p class="auth-subtitle">Secure Family Lunch Ordering System</p>
+        </div>
+      </div>
+
+      <div class="privacy-notice">
+        <h4>🔐 Secure Family Access</h4>
+        <ul>
+          <li>Your family's order history is private and secure</li>
+          <li>4-digit passcode protects your account</li>
+          <li>Access your complete order history anytime</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Login Section -->
+    <div class="form-section active" id="login-section">
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">Family Email Address</label>
+          <input type="email" id="login-email" class="form-input" 
+                 placeholder="parent@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="login-passcode">Your 4-Digit Passcode</label>
+          <input type="password" id="login-passcode" class="form-input passcode-input" 
+                 placeholder="••••" maxlength="4" required>
+        </div>
+        <button type="submit" class="auth-btn" id="login-btn">
+          🍽️ Access Cafe System
+        </button>
+      </form>
+
+      <p style="color: #666; margin-top: 20px;">
+        New family? 
+        <a href="#" class="toggle-link" onclick="showSection('signup')">Create your account</a>
+      </p>
+
+      <p style="color: #666; margin-top: 10px; font-size: 0.9em;">
+        Forgot your passcode? 
+        <a href="#" class="toggle-link" onclick="showSection('forgot')">Get help</a>
+      </p>
+    </div>
+
+    <!-- Signup Section -->
+    <div class="form-section" id="signup-section">
+      <h3 style="color: #4285f4; margin-bottom: 20px;">✨ Create Your Family Account</h3>
+      
+      <div style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: left;">
+        <h4 style="color: #1976d2; margin-bottom: 10px;">🎯 Why Create an Account?</h4>
+        <ul style="margin: 0; padding-left: 20px; color: #333; font-size: 0.9em;">
+          <li>Your order history is saved and accessible anytime</li>
+          <li>Quick reordering - we remember your children's info</li>
+          <li>Cancel items up until 8:15 AM with automatic refunds</li>
+          <li>Private and secure - only you can see your orders</li>
+        </ul>
+      </div>
+
+      <form id="signup-form">
+        <div class="form-group">
+          <label for="signup-email">Family Email Address</label>
+          <input type="email" id="signup-email" class="form-input" 
+                 placeholder="parent@example.com" required>
+          <small style="color: #666;">This will be your login username</small>
+        </div>
+        <div class="form-group">
+          <label for="signup-passcode">Choose 4-Digit Passcode</label>
+          <input type="password" id="signup-passcode" class="form-input passcode-input" 
+                 placeholder="••••" maxlength="4" required>
+          <small style="color: #666;">Easy to remember, like 2025 or 1234</small>
+        </div>
+        <div class="form-group">
+          <label for="confirm-passcode">Confirm Passcode</label>
+          <input type="password" id="confirm-passcode" class="form-input passcode-input" 
+                 placeholder="••••" maxlength="4" required>
+        </div>
+        <button type="submit" class="auth-btn" id="signup-btn">
+          🔐 Create Account & Enter
+        </button>
+        <button type="button" class="auth-btn secondary-btn" onclick="showSection('login')">
+          ← Back to Login
+        </button>
+      </form>
+    </div>
+
+    <!-- Forgot Passcode Section -->
+    <div class="form-section" id="forgot-section">
+      <h3 style="color: #4285f4; margin-bottom: 20px;">🔄 Reset Your Passcode</h3>
+      
+      <div style="background: #fff3e0; border: 2px solid #ff9800; border-radius: 8px; padding: 20px; margin-bottom: 25px; text-align: left;">
+        <h4 style="color: #f57c00; margin-bottom: 10px;">📧 Password Reset Process</h4>
+        <ul style="margin: 0; padding-left: 20px; color: #333; font-size: 0.9em;">
+          <li>We'll email you a temporary 4-digit code</li>
+          <li>Use that code to login once</li>
+          <li>Then you can set a new permanent passcode</li>
+        </ul>
+      </div>
+
+      <form id="forgot-form">
+        <div class="form-group">
+          <label for="forgot-email">Family Email Address</label>
+          <input type="email" id="forgot-email" class="form-input" 
+                 placeholder="parent@example.com" required>
+        </div>
+        <button type="submit" class="auth-btn" id="forgot-btn">
+          📧 Send Reset Code
+        </button>
+        <button type="button" class="auth-btn secondary-btn" onclick="showSection('login')">
+          ← Back to Login
+        </button>
+      </form>
+    </div>
+
+    <div class="status-message" id="status-message"></div>
+
+    <!-- Help Section -->
+    <div class="help-section">
+      <h4>❓ Need Help?</h4>
+      <ul>
+        <li><strong>Technical Issues:</strong> Contact CRivers@artiosacademies.com</li>
+        <li><strong>Forgot Email:</strong> Check with school office</li>
+        <li><strong>Account Problems:</strong> We can reset your account manually</li>
+        <li><strong>Privacy Questions:</strong> Your data is stored securely with Google</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const GOOGLE_SHEETS_CONFIG = {
+      webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
+      useGoogleSheets: true
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      setupEventListeners();
+      checkExistingAuth();
+      loadEmailFromURL();
+    });
+
+    function setupEventListeners() {
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleLogin();
+      });
+
+      document.getElementById('signup-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleSignup();
+      });
+
+      document.getElementById('forgot-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleForgotPasscode();
+      });
+
+      // Only allow numbers in passcode fields
+      document.querySelectorAll('.passcode-input').forEach(input => {
+        input.addEventListener('input', function(e) {
+          e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+      });
+    }
+
+    function loadEmailFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = urlParams.get('email');
+      
+      if (emailParam) {
+        document.getElementById('login-email').value = decodeURIComponent(emailParam);
+        document.getElementById('signup-email').value = decodeURIComponent(emailParam);
+        document.getElementById('forgot-email').value = decodeURIComponent(emailParam);
+      }
+    }
+
+    function showSection(sectionName) {
+      document.querySelectorAll('.form-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      document.getElementById(sectionName + '-section').classList.add('active');
+      hideStatus();
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const passcode = document.getElementById('login-passcode').value.trim();
+      const loginBtn = document.getElementById('login-btn');
+
+      if (!email || !email.includes('@')) {
+        showStatus('Please enter a valid email address', 'error');
+        return;
+      }
+
+      if (!passcode || passcode.length !== 4) {
+        showStatus('Please enter your 4-digit passcode', 'error');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = '🔍 Verifying...';
+      showStatus('Checking your credentials...', 'info');
+
+      const loginUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=verify_family_login&email=${encodeURIComponent(email)}&passcode=${encodeURIComponent(passcode)}`;
+
+      fetch(loginUrl)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Login response:', data);
+          
+          if (data.success) {
+            // Store successful authentication - longer session for convenience
+            sessionStorage.setItem('authenticatedEmail', email);
+            sessionStorage.setItem('authExpiry', Date.now() + (24 * 60 * 60 * 1000)); // 24 hours
+            
+            showStatus('✅ Welcome to Artios Cafe! Redirecting...', 'success');
+            
+            setTimeout(() => {
+              window.location.href = 'dashboard.html'; // New dashboard page
+            }, 1500);
+            
+          } else {
+            if (data.error === 'Family not found') {
+              showStatus('Email not found. Please create an account first.', 'error');
+              setTimeout(() => {
+                showSection('signup');
+                document.getElementById('signup-email').value = email;
+              }, 2000);
+            } else if (data.error === 'Invalid passcode') {
+              showStatus('Incorrect passcode. Please try again.', 'error');
+            } else {
+              showStatus(`Login failed: ${data.error}`, 'error');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Login error:', error);
+          showStatus('Network error. Please check your connection and try again.', 'error');
+        })
+        .finally(() => {
+          loginBtn.disabled = false;
+          loginBtn.textContent = '🍽️ Access Cafe System';
+        });
+    }
+
+    function handleSignup() {
+      const email = document.getElementById('signup-email').value.trim();
+      const passcode = document.getElementById('signup-passcode').value.trim();
+      const confirmPasscode = document.getElementById('confirm-passcode').value.trim();
+      const signupBtn = document.getElementById('signup-btn');
+
+      if (!email || !email.includes('@')) {
+        showStatus('Please enter a valid email address', 'error');
+        return;
+      }
+
+      if (!passcode || passcode.length !== 4) {
+        showStatus('Please enter a 4-digit passcode', 'error');
+        return;
+      }
+
+      if (passcode !== confirmPasscode) {
+        showStatus('Passcodes do not match. Please try again.', 'error');
+        return;
+      }
+
+      signupBtn.disabled = true;
+      signupBtn.textContent = '🔐 Creating account...';
+      showStatus('Setting up your family account...', 'info');
+
+      const signupUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=create_family_account&email=${encodeURIComponent(email)}&passcode=${encodeURIComponent(passcode)}`;
+
+      fetch(signupUrl)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Signup response:', data);
+          
+          if (data.success) {
+            showStatus('✅ Account created! Welcome to Artios Cafe!', 'success');
+            
+            // Auto-login after successful signup
+            setTimeout(() => {
+              sessionStorage.setItem('authenticatedEmail', email);
+              sessionStorage.setItem('authExpiry', Date.now() + (24 * 60 * 60 * 1000)); // 24 hours
+              window.location.href = 'dashboard.html';
+            }, 1500);
+            
+          } else {
+            if (data.error === 'Family already exists') {
+              showStatus('An account with this email already exists. Try logging in instead.', 'error');
+              setTimeout(() => {
+                showSection('login');
+                document.getElementById('login-email').value = email;
+              }, 2000);
+            } else {
+              showStatus(`Account creation failed: ${data.error}`, 'error');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Signup error:', error);
+          showStatus('Network error. Please check your connection and try again.', 'error');
+        })
+        .finally(() => {
+          signupBtn.disabled = false;
+          signupBtn.textContent = '🔐 Create Account & Enter';
+        });
+    }
+
+    function handleForgotPasscode() {
+      const email = document.getElementById('forgot-email').value.trim();
+      const forgotBtn = document.getElementById('forgot-btn');
+
+      if (!email || !email.includes('@')) {
+        showStatus('Please enter a valid email address', 'error');
+        return;
+      }
+
+      forgotBtn.disabled = true;
+      forgotBtn.textContent = '📧 Sending...';
+      showStatus('Sending reset code to your email...', 'info');
+
+      const resetUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=reset_family_passcode&email=${encodeURIComponent(email)}`;
+
+      fetch(resetUrl)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Reset response:', data);
+          
+          if (data.success) {
+            showStatus(`✅ Reset code sent to ${email}! Check your email and use the code to login.`, 'success');
+            setTimeout(() => {
+              showSection('login');
+              document.getElementById('login-email').value = email;
+            }, 3000);
+          } else {
+            showStatus(`Reset failed: ${data.error}`, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Reset error:', error);
+          showStatus('Network error. Please check your connection and try again.', 'error');
+        })
+        .finally(() => {
+          forgotBtn.disabled = false;
+          forgotBtn.textContent = '📧 Send Reset Code';
+        });
+    }
+
+    function checkExistingAuth() {
+      const authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
+      const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
+      
+      if (authenticatedEmail && Date.now() < authExpiry) {
+        // User is already authenticated, redirect to dashboard
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('status-message');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message ${type} show`;
+
+      setTimeout(() => {
+        statusDiv.classList.remove('show');
+      }, 8000);
+    }
+
+    function hideStatus() {
+      document.getElementById('status-message').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

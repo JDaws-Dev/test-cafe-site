@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artios Cafe - Daily Orders</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      padding: 20px;
+    }
+
+    .worker-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .worker-header {
+      margin-bottom: 30px;
+    }
+
+    .worker-title {
+      font-size: 2.2em;
+      font-weight: 700;
+      color: #ff9800;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .worker-subtitle {
+      color: #666;
+      font-size: 1.1em;
+      margin-bottom: 20px;
+    }
+
+    .instructions {
+      background: #fff3e0;
+      border: 2px solid #ff9800;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: left;
+    }
+
+    .instructions h3 {
+      color: #f57c00;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .instructions ul {
+      margin-left: 20px;
+      color: #666;
+    }
+
+    .instructions li {
+      margin-bottom: 5px;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .date-input, .email-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .date-input:focus, .email-input:focus {
+      outline: none;
+      border-color: #ff9800;
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+    }
+
+    .email-input {
+      font-family: monospace;
+    }
+
+    /* Day Display */
+    .day-display {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 20%);
+      border: 2px solid #ff9800;
+      border-radius: 8px;
+      font-weight: 700;
+      color: #f57c00;
+      text-align: center;
+      font-size: 1.1em;
+      display: none;
+    }
+
+    /* Button Styles */
+    .orders-btn {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color: white;
+      border: none;
+      padding: 18px 35px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .orders-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+    }
+
+    .orders-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Status Messages */
+    .status-message {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      text-align: left;
+    }
+
+    .status-message.show {
+      opacity: 1;
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-message.info {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #bbdefb;
+    }
+
+    /* Features List */
+    .features {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .features h4 {
+      color: #ff9800;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .features ul {
+      margin-left: 20px;
+      color: #666;
+    }
+
+    .features li {
+      margin-bottom: 8px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .worker-container {
+        padding: 20px;
+        margin: 10px;
+      }
+
+      .worker-title {
+        font-size: 1.8em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="worker-container">
+    <div class="worker-header">
+      <h1 class="worker-title">🍽️ Artios Cafe Daily Orders</h1>
+      <p class="worker-subtitle">Daily Food Order Portal</p>
+    </div>
+
+    <div class="instructions">
+      <h3>📋 How to Use:</h3>
+      <ul>
+        <li>Select the date you need food orders for</li>
+        <li>Enter your email address</li>
+        <li>Click "Get Daily Orders" to receive the order list</li>
+        <li>You'll get a formatted email with student checklist and Chick-fil-A orders</li>
+      </ul>
+    </div>
+
+    <form id="daily-orders-form">
+      <div class="form-group">
+        <label for="orders-date">Select Date for Food Orders:</label>
+        <input type="date" id="orders-date" class="date-input" required>
+        <div class="day-display" id="orders-day-display"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="worker-email">Your Email Address:</label>
+        <input type="email" 
+               id="worker-email" 
+               class="email-input" 
+               placeholder="worker@example.com"
+               required>
+      </div>
+
+      <button type="submit" class="orders-btn" id="daily-orders-btn">
+        📋 Get Daily Food Orders
+      </button>
+
+      <div class="status-message" id="daily-orders-status"></div>
+    </form>
+
+    <div class="features">
+      <h4>📧 What You'll Receive:</h4>
+      <ul>
+        <li><strong>Chick-fil-A Order List</strong> - Organized by categories (Entrees, Salads, Sides)</li>
+        <li><strong>Student Checklist</strong> - Printable with checkboxes sorted by last name</li>
+        <li><strong>Artios Items List</strong> - Items to prepare at school</li>
+        <li><strong>Professional Formatting</strong> - Clean and easy to read/print</li>
+        <li><strong>Order Totals</strong> - Clear counts for each category</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // FIXED: Configuration to match your Google Apps Script
+    const GOOGLE_SHEETS_CONFIG = {
+      webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
+      useGoogleSheets: true
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default date to today
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      document.getElementById('orders-date').value = todayStr;
+      updateOrdersDayDisplay();
+
+      // Setup event listeners
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      // Form submission
+      document.getElementById('daily-orders-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        sendDailyOrders();
+      });
+
+      // Date change listener
+      const ordersDateInput = document.getElementById('orders-date');
+      if (ordersDateInput) {
+        ordersDateInput.addEventListener('change', updateOrdersDayDisplay);
+      }
+    }
+
+    function updateOrdersDayDisplay() {
+      const dateInput = document.getElementById('orders-date');
+      const dayDisplay = document.getElementById('orders-day-display');
+      
+      if (dateInput && dayDisplay && dateInput.value) {
+        const selectedDate = new Date(dateInput.value + 'T12:00:00');
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayName = dayNames[selectedDate.getDay()];
+        
+        dayDisplay.textContent = `🍽️ ${dayName}, ${selectedDate.toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        })}`;
+        dayDisplay.style.display = 'block';
+      } else if (dayDisplay) {
+        dayDisplay.style.display = 'none';
+      }
+    }
+
+    function sendDailyOrders() {
+      const dateInput = document.getElementById('orders-date').value;
+      const workerEmail = document.getElementById('worker-email').value.trim();
+      const dailyOrdersBtn = document.getElementById('daily-orders-btn');
+      
+      // Validate inputs
+      if (!dateInput) {
+        showDailyOrdersStatus('Please select a date', 'error');
+        return;
+      }
+      
+      if (!workerEmail || !workerEmail.includes('@')) {
+        showDailyOrdersStatus('Please enter a valid email address', 'error');
+        return;
+      }
+
+      if (!GOOGLE_SHEETS_CONFIG.webAppUrl) {
+        showDailyOrdersStatus('System configuration error. Please contact admin.', 'error');
+        return;
+      }
+
+      dailyOrdersBtn.disabled = true;
+      dailyOrdersBtn.textContent = '⏳ Preparing Your Daily Orders...';
+      
+      showDailyOrdersStatus(`Preparing daily food orders for ${dateInput}...`, 'info');
+
+      // FIXED: Build URL for daily orders to match your Google Apps Script
+      const reportUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_report&date=${encodeURIComponent(dateInput)}&worker_recipients=${encodeURIComponent(workerEmail)}`;
+
+      console.log('Calling daily orders URL:', reportUrl);
+
+      fetch(reportUrl)
+        .then(response => {
+          console.log('Daily orders response status:', response.status);
+          return response.json();
+        })
+        .then(data => {
+          console.log('Daily orders response:', data);
+          
+          if (data.success) {
+            let message = `✅ Daily Food Orders Sent Successfully!\n\n`;
+            message += `📅 Date: ${dateInput}\n`;
+            message += `🍽️ Orders Found: ${data.orderCount || 0}\n`;
+            message += `📧 Email sent to: ${workerEmail}\n\n`;
+            
+            if (data.orderCount > 0) {
+              message += `Your email includes:\n`;
+              message += `• Chick-fil-A orders organized by categories\n`;
+              message += `• Student checklist sorted by last name\n`;
+              message += `• Artios items to prepare at school\n`;
+              message += `• Professional formatting for easy printing\n\n`;
+              message += `Check your email and start preparing! 🍽️`;
+            } else {
+              message += `No orders found for this date.\n`;
+              message += `Email sent confirming no food is needed. 👍`;
+            }
+            
+            // Show success message
+            const statusDiv = document.getElementById('daily-orders-status');
+            statusDiv.innerHTML = message.replace(/\n/g, '<br>');
+            statusDiv.className = 'status-message success show';
+
+          } else {
+            showDailyOrdersStatus(`Error: ${data.error || 'Failed to send daily orders'}`, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Daily orders error:', error);
+          showDailyOrdersStatus('Network error. Please check your connection and try again.', 'error');
+        })
+        .finally(() => {
+          dailyOrdersBtn.disabled = false;
+          dailyOrdersBtn.textContent = '📋 Get Daily Food Orders';
+        });
+    }
+
+    function showDailyOrdersStatus(message, type) {
+      const statusDiv = document.getElementById('daily-orders-status');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message ${type} show`;
+
+      setTimeout(() => {
+        statusDiv.classList.remove('show');
+      }, 10000); // Show longer for worker messages
+    }
+  </script>
+</body>
+</html>

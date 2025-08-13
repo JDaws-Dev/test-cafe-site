@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders - Artios Cafe Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .nav a {
+            color: #495057;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #4285f4;
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .search-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3367d6;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .orders-table th {
+            background: #4285f4;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .orders-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .orders-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .form-group {
+                min-width: 100%;
+            }
+            
+            .orders-table {
+                font-size: 14px;
+            }
+            
+            .orders-table th,
+            .orders-table td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Manage Orders</h1>
+            <p>View, search, and manage all cafe orders</p>
+        </div>
+
+        <div class="nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="manage-orders.html" class="active">Manage Orders</a>
+            <a href="daily-orders.html">Daily Orders</a>
+            <a href="admin-reports.html">Reports</a>
+            <a href="login.html">Logout</a>
+        </div>
+
+        <div class="content">
+            <div class="search-section">
+                <h3>🔍 Search Orders</h3>
+                <div class="search-form">
+                    <div class="form-group">
+                        <label for="searchEmail">Parent Email</label>
+                        <input type="email" id="searchEmail" placeholder="Enter parent email">
+                    </div>
+                    <div class="form-group">
+                        <label for="searchOrderId">Order ID</label>
+                        <input type="text" id="searchOrderId" placeholder="Enter order ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="searchDate">Date</label>
+                        <input type="date" id="searchDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="searchStatus">Status</label>
+                        <select id="searchStatus">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary" onclick="searchOrders()">Search Orders</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results-section">
+                <div class="loading" id="loading">
+                    <p>🔍 Enter search criteria above to find orders...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>❌ Cancel Order Item</h3>
+            <p>Are you sure you want to cancel this item?</p>
+            <div id="cancelItemDetails"></div>
+            <div style="margin-top: 20px;">
+                <label for="cancelReason">Cancellation Reason:</label>
+                <select id="cancelReason" style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <option value="Admin requested">Admin requested</option>
+                    <option value="Parent requested">Parent requested</option>
+                    <option value="Item unavailable">Item unavailable</option>
+                    <option value="Duplicate order">Duplicate order</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn btn-primary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmCancellation()" id="confirmCancelBtn">Confirm Cancellation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec';
+        let currentItemToCancel = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            setDefaultDate();
+        });
+
+        function setupEventListeners() {
+            // Modal close events
+            document.querySelector('.close').onclick = closeModal;
+            window.onclick = function(event) {
+                const modal = document.getElementById('cancelModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+
+            // Enter key search
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchOrders();
+                }
+            });
+        }
+
+        function setDefaultDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('searchDate').value = today;
+        }
+
+        async function searchOrders() {
+            const email = document.getElementById('searchEmail').value.trim();
+            const orderId = document.getElementById('searchOrderId').value.trim();
+            const date = document.getElementById('searchDate').value;
+            const status = document.getElementById('searchStatus').value;
+
+            if (!email && !orderId && !date) {
+                showError('Please enter at least one search criteria');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                let searchUrl = `${API_URL}?action=lookup_orders`;
+                
+                if (email) searchUrl += `&email=${encodeURIComponent(email)}`;
+                if (orderId) searchUrl += `&order_id=${encodeURIComponent(orderId)}`;
+
+                const response = await fetch(searchUrl);
+                const data = await response.json();
+
+                if (data.success && data.orders) {
+                    let filteredOrders = data.orders;
+
+                    // Filter by date if specified
+                    if (date) {
+                        filteredOrders = filteredOrders.filter(order => {
+                            return order.items.some(item => item.date === date);
+                        });
+                    }
+
+                    // Filter by status if specified
+                    if (status) {
+                        filteredOrders = filteredOrders.filter(order => {
+                            return order.items.some(item => item.status === status);
+                        });
+                    }
+
+                    displayOrders(filteredOrders);
+                } else {
+                    showError(data.error || 'No orders found');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('Failed to search orders. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayOrders(orders) {
+            const resultsSection = document.getElementById('results-section');
+            
+            if (orders.length === 0) {
+                resultsSection.innerHTML = '<div class="loading"><p>No orders found matching your criteria.</p></div>';
+                return;
+            }
+
+            let tableHtml = `
+                <h3>Search Results (${orders.length} orders found)</h3>
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Parent Email</th>
+                            <th>Child Name</th>
+                            <th>Item</th>
+                            <th>Day</th>
+                            <th>Date</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    const statusClass = item.status === 'cancelled' ? 'status-cancelled' : 'status-active';
+                    const actionButton = item.status === 'cancelled' 
+                        ? '<span style="color: #6c757d;">Cancelled</span>'
+                        : `<button class="btn btn-danger" onclick="showCancelModal('${item.id}', '${item.name}', '${item.childName}', '${item.day}', '${item.date}', ${item.price})">Cancel</button>`;
+
+                    tableHtml += `
+                        <tr>
+                            <td>${order.orderId}</td>
+                            <td>${order.email}</td>
+                            <td>${item.childName}</td>
+                            <td>${item.name}</td>
+                            <td>${item.day}</td>
+                            <td>${new Date(item.date).toLocaleDateString()}</td>
+                            <td>$${item.price.toFixed(2)}</td>
+                            <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                            <td>${actionButton}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tableHtml += '</tbody></table>';
+            resultsSection.innerHTML = tableHtml;
+        }
+
+        function showCancelModal(itemId, itemName, childName, day, date, price) {
+            currentItemToCancel = itemId;
+            
+            document.getElementById('cancelItemDetails').innerHTML = `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <strong>Item:</strong> ${itemName}<br>
+                    <strong>Student:</strong> ${childName}<br>
+                    <strong>Day:</strong> ${day}<br>
+                    <strong>Date:</strong> ${new Date(date).toLocaleDateString()}<br>
+                    <strong>Price:</strong> $${price.toFixed(2)}
+                </div>
+            `;
+            
+            document.getElementById('cancelModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('cancelModal').style.display = 'none';
+            currentItemToCancel = null;
+        }
+
+        async function confirmCancellation() {
+            if (!currentItemToCancel) return;
+
+            const reason = document.getElementById('cancelReason').value;
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Processing...';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        action: 'cancel_item',
+                        item_id: currentItemToCancel,
+                        reason: reason
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess(`Item cancelled successfully! Refund of $${result.refundAmount.toFixed(2)} will be processed.`);
+                    closeModal();
+                    // Refresh the search results
+                    setTimeout(() => {
+                        searchOrders();
+                    }, 1000);
+                } else {
+                    showError(`Cancellation failed: ${result.message || result.error}`);
+                }
+            } catch (error) {
+                console.error('Cancellation error:', error);
+                showError('Failed to cancel item. Please try again.');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirm Cancellation';
+            }
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                document.getElementById('results-section').innerHTML = '<div class="loading" id="loading"><p>🔍 Searching orders...</p></div>';
+            }
+        }
+
+        function showError(message) {
+            const resultsSection = document.getElementById('results-section');
+            resultsSection.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function showSuccess(message) {
+            const resultsSection = document.getElementById('results-section');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            resultsSection.insertBefore(successDiv, resultsSection.firstChild);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

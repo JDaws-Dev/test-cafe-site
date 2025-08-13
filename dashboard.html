@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artios Academies Cafe - Family Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      color: #202124;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      min-height: 100vh;
+    }
+
+    /* Header with Authentication */
+    .auth-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .family-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .family-avatar {
+      width: 50px;
+      height: 50px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .family-details h2 {
+      margin: 0;
+      font-size: 1.3em;
+    }
+
+    .family-details p {
+      margin: 5px 0 0 0;
+      opacity: 0.9;
+      font-size: 0.9em;
+    }
+
+    .auth-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    /* Main Dashboard Content */
+    .dashboard-content {
+      padding: 30px;
+    }
+
+    .welcome-section {
+      background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+      border: 2px solid #4caf50;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .welcome-title {
+      color: #2e7d32;
+      font-size: 1.5em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .welcome-subtitle {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    /* Quick Actions Grid */
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .action-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .action-card:hover {
+      border-color: #4285f4;
+      box-shadow: 0 4px 20px rgba(66, 133, 244, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .action-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .action-title {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .action-desc {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 0.95em;
+    }
+
+    .action-btn {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .action-btn:hover {
+      background: #3367d6;
+      transform: translateY(-1px);
+      text-decoration: none;
+      color: white;
+    }
+
+    .action-btn.secondary {
+      background: #ff9800;
+    }
+
+    .action-btn.secondary:hover {
+      background: #f57c00;
+    }
+
+    .action-btn.success {
+      background: #4caf50;
+    }
+
+    .action-btn.success:hover {
+      background: #43a047;
+    }
+
+    /* Recent Orders Summary */
+    .recent-orders {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+
+    .recent-orders h3 {
+      color: #4285f4;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .orders-loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .orders-summary {
+      display: none;
+    }
+
+    .order-item {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-details {
+      flex: 1;
+    }
+
+    .order-id {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .order-date {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .order-total {
+      font-weight: 700;
+      color: #4caf50;
+      font-size: 1.1em;
+    }
+
+    /* Store Status */
+    .store-status {
+      background: #e8f5e8;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .store-status.closed {
+      background: #ffebee;
+      border-color: #f44336;
+    }
+
+    .store-status h4 {
+      margin: 0 0 5px 0;
+      color: #2e7d32;
+    }
+
+    .store-status.closed h4 {
+      color: #d32f2f;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .auth-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .dashboard-content {
+        padding: 20px;
+      }
+
+      .quick-actions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .family-info {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .order-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Authenticated Header -->
+    <div class="auth-header">
+      <div class="family-info">
+        <div class="family-avatar" id="family-avatar">👨‍👩‍👧‍👦</div>
+        <div class="family-details">
+          <h2 id="family-greeting">Welcome back!</h2>
+          <p id="family-email">Loading...</p>
+        </div>
+      </div>
+      <div class="auth-actions">
+        <span id="session-time" style="font-size: 0.9em; opacity: 0.8;"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="dashboard-content">
+      <!-- Store Status -->
+      <div class="store-status" id="store-status">
+        <h4>🕐 Checking store hours...</h4>
+        <p>Please wait while we verify ordering availability...</p>
+      </div>
+
+      <!-- Welcome Section -->
+      <div class="welcome-section">
+        <div class="welcome-title">🍽️ Artios Academies Cafe Dashboard</div>
+        <p class="welcome-subtitle">
+          Manage your family's lunch orders, view history, and place new orders
+        </p>
+        <div style="font-size: 0.9em; color: #666;">
+          Secure family portal • Private order history • Easy ordering
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-grid">
+        <div class="action-card" onclick="goToOrdering()">
+          <span class="action-icon">📝</span>
+          <div class="action-title">Place New Order</div>
+          <div class="action-desc">Order lunch for your children for this week</div>
+          <div class="action-btn">Start Ordering</div>
+        </div>
+
+        <div class="action-card" onclick="viewOrderHistory()">
+          <span class="action-icon">📋</span>
+          <div class="action-title">Order History</div>
+          <div class="action-desc">View all past orders, cancel items, or request refunds</div>
+          <div class="action-btn secondary">View Orders</div>
+        </div>
+
+        <div class="action-card" onclick="contactSupport()">
+          <span class="action-icon">❓</span>
+          <div class="action-title">Get Help</div>
+          <div class="action-desc">Questions about orders, payments, or menu items</div>
+          <div class="action-btn success">Contact Us</div>
+        </div>
+      </div>
+
+      <!-- Recent Orders Summary -->
+      <div class="recent-orders">
+        <h3>📈 Recent Orders</h3>
+        <div class="orders-loading" id="orders-loading">
+          Loading your recent orders...
+        </div>
+        <div class="orders-summary" id="orders-summary">
+          <!-- Will be populated by JavaScript -->
+        </div>
+        <div style="text-align: center; margin-top: 15px;">
+          <a href="#" onclick="viewOrderHistory()" style="color: #4285f4; text-decoration: none; font-weight: 600;">
+            View All Orders →
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div style="text-align: center; color: #666; font-size: 0.9em; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+        <p><strong>Artios Academies of Sugar Hill</strong></p>
+        <p>Questions? Contact <strong>CRivers@artiosacademies.com</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const GOOGLE_SHEETS_CONFIG = {
+      webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
+      useGoogleSheets: true
+    };
+
+    let authenticatedEmail = '';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check authentication first
+      if (!checkAuthentication()) {
+        return; // Will redirect to login
+      }
+
+      // Initialize dashboard
+      initializeDashboard();
+      checkStoreHours();
+      loadRecentOrders();
+      updateSessionTimer();
+    });
+
+    function checkAuthentication() {
+      authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
+      const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
+      
+      console.log('Checking dashboard authentication...');
+      console.log('Email:', authenticatedEmail);
+      console.log('Expiry:', new Date(authExpiry));
+      
+      if (!authenticatedEmail || !authExpiry || Date.now() >= authExpiry) {
+        console.log('❌ Authentication failed - redirecting to login');
+        redirectToLogin();
+        return false;
+      }
+      
+      console.log('✅ Dashboard authentication successful');
+      return true;
+    }
+
+    function redirectToLogin() {
+      sessionStorage.removeItem('authenticatedEmail');
+      sessionStorage.removeItem('authExpiry');
+      window.location.href = 'login.html'; // Your new login page
+    }
+
+    function initializeDashboard() {
+      // Set family info in header
+      document.getElementById('family-email').textContent = authenticatedEmail;
+      document.getElementById('family-greeting').textContent = 'Welcome back!';
+      
+      // Set family avatar initial
+      const familyInitial = authenticatedEmail.charAt(0).toUpperCase();
+      document.getElementById('family-avatar').textContent = familyInitial;
+    }
+
+    function checkStoreHours() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const dayOfWeek = now.getDay();
+      const statusDiv = document.getElementById('store-status');
+      
+      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+      const isPastCutoff = (hours > 8) || (hours === 8 && minutes >= 15);
+      const isFridayAfterNoon = (dayOfWeek === 5 && hours >= 12);
+      
+      if (isWeekday && isPastCutoff && hours < 13 && !isFridayAfterNoon) {
+        statusDiv.className = 'store-status closed';
+        statusDiv.innerHTML = `
+          <h4>🔒 Ordering Currently Closed</h4>
+          <p>Daily ordering closes at 8:00 AM and reopens at 1:00 PM (12:00 PM on Fridays)</p>
+          <p><strong>Current time:</strong> ${now.toLocaleTimeString()}</p>
+        `;
+      } else {
+        statusDiv.className = 'store-status';
+        const statusText = isWeekday ? 'Ordering Open - Place Orders Now!' : 'Weekend Ordering Available';
+        statusDiv.innerHTML = `
+          <h4>✅ ${statusText}</h4>
+          <p>Orders accepted • Payments via Venmo • Questions? <a href="mailto:CRivers@artiosacademies.com" style="color: inherit;">CRivers@artiosacademies.com</a></p>
+        `;
+      }
+    }
+
+    function loadRecentOrders() {
+      if (!GOOGLE_SHEETS_CONFIG.useGoogleSheets) {
+        document.getElementById('orders-loading').style.display = 'none';
+        document.getElementById('orders-summary').style.display = 'block';
+        document.getElementById('orders-summary').innerHTML = `
+          <p style="text-align: center; color: #666; padding: 20px;">
+            Recent orders will appear here once orders are placed.
+          </p>
+        `;
+        return;
+      }
+
+      fetch(`${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=lookup_orders&email=${encodeURIComponent(authenticatedEmail)}`)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('orders-loading').style.display = 'none';
+          document.getElementById('orders-summary').style.display = 'block';
+          
+          if (data.success && data.orders && data.orders.length > 0) {
+            const recentOrders = data.orders.slice(0, 3);
+            let ordersHtml = '';
+            
+            recentOrders.forEach(order => {
+              ordersHtml += `
+                <div class="order-item">
+                  <div class="order-details">
+                    <div class="order-id">Order #${order.orderId}</div>
+                    <div class="order-date">${new Date(order.date).toLocaleDateString()}</div>
+                  </div>
+                  <div class="order-total">$${order.total}</div>
+                </div>
+              `;
+            });
+            
+            document.getElementById('orders-summary').innerHTML = ordersHtml;
+          } else {
+            document.getElementById('orders-summary').innerHTML = `
+              <p style="text-align: center; color: #666; padding: 20px;">
+                No recent orders found. Ready to place your first order?
+              </p>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('Error loading recent orders:', error);
+          document.getElementById('orders-loading').style.display = 'none';
+          document.getElementById('orders-summary').style.display = 'block';
+          document.getElementById('orders-summary').innerHTML = `
+            <p style="text-align: center; color: #f44336; padding: 20px;">
+              Unable to load recent orders. Please try again later.
+            </p>
+          `;
+        });
+    }
+
+    function updateSessionTimer() {
+      const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
+      if (!authExpiry) return;
+      
+      function updateTimer() {
+        const timeLeft = Math.max(0, Math.floor((authExpiry - Date.now()) / (1000 * 60 * 60)));
+        const sessionTimeSpan = document.getElementById('session-time');
+        if (sessionTimeSpan) {
+          sessionTimeSpan.textContent = timeLeft > 0 ? `${timeLeft}h left` : 'Expired';
+        }
+        
+        if (timeLeft <= 0) {
+          logout();
+        }
+      }
+      
+      updateTimer();
+      setInterval(updateTimer, 60000); // Update every minute
+    }
+
+    function goToOrdering() {
+      window.location.href = 'order.html';
+    }
+
+    function viewOrderHistory() {
+      window.location.href = 'manage-orders.html';
+    }
+
+    function contactSupport() {
+      window.open('mailto:CRivers@artiosacademies.com?subject=Cafe Support Request', '_blank');
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        sessionStorage.removeItem('authenticatedEmail');
+        sessionStorage.removeItem('authExpiry');
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+</body>
+</html>
