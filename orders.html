@@ -1617,92 +1617,111 @@
       }
     }
 
-   unction generateMenus() {
-  const container = document.getElementById('menu-container');
-  
-  days.forEach(function(day) {
-    const dayMenu = document.createElement('div');
-    dayMenu.className = 'menu-for-day';
-    dayMenu.dataset.day = day;
-    
-    if (day === currentDay) {
-      dayMenu.classList.add('active');
-    }
-    
-    Object.keys(menuData).forEach(function(category) {
-      const categoryDiv = document.createElement('div');
-      categoryDiv.className = 'menu-category';
-      categoryDiv.dataset.category = category;
+    function generateMenus() {
+      console.log('generateMenus() called');
+      const container = document.getElementById('menu-container');
+      console.log('Container found:', container);
+      console.log('MenuData:', menuData);
+      console.log('Days array:', days);
       
-      let categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
-      if (category === 'drinks') {
-        categoryTitle = 'Drinks';
+      if (!container) {
+        console.error('menu-container not found!');
+        return;
       }
       
-      // Create collapsible header
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'menu-category-header';
-      headerDiv.innerHTML = `
-        <h4>${categoryTitle}</h4>
-        <span class="collapse-icon">▼</span>
-      `;
-      
-      const itemsDiv = document.createElement('div');
-      itemsDiv.className = 'menu-items';
-      
-      if (category === 'drinks') {
-        const discountNotice = document.createElement('div');
-        discountNotice.className = 'drink-discount-notice';
-        discountNotice.innerHTML = '<div style="background: #e8f5e8; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #34a853;"><strong>💡 Combo Meal Drink Discount!</strong><br>Order an <strong>Entree or Salad + Side</strong> to get drink discounts applied in your cart!<br>• Regular Drink = <strong>FREE!</strong><br>• Premium Drink = <strong>$1.50</strong> (save $1.50!)<br></div>';
-        itemsDiv.appendChild(discountNotice);
+      if (!menuData || Object.keys(menuData).length === 0) {
+        console.error('menuData is empty or undefined!');
+        return;
       }
       
-      menuData[category].forEach(function(item) {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'menu-item';
+      days.forEach(function(day) {
+        console.log('Processing day:', day);
+        const dayMenu = document.createElement('div');
+        dayMenu.className = 'menu-for-day';
+        dayMenu.dataset.day = day;
         
-        let priceDisplay;
-        if (category === 'drinks') {
-          priceDisplay = '$' + item.basePrice.toFixed(2);
-        } else {
-          priceDisplay = '$' + item.price.toFixed(2);
+        if (day === currentDay) {
+          dayMenu.classList.add('active');
         }
         
-        // Create menu item with image (skip drinks)
-        let imageHtml = '';
-        if (category !== 'drinks' && item.image) {
-          imageHtml = `<img src="${item.image}" alt="${item.name}" class="menu-item-image" onerror="this.style.display='none'">`;
-        }
+        Object.keys(menuData).forEach(function(category) {
+          console.log('Processing category:', category);
+          const categoryDiv = document.createElement('div');
+          categoryDiv.className = 'menu-category';
+          categoryDiv.dataset.category = category;
+          
+          let categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
+          if (category === 'drinks') {
+            categoryTitle = 'Drinks';
+          }
+          
+          // Create collapsible header
+          const headerDiv = document.createElement('div');
+          headerDiv.className = 'menu-category-header';
+          headerDiv.innerHTML = `
+            <h4>${categoryTitle}</h4>
+            <span class="collapse-icon">▼</span>
+          `;
+          
+          const itemsDiv = document.createElement('div');
+          itemsDiv.className = 'menu-items';
+          
+          if (category === 'drinks') {
+            const discountNotice = document.createElement('div');
+            discountNotice.className = 'drink-discount-notice';
+            discountNotice.innerHTML = '<div style="background: #e8f5e8; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #34a853;"><strong>💡 Combo Meal Drink Discount!</strong><br>Order an <strong>Entree or Salad + Side</strong> to get drink discounts applied in your cart!<br>• Regular Drink = <strong>FREE!</strong><br>• Premium Drink = <strong>$1.50</strong> (save $1.50!)<br></div>';
+            itemsDiv.appendChild(discountNotice);
+          }
+          
+          menuData[category].forEach(function(item) {
+            console.log('Processing item:', item.name);
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'menu-item';
+            
+            let priceDisplay;
+            if (category === 'drinks') {
+              priceDisplay = '$' + item.basePrice.toFixed(2);
+            } else {
+              priceDisplay = '$' + item.price.toFixed(2);
+            }
+            
+            // Create menu item with image (skip drinks)
+            let imageHtml = '';
+            if (category !== 'drinks' && item.image) {
+              imageHtml = `<img src="${item.image}" alt="${item.name}" class="menu-item-image" onerror="this.style.display='none'">`;
+            }
+            
+            itemDiv.innerHTML = `
+              ${imageHtml}
+              <div class="menu-item-content">
+                <div class="item-header">
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-price" data-item-id="${item.id}">${priceDisplay}</div>
+                </div>
+                <div class="item-desc">${item.desc}</div>
+                <div class="child-checkboxes" id="${item.id}-${day}-checkboxes"></div>
+              </div>
+            `;
+            
+            itemsDiv.appendChild(itemDiv);
+          });
+          
+          categoryDiv.appendChild(headerDiv);
+          categoryDiv.appendChild(itemsDiv);
+          
+          // Setup collapse functionality
+          setupCategoryToggle(categoryDiv, category);
+          
+          dayMenu.appendChild(categoryDiv);
+        });
         
-        itemDiv.innerHTML = `
-          ${imageHtml}
-          <div class="menu-item-content">
-            <div class="item-header">
-              <div class="item-name">${item.name}</div>
-              <div class="item-price" data-item-id="${item.id}">${priceDisplay}</div>
-            </div>
-            <div class="item-desc">${item.desc}</div>
-            <div class="child-checkboxes" id="${item.id}-${day}-checkboxes"></div>
-          </div>
-        `;
-        
-        itemsDiv.appendChild(itemDiv);
+        console.log('Appending dayMenu to container for day:', day);
+        container.appendChild(dayMenu);
       });
       
-      categoryDiv.appendChild(headerDiv);
-      categoryDiv.appendChild(itemsDiv);
-      
-      // Setup collapse functionality
-      setupCategoryToggle(categoryDiv, category);
-      
-      dayMenu.appendChild(categoryDiv);
-    });
-    
-    container.appendChild(dayMenu);
-  });
-  
-  updateChildCheckboxes(); // THIS IS THE CRITICAL MISSING LINE!
-}
+      console.log('generateMenus() completed, calling updateChildCheckboxes()');
+      updateChildCheckboxes();
+    }
 
     function switchDay(day) {
       document.querySelectorAll('.day-tab').forEach(function(tab) {
@@ -2525,7 +2544,10 @@
           });
         });
         
-        orderData.total = currentTotal;
+        orderData.children.push(childData);
+      });
+      
+      orderData.total = currentTotal;
       
       // Send data to Google Sheets
       fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
