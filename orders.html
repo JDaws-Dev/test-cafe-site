@@ -2003,9 +2003,11 @@
         child.querySelector('.child-title').textContent = `Child ${childCount}`;
         
         const removeButton = child.querySelector('.remove-child');
-        removeButton.onclick = function() {
-          removeChild(child);
-        };
+        if (removeButton) {
+          removeButton.onclick = function() {
+            removeChild(child);
+          };
+        }
       });
       
       updateChildCheckboxes();
@@ -2032,8 +2034,8 @@
               const firstName = child.querySelector('.child-first-name').value.trim();
               const lastName = child.querySelector('.child-last-name').value.trim();
               
-              if (firstName && lastName) {
-                const fullName = `${firstName} ${lastName}`;
+              if (firstName) {
+                const fullName = lastName ? `${firstName} ${lastName}` : firstName;
                 
                 const checkboxDiv = document.createElement('div');
                 checkboxDiv.className = 'child-checkbox';
@@ -2289,26 +2291,26 @@
       
       code = code.trim().toUpperCase();
       
-      if (code === 'STAFF20') {
+      if (code === 'STAFF2025') {
         discountType = 'staff';
-        const discount = currentSubtotal * 0.20;
+        const discount = currentSubtotal * 0.10;
         currentDiscount += discount;
         
         promoStatus.classList.add('valid');
-        promoStatus.textContent = 'Valid code applied! (20% off)';
+        promoStatus.textContent = 'Valid code applied! (10% off)';
         
         discountAmountSpan.textContent = discount.toFixed(2);
         discountLine.style.display = 'block';
-      } else if (code === 'WELCOME10') {
-        discountType = 'welcome';
-        const discount = currentSubtotal >= 50 ? 10 : 0;
+      } else if (code === 'JOHN') {
+        discountType = 'john';
+        const discount = currentSubtotal * 0.50;
         currentDiscount += discount;
         
         promoStatus.classList.add('valid');
-        promoStatus.textContent = 'Valid code applied! ($10 off $50+)';
+        promoStatus.textContent = 'Valid code applied! (50% off)';
         
         discountAmountSpan.textContent = discount.toFixed(2);
-        discountLine.style.display = currentSubtotal >= 50 ? 'block' : 'none';
+        discountLine.style.display = 'block';
       } else {
         promoStatus.classList.add('invalid');
         promoStatus.textContent = 'Invalid code';
@@ -2527,10 +2529,7 @@
           });
         });
         
-        orderData.children.push(childData);
-      });
-      
-      orderData.total = currentTotal;
+        orderData.total = currentTotal;
     
       // Send data to Google Sheets
       fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
