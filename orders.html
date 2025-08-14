@@ -1354,29 +1354,36 @@
 
       async init() {
         try {
-          console.log('Initializing Order System...');
-          
-          this.checkStoreHours();
-          this.generateDayTabs();
-          this.generateMenus();
-          
-          const firstAvailableTab = document.querySelector('.day-tab:not(.disabled)');
-          if (firstAvailableTab) {
-            this.switchDay(firstAvailableTab.dataset.day);
-          } else {
-            this.switchDay('monday');
-          }
-          
+          await this.loadMenuData();
+          this.loadUserEmail(); // Load login email instead of cookie data
           this.setupEventListeners();
-          this.loadUserDataFromCookies();
           this.setupAutoSave();
-          this.updateCart();
           this.validateForm();
           
-          console.log('Order System initialized successfully');
+          // Show welcome message
+          setTimeout(() => {
+            this.showNotification('Welcome! Select items for each day and child.', 'info');
+          }, 1000);
+          
         } catch (error) {
-          console.error('Error initializing Order System:', error);
-          this.showNotification('System initialization failed. Please refresh the page.', 'error');
+          console.error('Error initializing order system:', error);
+          this.showNotification('Error loading menu. Please refresh the page.', 'error');
+        }
+      }
+
+      loadUserEmail() {
+        try {
+          // Check for logged-in user email in sessionStorage or localStorage
+          const loggedInEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
+          
+          if (loggedInEmail) {
+            const emailInput = document.getElementById('family-email');
+            if (emailInput) {
+              emailInput.value = loggedInEmail;
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user email:', error);
         }
       }
 
@@ -1780,16 +1787,7 @@
             </div>
             <div class="form-group">
               <label>Grade <span class="required">*</span></label>
-              <select class="child-grade" required>
-                <option value="">Select Grade</option>
-                <option value="K-2">K-2</option>
-                <option value="3-4">3-4</option>
-                <option value="5-6">5-6</option>
-                <option value="7-8">7-8</option>
-                <option value="9-12">9-12</option>
-                <option value="Staff">Staff</option>
-                <option value="Parent">Parent</option>
-              </select>
+              <input type="text" class="child-grade" required>
             </div>
           </div>
         `;
@@ -1814,30 +1812,45 @@
       removeChild(childSection) {
         const childNumber = parseInt(childSection.dataset.child);
         
+        // Uncheck all checkboxes for this child
         document.querySelectorAll(`input[data-child-id="${childNumber}"]`).forEach(checkbox => {
           checkbox.checked = false;
         });
         
-        // Remove cart items for this child
-        this.state.orderItems = this.state.orderItems.filter(item => item.childId !== childNumber);
+        // Remove ALL cart items for this child (fixed filtering logic)
+        this.state.orderItems = this.state.orderItems.filter(item => {
+          return item.childId !== childNumber;
+        });
         
         childSection.remove();
         
-        // Re-index remaining children
+        // Re-index remaining children and update their cart items
         const remainingChildren = document.querySelectorAll('.child-section');
-        this.state.childCount = 0;
+        const childMapping = new Map();
         
         remainingChildren.forEach((child, index) => {
-          this.state.childCount++;
-          child.dataset.child = this.state.childCount;
-          child.querySelector('.child-icon').textContent = this.state.childCount;
-          child.querySelector('.child-title').textContent = `Child ${this.state.childCount}`;
+          const oldChildId = parseInt(child.dataset.child);
+          const newChildId = index + 1;
+          
+          childMapping.set(oldChildId, newChildId);
+          
+          child.dataset.child = newChildId;
+          child.querySelector('.child-icon').textContent = newChildId;
+          child.querySelector('.child-title').textContent = `Child ${newChildId}`;
           
           const removeButton = child.querySelector('.remove-child');
-          removeButton.setAttribute('aria-label', `Remove child ${this.state.childCount}`);
+          removeButton.setAttribute('aria-label', `Remove child ${newChildId}`);
           removeButton.onclick = () => this.removeChild(child);
         });
         
+        // Update cart items with new child IDs
+        this.state.orderItems.forEach(item => {
+          if (childMapping.has(item.childId)) {
+            item.childId = childMapping.get(item.childId);
+          }
+        });
+        
+        this.state.childCount = remainingChildren.length;
         this.updateChildCheckboxes();
         this.updateCart();
         this.validateForm();
@@ -2440,11 +2453,33 @@
 
         setTimeout(() => indicator.remove(), 2000);
       }
+
+      async loadMenuData() {
+        try {
+          // Simulate loading menu data from an external source (e.g., API)
+          // Replace this with your actual data loading logic
+          await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+          console.log('Menu data loaded successfully');
+        } catch (error) {
+          console.error('Error loading menu data:', error);
+          this.showNotification('Error loading menu. Please refresh the page.', 'error');
+        }
+        this.generateDayTabs();
+        this.generateMenus();
+        
+        const firstAvailableTab = document.querySelector('.day-tab:not(.disabled)');
+        if (firstAvailableTab) {
+          this.switchDay(firstAvailableTab.dataset.day);
+        } else {
+          this.switchDay('monday');
+        }
+      }
     }
 
     let orderSystem;
     document.addEventListener('DOMContentLoaded', () => {
-      orderSystem = new OrderSystem();
+      window.orderSystem = new OrderSystem();
+      window.orderSystem.loadUserEmail(); // Auto-populate email and user data
     });
   </script>
 </body>
