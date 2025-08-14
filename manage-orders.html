@@ -5,64 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Orders - Artios Academies Lunch Program</title>
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f9fa;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             line-height: 1.6;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            background: var(--bg-primary);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            min-height: 100vh;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             color: white;
-            padding: 20px 0;
-            margin-bottom: 30px;
-            border-radius: 10px;
+            padding: 2rem 2.5rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
-        .header h1 {
-            margin: 0;
-            text-align: center;
-            font-size: 2.5em;
-            font-weight: 300;
+        .back-btn {
+            position: absolute;
+            top: 1.25rem;
+            left: 1.25rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 250ms ease;
+            font-size: 0.875rem;
         }
 
-        .nav {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
         }
 
-        .nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
+        .header-brand {
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 30px;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .nav a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: all 0.3s ease;
+        .artios-logo {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
         }
 
-        .nav a:hover, .nav a.active {
-            background: #667eea;
+        .header-text {
+            text-align: left;
+        }
+
+        .header-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            backdrop-filter: blur(10px);
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
             color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 250ms ease;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
         }
 
         /* Main Layout Grid */
@@ -71,6 +137,7 @@
             grid-template-columns: 1fr 400px;
             gap: 30px;
             margin-top: 30px;
+            padding: 2rem;
         }
 
         .orders-section {
@@ -111,19 +178,20 @@
         }
 
         .btn {
-            background: #667eea;
+            background: var(--primary-gradient);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 0.75rem;
             cursor: pointer;
             font-size: 16px;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            transition: all 250ms ease;
         }
 
         .btn:hover {
-            background: #5a6fd8;
             transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
         .btn:disabled {
@@ -322,7 +390,7 @@
         }
 
         .cart-header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: var(--primary-gradient);
             color: white;
             padding: 20px;
             text-align: center;
@@ -427,20 +495,20 @@
 
         .process-refunds-btn {
             width: 100%;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: var(--primary-gradient);
             color: white;
             border: none;
             padding: 15px;
-            border-radius: 6px;
+            border-radius: 0.75rem;
             font-size: 1.1em;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 250ms ease;
         }
 
         .process-refunds-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
         .process-refunds-btn:disabled {
@@ -464,30 +532,6 @@
         .clear-cart-btn:hover {
             background: #dc3545;
             color: white;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .quick-action-btn {
-            padding: 8px 16px;
-            background: #e9ecef;
-            border: 1px solid #ced4da;
-            border-radius: 20px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .quick-action-btn:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
         }
 
         /* Modal Styles */
@@ -707,29 +751,27 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Manage Orders</h1>
-            <p style="color: rgba(255,255,255,0.9); margin-top: 10px;">
-                Logged in as: <strong id="user-email"></strong>
-            </p>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+            
+            <div class="header-brand">
+                <img class="artios-logo" src="artios-logo.png" alt="Artios Academies Logo">
+                <div class="header-text">
+                    <h1>Artios Academies of Sugar Hill</h1>
+                    <div class="subtitle">Manage Your Lunch Orders</div>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="user-info">
+                    Logged in as: <strong id="user-email"></strong>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </div>
-
-        <nav class="nav">
-            <ul>
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="manage-orders.html" class="active">Manage Orders</a></li>
-                <li><a href="#" onclick="logout()">Logout</a></li>
-            </ul>
-        </nav>
 
         <div id="status-message" class="status-message"></div>
 
         <div id="refund-interface" style="display: none;">
-            <div class="quick-actions">
-                <button class="quick-action-btn" onclick="selectAllToday()">Select All Today's Refundable</button>
-                <button class="quick-action-btn" onclick="selectAllTomorrow()">Select All Tomorrow's</button>
-                <button class="quick-action-btn" onclick="clearAllSelections()">Clear All Selections</button>
-            </div>
-
             <div class="refund-container">
                 <div class="orders-section" id="orders-section">
                     <div class="loading">
@@ -761,6 +803,11 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 0.9em; padding: 20px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Artios Academies of Sugar Hill</strong></p>
+            <p>Questions? Contact <strong>CRivers@artiosacademies.com</strong></p>
         </div>
     </div>
 
@@ -805,7 +852,7 @@
 
     <script>
         // Fixed API URL
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec';
         
         let allOrders = [];
         let refundCart = [];
@@ -1132,36 +1179,6 @@
             
             refundCart = [];
             updateCartDisplay();
-        }
-
-        // Quick action functions
-        function selectAllToday() {
-            const today = new Date();
-            const todayStr = formatDateForAPI(today);
-            
-            document.querySelectorAll(`input[data-date="${todayStr}"]:not(:disabled)`).forEach(checkbox => {
-                if (!checkbox.checked) {
-                    checkbox.checked = true;
-                    updateRefundCart(checkbox.dataset.itemId);
-                }
-            });
-        }
-
-        function selectAllTomorrow() {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tomorrowStr = formatDateForAPI(tomorrow);
-            
-            document.querySelectorAll(`input[data-date="${tomorrowStr}"]:not(:disabled)`).forEach(checkbox => {
-                if (!checkbox.checked) {
-                    checkbox.checked = true;
-                    updateRefundCart(checkbox.dataset.itemId);
-                }
-            });
-        }
-
-        function clearAllSelections() {
-            clearRefundCart();
         }
 
         function formatDateForAPI(date) {
