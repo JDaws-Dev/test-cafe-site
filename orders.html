@@ -2310,37 +2310,26 @@
         const orderData = this.prepareOrderData();
         
         try {
-          // Use no-cors mode to bypass CORS restrictions
-          const response = await fetch(this.config.webAppUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-          });
-          
-          // With no-cors mode, we can't read the response, so assume success if no error thrown
-          console.log('Order submitted successfully (no-cors mode)');
-          
-          this.handleSuccessfulSubmission();
-          
+          // Use form submission to bypass CORS entirely
+          await this.submitOrderViaForm(orderData);
         } catch (error) {
           console.error('Error submitting order:', error);
-          // Fallback: try alternative submission method
-          try {
-            await this.submitOrderViaForm(orderData);
-          } catch (fallbackError) {
-            console.error('Fallback submission also failed:', fallbackError);
-            throw error;
-          }
+          this.showError('Failed to submit order. Please try again.');
         }
       }
 
       async submitOrderViaForm(orderData) {
-        // Create a hidden form to submit data without CORS issues
+        // Create a hidden iframe to submit form without page redirect
+        const iframe = document.createElement('iframe');
+        iframe.name = 'order-submit-frame';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        // Create form that targets the hidden iframe
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = this.config.webAppUrl;
-        form.target = '_blank';
+        form.target = 'order-submit-frame';
         form.style.display = 'none';
         
         // Add order data as form fields
@@ -2351,11 +2340,26 @@
         form.appendChild(dataInput);
         
         document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
         
-        console.log('Order submitted via form method');
-        this.handleSuccessfulSubmission();
+        // Submit form and handle response
+        return new Promise((resolve, reject) => {
+          iframe.onload = () => {
+            console.log('Order submitted successfully via form');
+            this.handleSuccessfulSubmission();
+            document.body.removeChild(form);
+            document.body.removeChild(iframe);
+            resolve();
+          };
+          
+          iframe.onerror = () => {
+            console.error('Form submission failed');
+            document.body.removeChild(form);
+            document.body.removeChild(iframe);
+            reject(new Error('Form submission failed'));
+          };
+          
+          form.submit();
+        });
       }
 
       prepareOrderData() {
@@ -2522,6 +2526,10 @@
 
       updateCartDisplay() {
         this.updateCart();
+      }
+
+      showError(message) {
+        this.showNotification(message, 'error');
       }
     }
 
