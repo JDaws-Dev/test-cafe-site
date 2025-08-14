@@ -686,115 +686,152 @@ function generateSessionId() {
   return `S${datePart}${timePart}${randomPart}`;
 }
 
+
+/**
+ * Normalize any date-ish input to "YYYY-MM-DD" (safe for Sheets Date, ISO/local strings, or serials)
+ */
+function normalizeDateToString(dateInput) {
+  if (!dateInput) return '';
+  let d;
+
+  if (dateInput instanceof Date) {
+    d = dateInput;
+  } else if (typeof dateInput === 'number') {
+    // If this is a Sheets serial date, convert using Apps Script Utilities
+    try {
+      d = new Date(dateInput);
+    } catch (e) {
+      d = new Date(NaN);
+    }
+  } else if (typeof dateInput === 'string') {
+    // Works for ISO, and most locale-ish strings that Apps Script’s Date can parse
+    d = new Date(dateInput);
+  } else {
+    return '';
+  }
+
+  if (isNaN(d.getTime())) return '';
+
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+
+
 /**
  * Enhanced lookupOrders function to properly return cancelled item details
+ */
+/**
+ * Enhanced lookupOrders function with normalized date handling
  */
 function lookupOrders(email, orderId = null) {
   try {
     console.log(`Looking up orders for email: ${email}, orderId: ${orderId}`);
-    
+
     const sheet = getOrdersSheet();
     const data = sheet.getDataRange().getValues();
-    
+
     const orderMap = {};
-    
+
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[1] === email) { // Email column
-        if (!orderId || row[0] === orderId) { // Order ID column
-          const currentOrderId = row[0];
-          
-          if (!orderMap[currentOrderId]) {
-            orderMap[currentOrderId] = {
-              orderId: currentOrderId,
-              timestamp: row[8], // Timestamp column
-              email: row[1],
-              items: [],
-              children: [],
-              subtotal: row[13] || 0,
-              discount: row[14] || 0,
-              total: row[15] || 0,
-              promoCode: row[16] || ''
-            };
-          }
-          
-          // Parse item data safely
-          try {
-            let itemsArray = [];
-            if (row[5]) {
-              if (typeof row[5] === 'string') {
-                itemsArray = JSON.parse(row[5]);
-              } else {
-                itemsArray = row[5];
-              }
-            }
-            
-            if (itemsArray.length > 0) {
-              const itemData = itemsArray[0];
-              
-              // Get item status and cancellation details
-              const itemStatus = row[17] || 'active';
-              const cancellationDate = row[18] || null;
-              const refundAmount = parseFloat(row[19]) || 0;
-              const cancellationReason = row[20] || null;
-              const sessionId = row[21] || null;
-              
-              // Create item object with all necessary data including cancellation details
-              const item = {
-                id: `${currentOrderId}-${i}`,
-                rowIndex: i,
-                name: itemData.name,
-                price: parseFloat(row[6]) || 0,
-                day: itemData.day,
-                childId: row[10] || '1',
-                childName: `${row[2]} ${row[3]}`.trim(),
-                childFirstName: row[2],
-                childLastName: row[3],
-                grade: row[4],
-                date: row[11], // Keep original date format for processing
-                status: itemStatus,
-                cancellationDate: cancellationDate,
-                refundAmount: refundAmount,
-                cancellationReason: cancellationReason,
-                sessionId: sessionId
-              };
-              
-              orderMap[currentOrderId].items.push(item);
-              
-              // Track unique children
-              const childKey = item.childName;
-              if (!orderMap[currentOrderId].children.find(c => c.name === childKey)) {
-                orderMap[currentOrderId].children.push({
-                  id: row[10] || '1',
-                  firstName: row[2],
-                  lastName: row[3],
-                  name: childKey,
-                  grade: row[4]
-                });
-              }
-            }
-          } catch (parseError) {
-            console.error(`Error parsing item data for row ${i}:`, parseError);
+      if (row[1] !== email) continue; // Parent_Email (B)
+
+      if (orderId && row[0] !== orderId) continue; // Order_ID (A)
+
+      const currentOrderId = row[0];
+
+      if (!orderMap[currentOrderId]) {
+        orderMap[currentOrderId] = {
+          orderId: currentOrderId,
+          timestamp: row[8], // Timestamp (I)
+          email: row[1],
+          items: [],
+          children: [],
+          subtotal: row[13] || 0, // N
+          discount: row[14] || 0, // O
+          total: row[15] || 0,    // P
+          promoCode: row[16] || ''// Q
+        };
+      }
+
+      try {
+        let itemsArray = [];
+        if (row[5]) { // Items_JSON (F)
+          itemsArray = typeof row[5] === 'string' ? JSON.parse(row[5]) : row[5];
+        }
+
+        if (itemsArray.length > 0) {
+          const itemData = itemsArray[0];
+
+          // CRITICAL: normalize date from Item_Date (L)
+          const normalizedDate = normalizeDateToString(row[11]);
+
+          // Status & cancellation columns
+          const itemStatus = row[17] || 'active';     // R
+          const cancellationDate = row[18] || null;   // S
+          const refundAmount = parseFloat(row[19]) || 0; // T
+          const cancellationReason = row[20] || null; // U
+          const sessionId = row[21] || null;          // V
+
+          const item = {
+            id: `${currentOrderId}-${i}`,
+            rowIndex: i,
+            name: itemData.name,
+            price: parseFloat(row[6]) || 0,             // Item_Price (G)
+            day: itemData.day || row[12],               // Day from JSON or Day_Name (M)
+            childId: row[10] || '1',                    // Child_ID (K)
+            childName: `${row[2]} ${row[3]}`.trim(),    // First + Last (C,D)
+            childFirstName: row[2],
+            childLastName: row[3],
+            grade: row[4],                               // Grade (E)
+            date: normalizedDate,                        // ALWAYS "YYYY-MM-DD"
+            status: itemStatus,
+            cancellationDate: cancellationDate,
+            refundAmount: refundAmount,
+            cancellationReason: cancellationReason,
+            sessionId: sessionId
+          };
+
+          orderMap[currentOrderId].items.push(item);
+
+          // Track unique children
+          const childKey = item.childName;
+          if (!orderMap[currentOrderId].children.find(c => c.name === childKey)) {
+            orderMap[currentOrderId].children.push({
+              id: row[10] || '1',
+              firstName: row[2],
+              lastName: row[3],
+              name: childKey,
+              grade: row[4]
+            });
           }
         }
+      } catch (parseError) {
+        console.error(`Error parsing item data for row ${i}:`, parseError);
       }
     }
-    
+
     const orders = Object.values(orderMap);
+
+    // Debug: verify normalization
     console.log(`Found ${orders.length} orders for ${email}`);
-    
-    return {
-      success: true,
-      orders: orders,
-      count: orders.length
-    };
-    
+    orders.forEach(order => {
+      console.log(`Order ${order.orderId}: ${order.items.length} items`);
+      order.items.forEach(it => {
+        if (!it.date || it.date.includes('T') || it.date.length !== 10) {
+          console.warn('Unnormalized date detected:', it);
+        }
+      });
+    });
+
+    return { success: true, orders, count: orders.length };
+
   } catch (error) {
     console.error('Error in lookupOrders:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    return { success: false, error: error.message };
   }
 }
 
