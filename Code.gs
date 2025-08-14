@@ -1,9 +1,9 @@
 /**
  * Artios Academies Cafe System - Google Apps Script
- * Version: 3.0 - August 12, 2025
+ * Version: 3.1 - August 14, 2025
  * 
  * Complete system with family authentication, order management,
- * cancellation processing, and automated daily reports
+ * simplified session-based cancellation processing, and automated daily reports
  */
 
 // ============================================
@@ -14,7 +14,7 @@ const SHEET_ID = '1vBlYUsY7lt0k4x7I_OxvjYbHvQn0hbR6HwHh_aCsHxA';
 const ORDERS_SHEET = 'orders';
 const FAMILY_ACCOUNTS_SHEET = 'Family_Accounts';
 const CANCELLATIONS_SHEET = 'Cancellations';
-const NOTIFICATION_EMAIL = 'CRivers@artiosacademies.com';
+const NOTIFICATION_EMAIL = 'jdaws@artiosacademies.com';
 
 // ============================================
 // MAIN ENTRY POINTS
@@ -27,22 +27,13 @@ function doPost(e) {
   try {
     console.log('doPost called');
     
-
-
-let data;
-if (e.parameter && e.parameter.data) {
-  console.log('Form-encoded data received');
-  data = JSON.parse(e.parameter.data);
-} else if (e.postData && e.postData.contents) {
-  console.log('Raw post data:', e.postData.contents);
-  data = JSON.parse(e.postData.contents);
-} else {
-  throw new Error('No POST data received');
-}
-
-
-
-
+    let data;
+    if (e.postData && e.postData.contents) {
+      console.log('Raw post data:', e.postData.contents);
+      data = JSON.parse(e.postData.contents);
+    } else {
+      throw new Error('No POST data received');
+    }
     
     // Log received data
     console.log('Parsed data:', JSON.stringify(data));
@@ -91,7 +82,7 @@ if (e.parameter && e.parameter.data) {
 }
 
 /**
- * Handle GET requests
+ * Complete doGet handler with all existing and new endpoints
  */
 function doGet(e) {
   try {
@@ -105,7 +96,7 @@ function doGet(e) {
           success: true,
           message: 'Google Apps Script is working correctly!',
           timestamp: new Date().toISOString(),
-          version: '3.0'
+          version: '3.1'
         }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -233,6 +224,7 @@ function doGet(e) {
       }
     }
     
+    // Updated single item cancellation
     if (action === 'cancel_item') {
       const itemId = e.parameter.item_id;
       const reason = e.parameter.reason || 'Parent requested';
@@ -262,6 +254,38 @@ function doGet(e) {
       }
     }
     
+    // New batch cancellation endpoint
+    if (action === 'cancel_multiple_items') {
+      const sessionId = e.parameter.session_id;
+      const itemsParam = e.parameter.items;
+      const reason = e.parameter.reason || 'Parent requested';
+      
+      if (!sessionId || !itemsParam) {
+        return ContentService
+          .createTextOutput(JSON.stringify({
+            success: false,
+            error: 'Session ID and items parameters required'
+          }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      try {
+        const items = JSON.parse(itemsParam);
+        const result = processBatchCancellation(items, sessionId, reason);
+        return ContentService
+          .createTextOutput(JSON.stringify(result))
+          .setMimeType(ContentService.MimeType.JSON);
+      } catch (batchError) {
+        console.error('Batch cancellation error:', batchError);
+        return ContentService
+          .createTextOutput(JSON.stringify({
+            success: false,
+            error: `Batch cancellation failed: ${batchError.toString()}`
+          }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
     // ============================================
     // REPORT GENERATION ENDPOINTS
     // ============================================
@@ -279,6 +303,7 @@ function doGet(e) {
       
       try {
         const dateParam = e.parameter.date;
+        const workerRecipients = e.parameter.worker_recipients;
         let reportDate;
         
         if (dateParam) {
@@ -291,6 +316,10 @@ function doGet(e) {
         }
         
         const result = generateEmailOnlyReport(reportDate);
+        
+        if (workerRecipients) {
+          sendWorkerDailyOrdersEmail(workerRecipients, result, reportDate);
+        }
         
         return ContentService
           .createTextOutput(JSON.stringify({
@@ -306,6 +335,42 @@ function doGet(e) {
           .createTextOutput(JSON.stringify({
             success: false,
             error: `Report generation failed: ${reportError.toString()}`
+          }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    if (action === 'generate_financial_report') {
+      const secret = e.parameter.secret;
+      if (secret !== 'cafe2025') {
+        return ContentService
+          .createTextOutput(JSON.stringify({
+            success: false,
+            error: 'Invalid secret key'
+          }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      try {
+        const startDate = e.parameter.start_date;
+        const endDate = e.parameter.end_date;
+        const adminRecipients = e.parameter.admin_recipients ? e.parameter.admin_recipients.split(',') : [];
+        
+        if (!startDate || !endDate) {
+          throw new Error('Start date and end date required');
+        }
+        
+        const result = generateFinancialReport(startDate, endDate, adminRecipients);
+        
+        return ContentService
+          .createTextOutput(JSON.stringify(result))
+          .setMimeType(ContentService.MimeType.JSON);
+      } catch (financialError) {
+        console.error('Financial report error:', financialError);
+        return ContentService
+          .createTextOutput(JSON.stringify({
+            success: false,
+            error: `Financial report failed: ${financialError.toString()}`
           }))
           .setMimeType(ContentService.MimeType.JSON);
       }
@@ -410,7 +475,8 @@ function getOrdersSheet() {
       'Item_Status',        // R
       'Cancellation_Date',  // S
       'Refund_Amount',      // T
-      'Cancellation_Reason' // U
+      'Cancellation_Reason', // U
+      'Cancellation_Session_ID' // V
     ];
     
     ordersSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -607,11 +673,11 @@ function resetFamilyPasscode(email) {
 }
 
 // ============================================
-// ORDER LOOKUP AND CANCELLATION FUNCTIONS
+// ENHANCED ORDER LOOKUP AND CANCELLATION FUNCTIONS
 // ============================================
 
 /**
- * Look up orders by email and optional order ID
+ * Enhanced lookupOrders function to properly return cancelled item details
  */
 function lookupOrders(email, orderId = null) {
   try {
@@ -631,7 +697,7 @@ function lookupOrders(email, orderId = null) {
           if (!orderMap[currentOrderId]) {
             orderMap[currentOrderId] = {
               orderId: currentOrderId,
-              timestamp: row[8],
+              timestamp: row[8], // Timestamp column
               email: row[1],
               items: [],
               children: [],
@@ -656,10 +722,14 @@ function lookupOrders(email, orderId = null) {
             if (itemsArray.length > 0) {
               const itemData = itemsArray[0];
               
-              // Get item status (default to 'active' if not set)
+              // Get item status and cancellation details
               const itemStatus = row[17] || 'active';
+              const cancellationDate = row[18] || null;
+              const refundAmount = parseFloat(row[19]) || 0;
+              const cancellationReason = row[20] || null;
+              const sessionId = row[21] || null;
               
-              // Create item object with all necessary data
+              // Create item object with all necessary data including cancellation details
               const item = {
                 id: `${currentOrderId}-${i}`,
                 rowIndex: i,
@@ -671,8 +741,10 @@ function lookupOrders(email, orderId = null) {
                 grade: row[4],
                 date: row[11], // Keep original date format for processing
                 status: itemStatus,
-                cancellationDate: row[18] || null,
-                refundAmount: parseFloat(row[19]) || 0
+                cancellationDate: cancellationDate,
+                refundAmount: refundAmount,
+                cancellationReason: cancellationReason,
+                sessionId: sessionId
               };
               
               orderMap[currentOrderId].items.push(item);
@@ -715,160 +787,175 @@ function lookupOrders(email, orderId = null) {
 }
 
 /**
- * CRITICAL FIX: Process item cancellation with correct deadline validation
+ * Process multiple item cancellations in a single session
  */
-function processCancellation(itemId, reason) {
+function processBatchCancellation(items, sessionId, reason) {
   try {
-    console.log(`Processing cancellation for item: ${itemId}, reason: ${reason}`);
+    console.log(`Processing batch cancellation for session: ${sessionId}, items: ${items.length}`);
     
     const sheet = getOrdersSheet();
     const data = sheet.getDataRange().getValues();
-    
-    // Extract row index from itemId (format: ORDERID-ROWINDEX)
-    const parts = itemId.split('-');
-    const rowIndex = parseInt(parts[parts.length - 1]);
-    
-    if (!rowIndex || rowIndex >= data.length || rowIndex < 1) {
-      throw new Error(`Invalid item ID: ${itemId}`);
-    }
-    
-    const row = data[rowIndex];
-    console.log(`Processing row ${rowIndex} for cancellation`);
-    
-    // Check if item is already cancelled
-    const currentStatus = row[17] || 'active';
-    if (currentStatus === 'cancelled') {
-      return {
-        success: false,
-        message: 'This item has already been cancelled'
-      };
-    }
-    
-    // Parse the item date (column 11) - should be in YYYY-MM-DD format
-    let itemDateStr = row[11];
-    console.log(`Raw item date: ${itemDateStr}`);
-    
-    // Handle different date formats
-    let itemDate;
-    if (itemDateStr instanceof Date) {
-      itemDate = new Date(itemDateStr);
-    } else if (typeof itemDateStr === 'string') {
-      if (itemDateStr.includes('T')) {
-        // Has time component, extract just the date part
-        itemDate = new Date(itemDateStr.split('T')[0] + 'T00:00:00');
-      } else if (itemDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // YYYY-MM-DD format
-        itemDate = new Date(itemDateStr + 'T00:00:00');
-      } else {
-        // Try parsing as-is
-        itemDate = new Date(itemDateStr);
-      }
-    } else {
-      throw new Error('Invalid item date format');
-    }
-    
-    // Validate the parsed date
-    if (isNaN(itemDate.getTime())) {
-      throw new Error(`Could not parse item date: ${itemDateStr}`);
-    }
-    
-    console.log(`Parsed item date: ${itemDate}`);
-    
-    // CRITICAL: Create cutoff time - 8:15 AM on the item's date in LOCAL time
-    // Use the item date's year, month, day but in LOCAL timezone
-    const cutoffTime = new Date(
-      itemDate.getFullYear(),
-      itemDate.getMonth(), 
-      itemDate.getDate(),
-      8,  // 8 AM
-      15, // 15 minutes
-      0,  // 0 seconds
-      0   // 0 milliseconds
-    );
-    
+    const cancelledItems = [];
     const now = new Date();
     
-    console.log(`Current time: ${now}`);
-    console.log(`Cutoff time: ${cutoffTime}`);
-    console.log(`Can cancel: ${now <= cutoffTime}`);
-    
-    if (now > cutoffTime) {
-      const itemDateString = itemDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric', 
-        month: 'long',
-        day: 'numeric'
+    for (const itemRequest of items) {
+      const itemId = itemRequest.itemId;
+      const itemReason = itemRequest.reason || reason;
+      
+      // Extract row index from itemId (format: ORDERID-ROWINDEX)
+      const parts = itemId.split('-');
+      const rowIndex = parseInt(parts[parts.length - 1]);
+      
+      if (!rowIndex || rowIndex >= data.length || rowIndex < 1) {
+        console.error(`Invalid item ID: ${itemId}`);
+        continue;
+      }
+      
+      const row = data[rowIndex];
+      
+      // Check if item is already cancelled
+      const currentStatus = row[17] || 'active';
+      if (currentStatus === 'cancelled') {
+        console.log(`Item ${itemId} already cancelled`);
+        continue;
+      }
+      
+      // Validate deadline (same logic as before)
+      let itemDateStr = row[11];
+      let itemDate;
+      if (itemDateStr instanceof Date) {
+        itemDate = new Date(itemDateStr);
+      } else if (typeof itemDateStr === 'string') {
+        if (itemDateStr.includes('T')) {
+          itemDate = new Date(itemDateStr.split('T')[0] + 'T00:00:00');
+        } else if (itemDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          itemDate = new Date(itemDateStr + 'T00:00:00');
+        } else {
+          itemDate = new Date(itemDateStr);
+        }
+      } else {
+        console.error(`Invalid item date format for ${itemId}: ${itemDateStr}`);
+        continue;
+      }
+      
+      if (isNaN(itemDate.getTime())) {
+        console.error(`Could not parse item date for ${itemId}: ${itemDateStr}`);
+        continue;
+      }
+      
+      // Check deadline
+      const cutoffTime = new Date(
+        itemDate.getFullYear(),
+        itemDate.getMonth(), 
+        itemDate.getDate(),
+        8, 15, 0, 0
+      );
+      
+      if (now > cutoffTime) {
+        console.log(`Item ${itemId} past deadline, skipping`);
+        continue;
+      }
+      
+      // Get item details
+      let itemsArray = [];
+      if (row[5]) {
+        if (typeof row[5] === 'string') {
+          itemsArray = JSON.parse(row[5]);
+        } else {
+          itemsArray = row[5];
+        }
+      }
+      
+      const itemData = itemsArray[0];
+      const refundAmount = parseFloat(row[6]) || 0;
+      const orderId = row[0];
+      const parentEmail = row[1];
+      
+      // Update the row with cancellation info
+      const range = sheet.getRange(rowIndex + 1, 1, 1, sheet.getLastColumn());
+      const updatedRow = [...row];
+      
+      // Ensure we have enough columns (add Cancellation_Session_ID as column V)
+      while (updatedRow.length < 22) {
+        updatedRow.push('');
+      }
+      
+      updatedRow[17] = 'cancelled'; // Status column (R)
+      updatedRow[18] = now.toISOString(); // Cancellation date (S)
+      updatedRow[19] = refundAmount; // Refund amount (T)
+      updatedRow[20] = itemReason; // Cancellation reason (U)
+      updatedRow[21] = sessionId; // Cancellation session ID (V)
+      
+      range.setValues([updatedRow]);
+      
+      // Add to cancelled items list
+      cancelledItems.push({
+        orderId: orderId,
+        parentEmail: parentEmail,
+        childName: `${row[2]} ${row[3]}`,
+        itemName: itemData.name,
+        itemDay: itemData.day,
+        itemDate: itemDate,
+        refundAmount: refundAmount,
+        reason: itemReason,
+        cancellationDate: now
       });
       
-      return {
-        success: false,
-        message: `Cannot cancel - past 8:15 AM deadline for ${itemDateString}`,
-        deadline: cutoffTime.toISOString(),
-        currentTime: now.toISOString()
-      };
+      // Log individual cancellation
+      logCancellation(orderId, itemData, refundAmount, itemReason, parentEmail);
+      
+      console.log(`Successfully cancelled item: ${itemData.name} for ${row[2]} ${row[3]}`);
     }
     
-    // Item can be cancelled - get item details
-    let itemsArray = [];
-    if (row[5]) {
-      if (typeof row[5] === 'string') {
-        itemsArray = JSON.parse(row[5]);
-      } else {
-        itemsArray = row[5];
-      }
+    if (cancelledItems.length > 0) {
+      // Send batched emails
+      const parentEmail = cancelledItems[0].parentEmail;
+      sendBatchedParentCancellationEmail(parentEmail, cancelledItems, sessionId);
+      sendBatchedAdminRefundNotification(parentEmail, cancelledItems, sessionId);
+      
+      console.log(`Sent batched refund emails for ${cancelledItems.length} items`);
     }
-    
-    const itemData = itemsArray[0]; // First item in array
-    const refundAmount = parseFloat(row[6]) || 0;
-    const orderId = row[0];
-    
-    // Update the row with cancellation info
-    const range = sheet.getRange(rowIndex + 1, 1, 1, sheet.getLastColumn());
-    const updatedRow = [...row];
-    
-    // Ensure we have enough columns
-    while (updatedRow.length < 21) {
-      updatedRow.push('');
-    }
-    
-    updatedRow[17] = 'cancelled'; // Status column (R)
-    updatedRow[18] = new Date().toISOString(); // Cancellation date (S)
-    updatedRow[19] = refundAmount; // Refund amount (T)
-    updatedRow[20] = reason; // Cancellation reason (U)
-    
-    range.setValues([updatedRow]);
-    
-    // Log the cancellation
-    logCancellation(orderId, itemData, refundAmount, reason, row[1]);
-    
-    // Send notifications
-    const orderInfo = {
-      orderId: orderId,
-      email: row[1],
-      childName: `${row[2]} ${row[3]}`,
-      itemName: itemData.name,
-      itemDay: itemData.day,
-      itemDate: itemDate,
-      refundAmount: refundAmount,
-      reason: reason
-    };
-    
-    sendParentCancellationConfirmation(orderInfo);
-    sendAdminRefundNotification(orderInfo);
-    
-    console.log(`Successfully cancelled item: ${itemData.name} for ${orderInfo.childName}`);
     
     return {
       success: true,
-      message: `${itemData.name} cancelled successfully. Refund of $${refundAmount.toFixed(2)} will be processed within 24 hours.`,
-      refundAmount: refundAmount,
-      cancellationDate: new Date().toISOString()
+      message: `${cancelledItems.length} item${cancelledItems.length !== 1 ? 's' : ''} cancelled successfully. You will receive a confirmation email shortly.`,
+      cancelledCount: cancelledItems.length,
+      totalRefund: cancelledItems.reduce((sum, item) => sum + item.refundAmount, 0),
+      sessionId: sessionId
     };
+    
+  } catch (error) {
+    console.error('Error in processBatchCancellation:', error);
+    throw error;
+  }
+}
+
+/**
+ * Enhanced single item cancellation that creates a single-item session
+ */
+function processCancellation(itemId, reason) {
+  try {
+    // Create a single-item session
+    const sessionId = generateSessionId();
+    const items = [{ itemId: itemId, reason: reason }];
+    
+    return processBatchCancellation(items, sessionId, reason);
     
   } catch (error) {
     console.error('Error in processCancellation:', error);
     throw error;
   }
+}
+
+/**
+ * Generate unique session ID
+ */
+function generateSessionId() {
+  const now = new Date();
+  const datePart = now.toISOString().slice(2, 10).replace(/-/g, '');
+  const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
+  const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `S${datePart}${timePart}${randomPart}`;
 }
 
 /**
@@ -887,7 +974,7 @@ function logCancellation(orderId, itemData, refundAmount, reason, email) {
       // Add headers
       cancellationSheet.getRange(1, 1, 1, 9).setValues([[
         'Cancellation Date', 'Order ID', 'Email', 'Item Name', 'Item Day', 
-        'Refund Amount', 'Reason', 'Status', 'Refund Processed Date'
+        'Refund Amount', 'Reason', 'Status', 'Session ID'
       ]]);
     }
     
@@ -900,8 +987,8 @@ function logCancellation(orderId, itemData, refundAmount, reason, email) {
       itemData.day,
       refundAmount,
       reason,
-      'Pending Refund',
-      '' // Will be filled when admin processes refund
+      'Cancelled',
+      '' // Session ID will be filled by batch processing
     ]);
     
     console.log('Cancellation logged successfully');
@@ -954,7 +1041,8 @@ function saveMultiChildOrderToSheet(orderData) {
         'active',                             // R: Item Status (for cancellation)
         '',                                   // S: Cancellation Date
         '',                                   // T: Refund Amount
-        ''                                    // U: Cancellation Reason
+        '',                                   // U: Cancellation Reason
+        ''                                    // V: Cancellation Session ID
       ];
       
       sheet.appendRow(rowData);
@@ -1120,6 +1208,81 @@ function compileDailyOrders() {
   }
 }
 
+/**
+ * Generate financial report (placeholder for existing functionality)
+ */
+function generateFinancialReport(startDate, endDate, adminRecipients) {
+  try {
+    console.log(`Generating financial report from ${startDate} to ${endDate}`);
+    
+    const sheet = getOrdersSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    
+    let totalRevenue = 0;
+    let totalOrders = 0;
+    let totalDiscounts = 0;
+    const familyEmails = new Set();
+    const itemCounts = {};
+    
+    // Process orders within date range
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const itemDateStr = row[11];
+      const itemStatus = row[17] || 'active';
+      
+      // Skip cancelled items
+      if (itemStatus === 'cancelled') {
+        continue;
+      }
+      
+      const itemDate = new Date(itemDateStr);
+      
+      if (itemDate >= startDateObj && itemDate <= endDateObj) {
+        totalRevenue += parseFloat(row[15]) || 0; // Total column
+        totalDiscounts += parseFloat(row[14]) || 0; // Discount column
+        totalOrders++;
+        familyEmails.add(row[1]); // Email column
+        
+        // Count items
+        const items = JSON.parse(row[5] || '[]');
+        items.forEach(item => {
+          if (!itemCounts[item.name]) {
+            itemCounts[item.name] = 0;
+          }
+          itemCounts[item.name]++;
+        });
+      }
+    }
+    
+    // Send financial report email to admin recipients
+    if (adminRecipients && adminRecipients.length > 0) {
+      sendFinancialReportEmail(startDate, endDate, {
+        totalRevenue,
+        totalOrders,
+        totalDiscounts,
+        familiesServed: familyEmails.size,
+        itemCounts
+      }, adminRecipients);
+    }
+    
+    return {
+      success: true,
+      message: 'Financial report generated',
+      totalRevenue: totalRevenue,
+      totalOrders: totalOrders,
+      totalDiscounts: totalDiscounts,
+      familiesServed: familyEmails.size
+    };
+    
+  } catch (error) {
+    console.error('Error generating financial report:', error);
+    throw error;
+  }
+}
+
 // ============================================
 // EMAIL FUNCTIONS
 // ============================================
@@ -1244,38 +1407,69 @@ function sendPasswordResetEmail(email, tempPasscode) {
 }
 
 /**
- * Send confirmation email to parent for cancellation
+ * Send batched cancellation confirmation to parent
  */
-function sendParentCancellationConfirmation(orderInfo) {
+function sendBatchedParentCancellationEmail(parentEmail, cancellations, sessionId) {
   try {
-    const subject = `Cancellation Confirmed - ${orderInfo.itemName}`;
+    const totalRefund = cancellations.reduce((sum, item) => sum + item.refundAmount, 0);
+    const itemCount = cancellations.length;
+    const subject = `Lunch Order Cancellation Confirmed - $${totalRefund.toFixed(2)} Refund`;
+    
+    let itemsList = '';
+    cancellations.forEach(item => {
+      itemsList += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.childName}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemName}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDay}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDate.toLocaleDateString()}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${item.refundAmount.toFixed(2)}</td>
+        </tr>
+      `;
+    });
     
     const emailBody = `
       <html>
       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); color: white; padding: 25px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0; font-size: 1.8em;">Cancellation Confirmed</h1>
+          <h1 style="margin: 0; font-size: 1.8em;">Cancellation${itemCount > 1 ? 's' : ''} Confirmed</h1>
         </div>
         
         <div style="padding: 25px; background: white;">
           <h3 style="color: #4caf50;">Your cancellation has been processed</h3>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
-            <h4>Cancelled Item:</h4>
-            <ul>
-              <li><strong>Student:</strong> ${orderInfo.childName}</li>
-              <li><strong>Item:</strong> ${orderInfo.itemName}</li>
-              <li><strong>Day:</strong> ${orderInfo.itemDay}, ${orderInfo.itemDate.toLocaleDateString()}</li>
-              <li><strong>Refund Amount:</strong> $${orderInfo.refundAmount.toFixed(2)}</li>
-            </ul>
+            <h4>Cancelled Items:</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <thead>
+                <tr style="background: #e8f5e8;">
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Student</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Date</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Refund</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsList}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f5f5f5; font-weight: bold;">
+                  <td colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total Refund:</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${totalRefund.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
           
           <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
             <h4>Refund Information:</h4>
             <ul>
-              <li><strong>Amount:</strong> $${orderInfo.refundAmount.toFixed(2)}</li>
-              <li><strong>Method:</strong> Venmo refund to your payment account</li>
+              <li><strong>Amount:</strong> $${totalRefund.toFixed(2)}</li>
+              <li><strong>Method:</strong> Venmo refund</li>
               <li><strong>Timeline:</strong> Within 24 hours</li>
+              <li><strong>Session ID:</strong> ${sessionId}</li>
+              <li><strong>Cancelled on:</strong> ${new Date().toLocaleDateString()}</li>
             </ul>
           </div>
           
@@ -1288,77 +1482,107 @@ function sendParentCancellationConfirmation(orderInfo) {
     `;
     
     GmailApp.sendEmail(
-      orderInfo.email,
+      parentEmail,
       subject,
-      `Cancellation confirmed for ${orderInfo.itemName}. Refund of $${orderInfo.refundAmount.toFixed(2)} will be processed within 24 hours.`,
+      `Cancellation confirmed. Refund of $${totalRefund.toFixed(2)} will be processed within 24 hours.`,
       {
         htmlBody: emailBody,
         name: 'Artios Academies Cafe'
       }
     );
     
-    console.log(`Cancellation confirmation sent to ${orderInfo.email}`);
+    console.log(`Batched cancellation confirmation sent to ${parentEmail}`);
     
   } catch (error) {
-    console.error('Error sending cancellation confirmation:', error);
+    console.error('Error sending batched parent cancellation email:', error);
   }
 }
 
 /**
- * Send refund notification to admin
+ * Send batched refund notification to admin
  */
-function sendAdminRefundNotification(orderInfo) {
+function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionId) {
   try {
-    const subject = `ACTION REQUIRED: Process Refund - ${orderInfo.childName}`;
+    const totalRefund = cancellations.reduce((sum, item) => sum + item.refundAmount, 0);
+    const itemCount = cancellations.length;
+    const subject = `ACTION REQUIRED: Send Venmo Refund - $${totalRefund.toFixed(2)} (${itemCount} item${itemCount > 1 ? 's' : ''})`;
+    
+    let itemsDetail = '';
+    cancellations.forEach(item => {
+      itemsDetail += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.childName}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemName}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDay}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDate.toLocaleDateString()}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${item.refundAmount.toFixed(2)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.reason}</td>
+        </tr>
+      `;
+    });
     
     const emailBody = `
       <html>
-      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #f44336 0%, #ff5722 100%); color: white; padding: 25px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">Refund Required</h1>
+          <h1 style="margin: 0;">Venmo Refund Required</h1>
         </div>
         
         <div style="padding: 25px; background: white;">
           <div style="background: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #d32f2f; margin: 0 0 15px 0;">ACTION REQUIRED</h3>
-            <p style="margin: 0; font-size: 1.1em; font-weight: 600;">Send $${orderInfo.refundAmount.toFixed(2)} via Venmo to parent</p>
+            <p style="margin: 0; font-size: 1.2em; font-weight: 600;">Send $${totalRefund.toFixed(2)} via Venmo to ${parentEmail}</p>
+            <p style="margin: 10px 0 0 0; color: #666;">Session ID: ${sessionId}</p>
           </div>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h4 style="margin: 0 0 15px 0; color: #333;">Cancellation Details:</h4>
-            <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-              <li><strong>Parent:</strong> ${orderInfo.email}</li>
-              <li><strong>Order ID:</strong> ${orderInfo.orderId}</li>
-              <li><strong>Student:</strong> ${orderInfo.childName}</li>
-              <li><strong>Cancelled Item:</strong> ${orderInfo.itemName}</li>
-              <li><strong>Day:</strong> ${orderInfo.itemDay}, ${orderInfo.itemDate.toLocaleDateString()}</li>
-              <li><strong>Reason:</strong> ${orderInfo.reason}</li>
-              <li><strong>Cancelled at:</strong> ${new Date().toLocaleString()}</li>
-            </ul>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #e9ecef;">
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Student</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Date</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Refund</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsDetail}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f5f5f5; font-weight: bold;">
+                  <td colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: right;">TOTAL TO REFUND:</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${totalRefund.toFixed(2)}</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
           
           <div style="background: #e8f5e8; border: 2px solid #4caf50; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h4 style="color: #2e7d32; margin: 0 0 15px 0;">Venmo Payment Instructions:</h4>
             <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
-              <li>Send <strong>$${orderInfo.refundAmount.toFixed(2)}</strong> via Venmo to <strong>${orderInfo.email}</strong></li>
-              <li>Use note: <strong>"Artios Cafe refund - Order ${orderInfo.orderId}"</strong></li>
-              <li>Reply to this email to confirm refund sent</li>
+              <li>Send <strong>$${totalRefund.toFixed(2)}</strong> via Venmo to <strong>${parentEmail}</strong></li>
+              <li>Use note: <strong>"Artios Cafe refund - Session ${sessionId}"</strong></li>
+              <li>No reply needed - system handles confirmation emails</li>
             </ol>
           </div>
           
           <div style="background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h4 style="color: #1976d2; margin: 0 0 15px 0;">Food Order Impact:</h4>
             <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-              <li>Monday daily orders automatically updated</li>
-              <li>Chick-fil-A count reduced by 1 ${orderInfo.itemName}</li>
-              <li>Student checklist updated (${orderInfo.childName} removed from ${orderInfo.itemDay})</li>
-              <li>Worker will receive corrected food list at 8:15 AM</li>
+              <li>Daily orders automatically updated</li>
+              <li>Chick-fil-A counts reduced by ${itemCount} item${itemCount > 1 ? 's' : ''}</li>
+              <li>Student checklists updated</li>
+              <li>Workers will receive corrected food lists at 8:15 AM</li>
             </ul>
           </div>
           
           <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
             <p style="margin: 0; color: #f57c00; font-weight: 600;">
-              This cancellation was auto-approved because it was submitted before the ${orderInfo.itemDay} 8:15 AM deadline.
+              These cancellations were auto-approved because they were submitted before the 8:15 AM deadline.
             </p>
           </div>
         </div>
@@ -1369,17 +1593,17 @@ function sendAdminRefundNotification(orderInfo) {
     GmailApp.sendEmail(
       NOTIFICATION_EMAIL,
       subject,
-      `ACTION REQUIRED: Process refund of $${orderInfo.refundAmount.toFixed(2)} for ${orderInfo.childName}'s cancelled ${orderInfo.itemName}`,
+      `ACTION REQUIRED: Process refund of $${totalRefund.toFixed(2)} for ${itemCount} cancelled items`,
       {
         htmlBody: emailBody,
         name: 'Artios Cafe System - Refund Required'
       }
     );
     
-    console.log(`Admin refund notification sent for ${orderInfo.childName}`);
+    console.log(`Admin refund notification sent for session ${sessionId}`);
     
   } catch (error) {
-    console.error('Error sending admin refund notification:', error);
+    console.error('Error sending batched admin refund notification:', error);
   }
 }
 
@@ -1408,7 +1632,7 @@ function sendOrderConfirmationEmail(orderData) {
     Object.keys(dayGroups).sort().forEach(day => {
       itemsList += `<h4 style="color: #4285f4; margin-top: 20px;">${day}:</h4><ul>`;
       dayGroups[day].forEach(item => {
-        itemsList += `<li>${item.childName}: ${item.itemName} - $${item.price.toFixed(2)}</li>`;
+        itemsList += `<li>${item.childName}: ${item.itemName} - ${item.price.toFixed(2)}</li>`;
       });
       itemsList += '</ul>';
     });
@@ -1431,9 +1655,9 @@ function sendOrderConfirmationEmail(orderData) {
           
           <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Payment Information:</h4>
-            <p style="margin: 5px 0;"><strong>Subtotal:</strong> $${orderData.subtotal.toFixed(2)}</p>
-            ${orderData.discount > 0 ? `<p style="margin: 5px 0; color: #d32f2f;"><strong>Discount:</strong> -$${orderData.discount.toFixed(2)}</p>` : ''}
-            <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Due:</strong> $${orderData.total.toFixed(2)}</p>
+            <p style="margin: 5px 0;"><strong>Subtotal:</strong> ${orderData.subtotal.toFixed(2)}</p>
+            ${orderData.discount > 0 ? `<p style="margin: 5px 0; color: #d32f2f;"><strong>Discount:</strong> -${orderData.discount.toFixed(2)}</p>` : ''}
+            <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Due:</strong> ${orderData.total.toFixed(2)}</p>
           </div>
           
           <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
@@ -1462,7 +1686,7 @@ function sendOrderConfirmationEmail(orderData) {
     GmailApp.sendEmail(
       orderData.parentEmail,
       subject,
-      `Order confirmed! Total: $${orderData.total.toFixed(2)}. Please send payment via Venmo.`,
+      `Order confirmed! Total: ${orderData.total.toFixed(2)}. Please send payment via Venmo.`,
       {
         htmlBody: emailBody,
         name: 'Artios Academies Cafe'
@@ -1492,7 +1716,7 @@ function sendAdminNotificationEmail(orderData) {
           <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.grade : ''}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.day}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">$${item.price.toFixed(2)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${item.price.toFixed(2)}</td>
         </tr>
       `;
     });
@@ -1510,7 +1734,7 @@ function sendAdminNotificationEmail(orderData) {
             <p style="margin: 5px 0;"><strong>Order ID:</strong> ${orderData.orderId}</p>
             <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${orderData.parentEmail}</p>
             <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
-            <p style="margin: 5px 0;"><strong>Total Amount:</strong> $${orderData.total.toFixed(2)}</p>
+            <p style="margin: 5px 0;"><strong>Total Amount:</strong> ${orderData.total.toFixed(2)}</p>
             ${orderData.promoCode ? `<p style="margin: 5px 0;"><strong>Promo Code:</strong> ${orderData.promoCode}</strong></p>` : ''}
           </div>
           
@@ -1533,7 +1757,7 @@ function sendAdminNotificationEmail(orderData) {
           <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
             <h4 style="margin: 0 0 10px 0; color: #f57c00;">Action Required:</h4>
             <p style="margin: 5px 0;">Monitor for Venmo payment from <strong>${orderData.parentEmail}</strong></p>
-            <p style="margin: 5px 0;">Expected amount: <strong>$${orderData.total.toFixed(2)}</strong></p>
+            <p style="margin: 5px 0;">Expected amount: <strong>${orderData.total.toFixed(2)}</strong></p>
             <p style="margin: 5px 0;">Order ID in payment note: <strong>${orderData.orderId}</strong></p>
           </div>
         </div>
@@ -1544,7 +1768,7 @@ function sendAdminNotificationEmail(orderData) {
     GmailApp.sendEmail(
       NOTIFICATION_EMAIL,
       subject,
-      `New order received from ${orderData.parentEmail}. Total: $${orderData.total.toFixed(2)}`,
+      `New order received from ${orderData.parentEmail}. Total: ${orderData.total.toFixed(2)}`,
       {
         htmlBody: emailBody,
         name: 'Artios Cafe System'
@@ -1610,8 +1834,8 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
         <tr>
           <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
           <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${data.count}</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${data.price.toFixed(2)}</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${data.total.toFixed(2)}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${data.price.toFixed(2)}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${data.total.toFixed(2)}</td>
         </tr>
       `;
     });
@@ -1671,8 +1895,8 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
                 <strong>Families Served:</strong> ${result.reportData.familiesServed}<br>
               </div>
               <div>
-                <strong>Revenue:</strong> $${result.reportData.totalRevenue.toFixed(2)}<br>
-                <strong>Discounts:</strong> $${result.reportData.totalDiscounts.toFixed(2)}<br>
+                <strong>Revenue:</strong> ${result.reportData.totalRevenue.toFixed(2)}<br>
+                <strong>Discounts:</strong> ${result.reportData.totalDiscounts.toFixed(2)}<br>
               </div>
             </div>
           </div>
@@ -1698,7 +1922,7 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
                   <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${result.orderCount}</td>
                   <td style="padding: 10px; border: 1px solid #ddd;"></td>
                   <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">
-                    $${result.reportData.totalRevenue.toFixed(2)}
+                    ${result.reportData.totalRevenue.toFixed(2)}
                   </td>
                 </tr>
               </tfoot>
@@ -1750,6 +1974,250 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
     
   } catch (error) {
     console.error('Error sending report email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send worker daily orders email (for daily-orders.html functionality)
+ */
+function sendWorkerDailyOrdersEmail(workerEmail, reportData, reportDate) {
+  try {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const reportDayName = dayNames[reportDate.getDay()];
+    const dateStr = reportDate.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    const subject = `Daily Food Orders - ${dateStr} - ${reportData.orderCount} Items`;
+    
+    if (reportData.orderCount === 0) {
+      const emailBody = `
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
+            <h2 style="color: #666;">No Orders for ${dateStr}</h2>
+            <p>There are no lunch orders scheduled for today. No food preparation needed.</p>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      GmailApp.sendEmail(
+        workerEmail,
+        subject,
+        `No orders for ${dateStr}`,
+        {
+          htmlBody: emailBody,
+          name: 'Artios Cafe Daily Orders'
+        }
+      );
+      return;
+    }
+    
+    // Build detailed email for worker
+    let itemSummaryHtml = '';
+    const sortedItems = Object.entries(reportData.reportData.itemCounts)
+      .sort((a, b) => b[1].count - a[1].count);
+    
+    sortedItems.forEach(([itemName, data]) => {
+      itemSummaryHtml += `
+        <tr>
+          <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${data.count}</td>
+        </tr>
+      `;
+    });
+    
+    // Build student checklist
+    let studentListHtml = '';
+    const itemStudentMap = {};
+    
+    reportData.reportData.itemsForThisDate.forEach(order => {
+      const itemName = order.item.name;
+      if (!itemStudentMap[itemName]) {
+        itemStudentMap[itemName] = [];
+      }
+      itemStudentMap[itemName].push({
+        name: order.childName,
+        grade: order.grade
+      });
+    });
+    
+    Object.keys(itemStudentMap).sort().forEach(itemName => {
+      const students = itemStudentMap[itemName]
+        .sort((a, b) => a.name.split(' ')[1]?.localeCompare(b.name.split(' ')[1]) || a.name.localeCompare(b.name));
+      
+      studentListHtml += `
+        <div style="margin: 20px 0; break-inside: avoid;">
+          <h4 style="color: #4285f4; margin: 10px 0; background: #f0f8ff; padding: 10px; border-radius: 5px;">
+            ${itemName} (${students.length} orders)
+          </h4>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-left: 15px;">
+      `;
+      
+      students.forEach(student => {
+        studentListHtml += `
+          <div style="display: flex; align-items: center; padding: 5px 0;">
+            <input type="checkbox" style="margin-right: 8px; transform: scale(1.2);">
+            <span>${student.name} (${student.grade})</span>
+          </div>
+        `;
+      });
+      
+      studentListHtml += `
+          </div>
+        </div>
+      `;
+    });
+    
+    const emailBody = `
+      <html>
+      <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+          <h1 style="margin: 0;">🍽️ Daily Food Orders</h1>
+          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateStr}</p>
+        </div>
+        
+        <div style="padding: 25px; background: white;">
+          <!-- Summary Box -->
+          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+            <h3 style="color: #f57c00; margin: 0 0 15px 0;">📋 Order Summary</h3>
+            <div style="font-size: 1.1em; line-height: 1.6;">
+              <strong>Total Items to Prepare:</strong> ${reportData.orderCount}<br>
+              <strong>Students Served:</strong> ${reportData.reportData.familiesServed}<br>
+              <strong>Categories:</strong> ${Object.keys(reportData.reportData.itemCounts).length}
+            </div>
+          </div>
+          
+          <!-- Chick-fil-A Order List -->
+          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
+            <h3 style="color: #1976d2; margin: 0 0 15px 0;">🐔 Chick-fil-A Order List</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #bbdefb;">
+                  <th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-size: 1.1em;">Item</th>
+                  <th style="padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 1.1em;">Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemSummaryHtml}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f5f5f5; font-weight: bold; font-size: 1.1em;">
+                  <td style="padding: 12px; border: 1px solid #ddd;">TOTAL ITEMS</td>
+                  <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${reportData.orderCount}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          
+          <!-- Student Checklist -->
+          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">✅ Student Checklist (Printable)</h3>
+            <p style="color: #666; margin-bottom: 20px; font-style: italic;">
+              Check off each student as you distribute their order. Sorted by last name for easy reference.
+            </p>
+            ${studentListHtml}
+          </div>
+          
+          <!-- Action Items -->
+          <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
+            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">🎯 Today's Tasks</h3>
+            <ol style="margin: 0; padding-left: 25px; line-height: 2; font-size: 1.1em;">
+              <li><strong>Place Chick-fil-A order</strong> for ${reportData.orderCount} total items</li>
+              <li><strong>Print this checklist</strong> or keep email open on tablet</li>
+              <li><strong>Prepare labels</strong> for each student's order</li>
+              <li><strong>Set up distribution area</strong> before lunch period</li>
+              <li><strong>Check off students</strong> as orders are distributed</li>
+            </ol>
+          </div>
+          
+          <!-- Footer -->
+          <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}</p>
+            <p style="font-size: 0.9em;">This report excludes cancelled items and shows only active orders.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    GmailApp.sendEmail(
+      workerEmail,
+      subject,
+      `Daily orders: ${reportData.orderCount} items for ${dateStr}`,
+      {
+        htmlBody: emailBody,
+        name: 'Artios Cafe Daily Orders'
+      }
+    );
+    
+    console.log(`Worker daily orders email sent to ${workerEmail}: ${reportData.orderCount} items for ${dateStr}`);
+    
+  } catch (error) {
+    console.error('Error sending worker daily orders email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send financial report email
+ */
+function sendFinancialReportEmail(startDate, endDate, reportData, adminRecipients) {
+  try {
+    const subject = `Artios Cafe Financial Report - ${startDate} to ${endDate}`;
+    
+    let itemsList = '';
+    Object.entries(reportData.itemCounts).forEach(([itemName, count]) => {
+      itemsList += `<li>${itemName}: ${count} orders</li>`;
+    });
+    
+    const emailBody = `
+      <html>
+      <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+          <h1 style="margin: 0;">Financial Report</h1>
+          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${startDate} to ${endDate}</p>
+        </div>
+        
+        <div style="padding: 25px; background: white;">
+          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">Summary</h3>
+            <p><strong>Total Revenue:</strong> ${reportData.totalRevenue.toFixed(2)}</p>
+            <p><strong>Total Orders:</strong> ${reportData.totalOrders}</p>
+            <p><strong>Total Discounts:</strong> ${reportData.totalDiscounts.toFixed(2)}</p>
+            <p><strong>Families Served:</strong> ${reportData.familiesServed}</p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin: 0 0 15px 0;">Popular Items</h3>
+            <ul>${itemsList}</ul>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    adminRecipients.forEach(email => {
+      GmailApp.sendEmail(
+        email,
+        subject,
+        `Financial report: ${reportData.totalRevenue.toFixed(2)} revenue from ${reportData.totalOrders} orders`,
+        {
+          htmlBody: emailBody,
+          name: 'Artios Cafe Financial Reports'
+        }
+      );
+    });
+    
+    console.log(`Financial report sent to ${adminRecipients.length} recipients`);
+    
+  } catch (error) {
+    console.error('Error sending financial report email:', error);
     throw error;
   }
 }
@@ -1809,7 +2277,7 @@ function setupFamilyAuthentication() {
     console.log('✅ Family authentication system ready');
     console.log('✅ Google Sheets configured with proper columns');
     console.log('✅ Daily email automation scheduled for 8:15 AM');
-    console.log('✅ Order cancellation system ready');
+    console.log('✅ Session-based cancellation system ready');
     console.log('✅ All email templates configured');
     console.log('');
     console.log('🚀 NEXT STEPS:');
@@ -1824,6 +2292,7 @@ function setupFamilyAuthentication() {
     console.log('• ?action=create_family_account&email=X&passcode=X - Signup');
     console.log('• ?action=lookup_orders&email=X - Get orders');
     console.log('• ?action=cancel_item&item_id=X&reason=X - Cancel item');
+    console.log('• ?action=cancel_multiple_items&session_id=X&items=X&reason=X - Batch cancel');
     console.log('');
     
   } catch (error) {
