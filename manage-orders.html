@@ -147,58 +147,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .email-section {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .email-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .email-input-group {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .email-input-group input {
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-            min-width: 250px;
-        }
-
-        .btn {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 0.75rem;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 250ms ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
         /* Date Group Styles */
         .date-group {
             margin-bottom: 20px;
@@ -259,6 +207,14 @@
             font-size: 0.85em;
         }
 
+        .cancelled-count {
+            background: #ef4444;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
         .toggle-icon {
             transition: transform 0.3s ease;
             color: #6c757d;
@@ -288,13 +244,24 @@
             transition: background-color 0.2s ease;
         }
 
-        .refund-item:hover {
+        .refund-item:hover:not(.cancelled) {
             background: #f8f9fa;
         }
 
         .refund-item.disabled {
             opacity: 0.5;
             background: #f8f9fa;
+        }
+
+        .refund-item.cancelled {
+            background: #ffebee;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .refund-item.cancelled .item-details {
+            text-decoration: line-through;
+            color: #999;
         }
 
         .refund-item input[type="checkbox"] {
@@ -374,6 +341,11 @@
         .status-refunded {
             background: #e2e3e5;
             color: #383d41;
+        }
+
+        .status-cancelled {
+            background: #ffcdd2;
+            color: #c62828;
         }
 
         /* Refund Cart Styles */
@@ -544,6 +516,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
         }
 
         .modal.show {
@@ -561,6 +534,18 @@
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .close {
@@ -590,8 +575,19 @@
             margin-top: 20px;
         }
 
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 250ms ease;
+        }
+
         .btn-danger {
             background: #dc3545;
+            color: white;
         }
 
         .btn-danger:hover {
@@ -600,6 +596,7 @@
 
         .btn-secondary {
             background: #6c757d;
+            color: white;
         }
 
         .btn-secondary:hover {
@@ -610,7 +607,7 @@
         .status-message {
             padding: 15px;
             border-radius: 8px;
-            margin: 20px 0;
+            margin: 20px;
             font-weight: 500;
             display: none;
         }
@@ -661,25 +658,6 @@
         }
 
         /* Mobile Responsive */
-        @media (min-width: 769px) {
-            .header-top-row {
-                position: relative;
-                height: 0; /* Don't take up space */
-            }
-            
-            .back-btn {
-                position: absolute;
-                top: 0;
-                left: 0;
-            }
-            
-            .header-actions {
-                position: absolute;
-                top: 0;
-                right: 0;
-            }
-        }
-
         @media (max-width: 1024px) {
             .refund-container {
                 grid-template-columns: 1fr;
@@ -693,10 +671,6 @@
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
             .header {
                 padding: 1rem;
             }
@@ -726,16 +700,6 @@
                 font-size: 1.5rem;
             }
 
-            .nav ul {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .email-input-group {
-                flex-direction: column;
-                align-items: center;
-            }
-
             .item-main {
                 flex-direction: column;
                 align-items: flex-start;
@@ -752,14 +716,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="header-top-row">
-                <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
-                <div class="header-actions">
-                    <div class="user-info">
-                        <span id="user-email"></span>
-                    </div>
-                    <button class="logout-btn" onclick="logout()">Logout</button>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+            <div class="header-actions">
+                <div class="user-info">
+                    <span id="user-email"></span>
                 </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
             
             <div class="header-brand">
@@ -796,7 +758,7 @@
                             <strong>Total Refund:</strong>
                             <span class="total-amount">$<span id="refund-total">0.00</span></span>
                         </div>
-                        <button class="process-refunds-btn" id="process-refunds-btn" onclick="processAllRefunds()" disabled>
+                        <button class="process-refunds-btn" id="process-refunds-btn" onclick="showBatchConfirmation()" disabled>
                             Process Refunds
                         </button>
                         <button class="clear-cart-btn" onclick="clearRefundCart()">
@@ -838,20 +800,6 @@
         </div>
     </div>
 
-    <!-- Results Modal -->
-    <div id="resultsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeResultsModal()">&times;</span>
-            <h2>Refund Processing Results</h2>
-            <div id="refundResults">
-                <!-- Results will be displayed here -->
-            </div>
-            <div class="modal-buttons">
-                <button class="btn" onclick="closeResultsModal()">Close</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // Fixed API URL
         const API_URL = 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec';
@@ -880,6 +828,9 @@
                 return;
             }
             
+            // Set user email in header
+            document.getElementById('user-email').textContent = authenticatedEmail;
+            
             // Automatically load orders for authenticated user
             loadOrdersForAuthenticatedUser(authenticatedEmail);
             
@@ -895,20 +846,6 @@
             };
         }
 
-        function checkAuthentication() {
-            const authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
-            const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
-            
-            if (!authenticatedEmail || !authExpiry || Date.now() >= authExpiry) {
-                // Session expired or not authenticated
-                alert('Your session has expired. Please log in again.');
-                window.location.href = 'login.html';
-                return null;
-            }
-            
-            return authenticatedEmail;
-        }
-
         function logout() {
             sessionStorage.removeItem('authenticatedEmail');
             sessionStorage.removeItem('authExpiry');
@@ -916,9 +853,6 @@
         }
 
         async function loadOrdersForAuthenticatedUser(email) {
-            // No need to ask for email - we already have it
-            document.getElementById('user-email').textContent = email;
-            
             showMessage('Loading your orders...', 'info');
             document.getElementById('refund-interface').style.display = 'block';
             document.getElementById('orders-section').innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading your orders...</div>';
@@ -950,34 +884,33 @@
             const ordersSection = document.getElementById('orders-section');
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            const endOfWeek = new Date(today);
-            endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
 
             // Group items by date
             const itemsByDate = {};
             
             orders.forEach(order => {
                 order.items.forEach(item => {
-                    // Skip cancelled items
-                    if (item.status === 'cancelled') return;
-                    
                     // Clean the date - remove timezone info
-                    const itemDate = item.date.split('T')[0]; // Get just YYYY-MM-DD
+                    const itemDate = item.date ? item.date.split('T')[0] : '';
+                    
+                    if (!itemDate) return;
                     
                     if (!itemsByDate[itemDate]) {
                         itemsByDate[itemDate] = [];
                     }
                     
+                    // Fix grade field - use multiple fallbacks
+                    const grade = item.grade || item.childGrade || order.grade || 'Unknown';
+                    
                     itemsByDate[itemDate].push({
                         ...item,
-                        date: itemDate, // Store cleaned date
+                        date: itemDate,
                         orderId: order.orderId,
                         email: order.email,
-                        grade: item.grade || item.childGrade || 'N/A' // Make sure we're getting the right field
+                        grade: grade,
+                        childFirstName: item.childFirstName || item.childName?.split(' ')[0] || '',
+                        childLastName: item.childLastName || item.childName?.split(' ')[1] || '',
+                        status: item.status || 'active'
                     });
                 });
             });
@@ -988,28 +921,21 @@
             let html = '';
             
             sortedDates.forEach(dateStr => {
-                const date = new Date(dateStr + 'T12:00:00'); // Use noon to avoid timezone issues
+                const date = new Date(dateStr + 'T12:00:00');
                 const items = itemsByDate[dateStr];
-                const refundableItems = items.filter(item => canRefundItem(dateStr));
+                const refundableItems = items.filter(item => item.status !== 'cancelled' && canRefundItem(dateStr));
+                const cancelledItems = items.filter(item => item.status === 'cancelled');
                 
                 const isToday = date.toDateString() === today.toDateString();
                 const isPast = date < today;
                 
-                html += createDateGroup(date, items, refundableItems, isToday, isPast, dateStr);
+                html += createDateGroup(date, items, refundableItems, cancelledItems, isToday, isPast, dateStr);
             });
 
             ordersSection.innerHTML = html || '<div class="empty-cart">No orders found</div>';
         }
 
-        function createDateGroup(date, items, refundableItems, isToday, isPast, dateStr) {
-            // Validate date first
-            if (isNaN(date.getTime())) {
-                console.error('Invalid date:', dateStr);
-                // Create date from string manually
-                const [year, month, day] = dateStr.split('-');
-                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
-            }
-            
+        function createDateGroup(date, items, refundableItems, cancelledItems, isToday, isPast, dateStr) {
             const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                                'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1029,6 +955,7 @@
                             <span class="date-title">${dateDisplay}</span>
                             <span class="item-count">${items.length} item${items.length !== 1 ? 's' : ''}</span>
                             ${refundableItems.length > 0 ? `<span class="refundable-count">${refundableItems.length} refundable</span>` : ''}
+                            ${cancelledItems.length > 0 ? `<span class="cancelled-count">${cancelledItems.length} cancelled</span>` : ''}
                         </div>
                         <span class="toggle-icon">▼</span>
                     </div>
@@ -1036,11 +963,16 @@
             `;
 
             items.forEach(item => {
-                const canRefund = canRefundItem(dateStr);
+                const isCancelled = item.status === 'cancelled';
+                const canRefund = !isCancelled && canRefundItem(dateStr);
                 const itemId = `${item.orderId}-${item.id || Math.random().toString(36).substr(2, 9)}`;
                 
                 html += `
-                    <div class="refund-item ${!canRefund ? 'disabled' : ''}">
+                    <div class="refund-item ${!canRefund && !isCancelled ? 'disabled' : ''} ${isCancelled ? 'cancelled' : ''}">
+                `;
+                
+                if (!isCancelled) {
+                    html += `
                         <input type="checkbox" 
                                id="item-${itemId}" 
                                data-item-id="${itemId}"
@@ -1052,7 +984,13 @@
                                data-day="${item.day}"
                                onchange="updateRefundCart('${itemId}')"
                                ${!canRefund ? 'disabled' : ''}>
-                        <label for="item-${itemId}">
+                    `;
+                } else {
+                    html += `<div style="width: 35px;"></div>`;
+                }
+                
+                html += `
+                        <label for="item-${itemId}" style="${isCancelled ? 'cursor: default;' : ''}">
                             <div class="item-details">
                                 <div class="item-main">
                                     <span class="child-name">${item.childName}</span>
@@ -1060,14 +998,24 @@
                                 </div>
                                 <div class="item-meta">
                                     <span>${item.day}</span>
-                                    <span>Grade: ${item.grade || 'N/A'}</span>
+                                    <span>Grade: ${item.grade}</span>
+                                    ${isCancelled && item.cancellationDate ? 
+                                        `<span style="color: #ef4444;">Cancelled: ${new Date(item.cancellationDate).toLocaleDateString()}</span>` : ''}
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center;">
                                 <span class="item-price">$${item.price.toFixed(2)}</span>
-                                ${canRefund ? 
-                                    '<span class="status-badge status-refundable">Refundable</span>' : 
-                                    '<span class="status-badge status-deadline-passed">Past Deadline</span>'}
+                `;
+                
+                if (isCancelled) {
+                    html += '<span class="status-badge status-cancelled">REFUNDED</span>';
+                } else if (canRefund) {
+                    html += '<span class="status-badge status-refundable">Refundable</span>';
+                } else {
+                    html += '<span class="status-badge status-deadline-passed">Past Deadline</span>';
+                }
+                
+                html += `
                             </div>
                         </label>
                     </div>
@@ -1188,64 +1136,12 @@
             updateCartDisplay();
         }
 
-        function formatDateForAPI(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        async function processAllRefunds() {
+        function showBatchConfirmation() {
             if (refundCart.length === 0) {
                 showMessage('No items selected for refund', 'error');
                 return;
             }
             
-            // Generate ONE session ID for ALL items
-            const sessionId = generateSessionId();
-            
-            // Prepare ALL items for batch processing
-            const itemsToCancel = refundCart.map(item => ({
-                itemId: item.id,
-                reason: 'Parent requested'
-            }));
-            
-            const confirmBtn = document.getElementById('process-refunds-btn');
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Processing...';
-            
-            try {
-                // Send ALL items in ONE API call
-                const url = `${API_URL}?action=cancel_multiple_items&session_id=${sessionId}&items=${encodeURIComponent(JSON.stringify(itemsToCancel))}&reason=Parent%20requested`;
-                
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (result.success) {
-                    showMessage(`Successfully cancelled ${result.cancelledCount} items. Total refund: $${result.totalRefund.toFixed(2)}. You will receive ONE confirmation email.`, 'success');
-                    
-                    // Clear the cart
-                    refundCart = [];
-                    updateCartDisplay();
-                    
-                    // Reload orders to show updated status
-                    const email = checkAuthentication();
-                    if (email) {
-                        setTimeout(() => loadOrdersForAuthenticatedUser(email), 2000);
-                    }
-                } else {
-                    showMessage(`Error: ${result.error}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error processing refunds:', error);
-                showMessage('Failed to process refunds. Please try again.', 'error');
-            } finally {
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Process Refunds';
-            }
-        }
-
-        function showBatchConfirmation() {
             const modal = document.getElementById('batchConfirmModal');
             const detailsDiv = document.getElementById('batchRefundDetails');
             const totalSpan = document.getElementById('batchTotalAmount');
@@ -1286,110 +1182,46 @@
             confirmBtn.disabled = true;
             confirmBtn.textContent = 'Processing...';
             
-            const results = [];
+            // Generate ONE session ID for ALL items
+            const sessionId = generateSessionId();
             
-            for (const item of refundCart) {
-                try {
-                    const response = await fetch(`${API_URL}?action=cancel_item&item_id=${encodeURIComponent(item.id)}&reason=${encodeURIComponent('Batch refund request')}`, {
-                        method: 'GET'
-                    });
+            // Prepare ALL items for batch processing (removed reason)
+            const itemsToCancel = refundCart.map(item => ({
+                itemId: item.id
+            }));
+            
+            try {
+                // Send ALL items in ONE API call (removed reason parameter)
+                const url = `${API_URL}?action=cancel_multiple_items&session_id=${sessionId}&items=${encodeURIComponent(JSON.stringify(itemsToCancel))}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeBatchModal();
+                    showMessage(`Successfully cancelled ${result.cancelledCount} items. Total refund: $${result.totalRefund.toFixed(2)}. You will receive ONE confirmation email.`, 'success');
                     
-                    const result = await response.json();
-                    results.push({
-                        item: item,
-                        success: result.success,
-                        message: result.message || result.error
-                    });
-                } catch (error) {
-                    results.push({
-                        item: item,
-                        success: false,
-                        message: error.message
-                    });
+                    // Clear the cart
+                    refundCart = [];
+                    updateCartDisplay();
+                    
+                    // Reload orders to show updated status
+                    const email = sessionStorage.getItem('authenticatedEmail');
+                    if (email) {
+                        setTimeout(() => loadOrdersForAuthenticatedUser(email), 2000);
+                    }
+                } else {
+                    closeBatchModal();
+                    showMessage(`Error: ${result.error}`, 'error');
                 }
+            } catch (error) {
+                console.error('Error processing refunds:', error);
+                closeBatchModal();
+                showMessage('Failed to process refunds. Please try again.', 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirm & Process Refunds';
             }
-            
-            closeBatchModal();
-            showRefundResults(results);
-            
-            // Clear successful items from cart
-            const successfulItems = results.filter(r => r.success).map(r => r.item.id);
-            refundCart = refundCart.filter(item => !successfulItems.includes(item.id));
-            updateCartDisplay();
-            
-            // Reload orders to reflect changes
-            const email = checkAuthentication();
-            if (email) {
-                setTimeout(() => loadOrdersForAuthenticatedUser(email), 2000);
-            }
-            
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Confirm & Process Refunds';
-        }
-
-        function showRefundResults(results) {
-            const modal = document.getElementById('resultsModal');
-            const resultsDiv = document.getElementById('refundResults');
-            
-            const successful = results.filter(r => r.success);
-            const failed = results.filter(r => !r.success);
-            
-            let html = '';
-            
-            if (successful.length > 0) {
-                html += `
-                    <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                        <h3 style="color: #155724; margin-top: 0;">✅ Successfully Refunded (${successful.length})</h3>
-                        <ul>
-                `;
-                
-                let totalRefunded = 0;
-                successful.forEach(r => {
-                    html += `<li>${r.item.childName} - ${r.item.name} ($${r.item.amount.toFixed(2)})</li>`;
-                    totalRefunded += r.item.amount;
-                });
-                
-                html += `
-                        </ul>
-                        <strong>Total Refunded: $${totalRefunded.toFixed(2)}</strong>
-                    </div>
-                `;
-            }
-            
-            if (failed.length > 0) {
-                html += `
-                    <div style="background: #f8d7da; padding: 15px; border-radius: 8px;">
-                        <h3 style="color: #721c24; margin-top: 0;">❌ Failed (${failed.length})</h3>
-                        <ul>
-                `;
-                
-                failed.forEach(r => {
-                    html += `<li>${r.item.childName} - ${r.item.name}: ${r.message}</li>`;
-                });
-                
-                html += `
-                        </ul>
-                    </div>
-                `;
-            }
-            
-            html += `
-                <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                    <p style="margin: 0; color: #0c5460;">
-                        <strong>Next Steps:</strong><br>
-                        • You will receive a confirmation email for successful refunds<br>
-                        • Refunds will be processed via Venmo within 24 hours<br>
-                        • Contact CRivers@artiosacademies.com with any questions
-                    </p>
-                </div>
-            `;
-            
-            resultsDiv.innerHTML = html;
-            modal.classList.add('show');
-        }
-
-        function closeResultsModal() {
-            document.getElementById('resultsModal').classList.remove('show');
         }
 
         function showMessage(message, type) {
