@@ -1386,7 +1386,7 @@
       checkStoreHours() {
         const now = new Date();
         const dayOfWeek = now.getDay();
-        const isFridayAfterOne = (dayOfWeek === 5 && now.getHours() >= 13);
+        const isFridayAfterOne = (dayOfWeek === 5 && now.getHours() >= 9);
         
         this.state.isNextWeek = isFridayAfterOne;
         this.state.storeIsOpen = true;
