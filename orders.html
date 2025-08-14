@@ -1104,10 +1104,16 @@
       <div class="form-section">
         <!-- Enhanced shared email section -->
         <div class="shared-email">
-          <h3>📧 Family Email</h3>
-          <div class="form-group">
-            <label for="family-email">Email Address <span class="required">*</span></label>
-            <input type="email" id="family-email" required placeholder="parent@example.com">
+          <h3>📧 Family Contact Information</h3>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: span 2;">
+              <label for="family-email">Email Address <span class="required">*</span></label>
+              <input type="email" id="family-email" required placeholder="parent@example.com">
+            </div>
+            <div class="form-group">
+              <label for="family-phone">Phone Number (Optional)</label>
+              <input type="tel" id="family-phone" placeholder="(555) 123-4567">
+            </div>
           </div>
         </div>
 
@@ -1291,6 +1297,7 @@
   <script>
     class OrderSystem {
       constructor() {
+        // FIXED: Using the correct URL from login.html
         this.config = {
           webAppUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
           useGoogleSheets: true
@@ -1306,6 +1313,7 @@
           currentDiscount: 0,
           orderItems: [],
           discountType: 'none',
+          appliedPromoCode: '',
           childCount: 1
         };
 
@@ -1352,18 +1360,12 @@
         this.init();
       }
 
-      init() {
-        this.loadUserEmail(); // Add this line to auto-populate email
-        this.loadUserDataFromCookies();
-        this.updateChildCheckboxes();
-        this.validateForm();
-        this.updateCartDisplay();
-      }
-
       async init() {
         try {
+          this.checkStoreHours();
           await this.loadMenuData();
-          this.loadUserEmail(); // Load login email instead of cookie data
+          this.loadUserEmail();
+          this.loadUserDataFromCookies();
           this.setupEventListeners();
           this.setupAutoSave();
           this.validateForm();
@@ -1380,12 +1382,13 @@
       }
 
       loadUserEmail() {
-        // Try to get email from login session
-        const userEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
-        if (userEmail) {
+        // Try to get email from session storage (from dashboard/login)
+        const authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
+        if (authenticatedEmail) {
           const emailField = document.getElementById('family-email');
           if (emailField) {
-            emailField.value = userEmail;
+            emailField.value = authenticatedEmail;
+            console.log('Email loaded from session:', authenticatedEmail);
           }
         }
       }
@@ -1415,6 +1418,27 @@
         d.setDate(diff);
         d.setHours(0, 0, 0, 0);
         return d;
+      }
+
+      // FIXED: Added this critical function to calculate dates for each day
+      calculateDateForDay(dayName) {
+        const monday = this.state.currentWeekMonday;
+        const dayIndex = this.constants.dayNames.findIndex(d => d === dayName);
+        
+        if (dayIndex === -1) {
+          console.error('Invalid day name:', dayName);
+          return '';
+        }
+        
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + dayIndex);
+        
+        // Format as YYYY-MM-DD
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
       }
 
       generateDayTabs() {
@@ -1688,11 +1712,11 @@
         }
       }
 
-
       saveUserDataToCookies(showIndicator = true) {
         try {
           const familyData = {
             email: document.getElementById('family-email')?.value.trim() || '',
+            phone: document.getElementById('family-phone')?.value.trim() || '',
             children: []
           };
           
@@ -1741,6 +1765,11 @@
             emailInput.value = familyData.email;
           }
           
+          const phoneInput = document.getElementById('family-phone');
+          if (phoneInput && familyData.phone) {
+            phoneInput.value = familyData.phone;
+          }
+          
           if (familyData.children?.length > 0) {
             const defaultChild = document.querySelector('.child-section');
             if (defaultChild) {
@@ -1761,788 +1790,3 @@
           console.error('Error loading family data from cookies:', error);
         }
       }
-
-      addChild(childData = null) {
-        this.state.childCount++;
-        
-        const newChildSection = document.createElement('div');
-        newChildSection.className = 'child-section';
-        newChildSection.dataset.child = this.state.childCount;
-        
-        newChildSection.innerHTML = `
-          <div class="child-header">
-            <div class="child-title">
-              <div class="child-icon">${this.state.childCount}</div>
-              Child ${this.state.childCount}
-            </div>
-            <button type="button" class="remove-child" aria-label="Remove child ${this.state.childCount}">
-              ✕
-            </button>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>First Name <span class="required">*</span></label>
-              <input type="text" class="child-first-name" required>
-            </div>
-            <div class="form-group">
-              <label>Last Name <span class="required">*</span></label>
-              <input type="text" class="child-last-name" required>
-            </div>
-            <div class="form-group">
-              <label>Grade <span class="required">*</span></label>
-              <select class="child-grade" required>
-                <option value="">Select Grade</option>
-                <option value="K-2">K-2</option>
-                <option value="3-4">3-4</option>
-                <option value="5-6">5-6</option>
-                <option value="7-8">7-8</option>
-                <option value="9-12">9-12</option>
-              </select>
-            </div>
-          </div>
-        `;
-        
-        // Add remove functionality
-        newChildSection.querySelector('.remove-child').addEventListener('click', () => {
-          this.removeChild(newChildSection);
-        });
-        
-        document.getElementById('children-container').appendChild(newChildSection);
-        
-        if (childData) {
-          newChildSection.querySelector('.child-first-name').value = childData.firstName || '';
-          newChildSection.querySelector('.child-last-name').value = childData.lastName || '';
-          newChildSection.querySelector('.child-grade').value = childData.grade || '';
-        }
-        
-        this.updateChildCheckboxes();
-        this.validateForm();
-      }
-
-      removeChild(childSection) {
-        const childNumber = parseInt(childSection.dataset.child);
-        
-        // Uncheck all checkboxes for this child
-        document.querySelectorAll(`input[data-child-id="${childNumber}"]`).forEach(checkbox => {
-          checkbox.checked = false;
-        });
-        
-        // Remove ALL cart items for this child
-        this.state.orderItems = this.state.orderItems.filter(item => {
-          return item.childId !== childNumber;
-        });
-        
-        childSection.remove();
-        
-        // Re-index remaining children and update their cart items
-        const remainingChildren = document.querySelectorAll('.child-section');
-        const childMapping = new Map();
-        
-        remainingChildren.forEach((child, index) => {
-          const oldChildId = parseInt(child.dataset.child);
-          const newChildId = index + 1;
-          
-          childMapping.set(oldChildId, newChildId);
-          
-          child.dataset.child = newChildId;
-          child.querySelector('.child-icon').textContent = newChildId;
-          child.querySelector('.child-title').textContent = `Child ${newChildId}`;
-          
-          const removeButton = child.querySelector('.remove-child');
-          removeButton.setAttribute('aria-label', `Remove child ${newChildId}`);
-          removeButton.onclick = () => this.removeChild(child);
-        });
-        
-        // Update cart items with new child IDs
-        this.state.orderItems.forEach(item => {
-          if (childMapping.has(item.childId)) {
-            item.childId = childMapping.get(item.childId);
-          }
-        });
-        
-        // Update checkboxes with new child IDs
-        document.querySelectorAll('input[data-child-id]').forEach(checkbox => {
-          const oldChildId = parseInt(checkbox.dataset.childId);
-          if (childMapping.has(oldChildId)) {
-            checkbox.dataset.childId = childMapping.get(oldChildId);
-          }
-        });
-        
-        this.state.childCount = remainingChildren.length;
-        this.updateChildCheckboxes();
-        this.updateCartDisplay(); // Add this to refresh cart display
-        this.validateForm();
-      }
-
-      updateChildCheckboxes() {
-        const children = document.querySelectorAll('.child-section');
-        
-        document.querySelectorAll('.menu-item').forEach(menuItem => {
-          const itemId = menuItem.querySelector('.item-price')?.dataset.itemId;
-          if (!itemId) return;
-          
-          this.constants.days.forEach(day => {
-            const checkboxesContainer = document.getElementById(`${itemId}-${day}-checkboxes`);
-            if (!checkboxesContainer) return;
-            
-            checkboxesContainer.innerHTML = '';
-            
-            children.forEach(child => {
-              const childId = child.dataset.child;
-              const firstName = child.querySelector('.child-first-name')?.value.trim() || '';
-              const lastName = child.querySelector('.child-last-name')?.value.trim() || '';
-              
-              if (firstName) {
-                const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-                
-                const checkboxDiv = document.createElement('div');
-                checkboxDiv.className = 'child-checkbox';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `${itemId}-${childId}-${day}`;
-                checkbox.dataset.item = itemId;
-                checkbox.dataset.childId = childId;
-                checkbox.dataset.day = day;
-                
-                const label = document.createElement('label');
-                label.htmlFor = checkbox.id;
-                label.textContent = fullName;
-                
-                checkboxDiv.appendChild(checkbox);
-                checkboxDiv.appendChild(label);
-                checkboxesContainer.appendChild(checkboxDiv);
-              }
-            });
-          });
-        });
-      }
-
-      updateCart() {
-        this.state.orderItems = [];
-        this.state.currentSubtotal = 0;
-        
-        const childDayDrinks = {};
-        
-        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
-          const { item: itemId, day, childId } = checkbox.dataset;
-          
-          const child = document.querySelector(`[data-child="${childId}"]`);
-          if (!child) return;
-          
-          const childFirstName = child.querySelector('.child-first-name')?.value || '';
-          const childLastName = child.querySelector('.child-last-name')?.value || '';
-          const childGrade = child.querySelector('.child-grade')?.value || '';
-          
-          const { item, category } = this.findMenuItem(itemId);
-          if (!item) return;
-          
-          let finalPrice = item.price || item.basePrice;
-          let isDiscounted = false;
-          let discountAmount = 0;
-          
-          if (category === 'drinks') {
-            const hasCombo = this.checkChildHasEntreeOrSaladAndSide(childId, day);
-            const childDayKey = `${childId}-${day}`;
-            
-            if (!childDayDrinks[childDayKey]) {
-              childDayDrinks[childDayKey] = { discountedDrinks: 0, hasCombo };
-            }
-            
-            if (hasCombo && childDayDrinks[childDayKey].discountedDrinks === 0) {
-              if (item.category === 'regular') {
-                discountAmount = item.basePrice;
-                finalPrice = 0;
-                isDiscounted = true;
-              } else if (item.category === 'premium') {
-                discountAmount = item.basePrice - 1.50;
-                finalPrice = 1.50;
-                isDiscounted = true;
-              }
-              childDayDrinks[childDayKey].discountedDrinks++;
-            } else {
-              finalPrice = item.basePrice;
-            }
-          }
-          
-          const orderItem = {
-            itemId,
-            childId: parseInt(childId),
-            childName: `${childFirstName} ${childLastName}`,
-            firstName: childFirstName,
-            lastName: childLastName,
-            grade: childGrade,
-            name: item.name,
-            price: finalPrice,
-            originalPrice: item.price || item.basePrice,
-            day: day.charAt(0).toUpperCase() + day.slice(1),
-            category,
-            isDiscounted,
-            discountAmount
-          };
-          
-          this.state.orderItems.push(orderItem);
-          this.state.currentSubtotal += finalPrice;
-        });
-        
-        this.calculateDiscounts();
-        this.displayCart();
-        this.validateForm();
-      }
-
-      findMenuItem(itemId) {
-        for (const [category, items] of Object.entries(this.menuData)) {
-          const item = items.find(i => i.id === itemId);
-          if (item) return { item, category };
-        }
-        return { item: null, category: null };
-      }
-
-      checkChildHasEntreeOrSaladAndSide(childId, day) {
-        let hasEntreeOrSalad = false;
-        let hasSide = false;
-        
-        document.querySelectorAll(`input[type="checkbox"][data-child-id="${childId}"][data-day="${day}"]:checked`).forEach(checkbox => {
-          const { item, category } = this.findMenuItem(checkbox.dataset.item);
-          if (item) {
-            if (category === 'entrees' || category === 'salads') {
-              hasEntreeOrSalad = true;
-            } else if (category === 'sides') {
-              hasSide = true;
-            }
-          }
-        });
-        
-        return hasEntreeOrSalad && hasSide;
-      }
-
-      calculateDiscounts() {
-        if (this.state.discountType === 'staff') {
-          this.state.currentDiscount = this.state.currentSubtotal * 0.10;
-        } else if (this.state.discountType === 'john') {
-          this.state.currentDiscount = this.state.currentSubtotal * 0.50;
-        } else {
-          this.state.currentDiscount = 0;
-        }
-        
-        this.state.currentTotal = Math.max(0, this.state.currentSubtotal - this.state.currentDiscount);
-      }
-
-      displayCart() {
-        const cartItemsDiv = document.getElementById('cart-items');
-        const totalSpan = document.getElementById('total-amount');
-        
-        if (this.state.orderItems.length === 0) {
-          cartItemsDiv.innerHTML = '<div class="empty-cart">No items selected</div>';
-          totalSpan.textContent = '0.00';
-          return;
-        }
-        
-        const itemsByChild = this.groupItemsByChild();
-        let html = '';
-        
-        Object.keys(itemsByChild)
-          .sort((a, b) => parseInt(a) - parseInt(b))
-          .forEach(childId => {
-            const child = itemsByChild[childId];
-            html += `<div class="child-cart-section">
-              <div class="child-cart-header">${child.name}</div>`;
-            
-            child.items.forEach(item => {
-              const { extraClass, priceDisplay, discountDisplay } = this.formatCartItem(item);
-              
-              html += `
-                <div class="cart-item ${extraClass}">
-                  <div class="cart-item-content">
-                    <div class="cart-item-name">${item.name} (${item.day})</div>
-                    ${discountDisplay}
-                    <div class="cart-item-price">${priceDisplay}</div>
-                  </div>
-                  <button class="remove-item-btn" 
-                          onclick="orderSystem.removeItemFromCart('${item.itemId}', '${item.childId}', '${item.day.toLowerCase()}')" 
-                          title="Remove this item" 
-                          aria-label="Remove ${item.name}">✕</button>
-                </div>`;
-            });
-            html += '</div>';
-          });
-        
-        cartItemsDiv.innerHTML = html;
-        totalSpan.textContent = this.state.currentTotal.toFixed(2);
-        
-        // Update modal totals
-        ['modal-total', 'venmo-total'].forEach(id => {
-          const element = document.getElementById(id);
-          if (element) element.textContent = this.state.currentTotal.toFixed(2);
-        });
-      }
-
-      groupItemsByChild() {
-        const itemsByChild = {};
-        this.state.orderItems.forEach(item => {
-          if (!itemsByChild[item.childId]) {
-            itemsByChild[item.childId] = {
-              name: item.childName,
-              items: []
-            };
-          }
-          itemsByChild[item.childId].items.push(item);
-        });
-        return itemsByChild;
-      }
-
-      formatCartItem(item) {
-        let extraClass = '';
-        let priceDisplay = `$${item.price.toFixed(2)}`;
-        let discountDisplay = '';
-        
-        if (item.category === 'drinks' && item.isDiscounted) {
-          if (item.price === 0) {
-            extraClass = 'free-item';
-            priceDisplay = 'FREE';
-            discountDisplay = `<div class="discount-line">Was $${item.originalPrice.toFixed(2)} - Combo discount -$${item.discountAmount.toFixed(2)}</div>`;
-          } else {
-            extraClass = 'discounted-item';
-            discountDisplay = `<div class="discount-line">Was $${item.originalPrice.toFixed(2)} - Combo discount -$${item.discountAmount.toFixed(2)}</div>`;
-          }
-        }
-        
-        return { extraClass, priceDisplay, discountDisplay };
-      }
-
-      removeItemFromCart(itemId, childId, day) {
-        const checkbox = document.querySelector(
-          `input[type="checkbox"][data-item="${itemId}"][data-child-id="${childId}"][data-day="${day}"]`
-        );
-        
-        if (checkbox) {
-          checkbox.checked = false;
-          this.updateCart();
-          this.showNotification('Removed item from order', 'info');
-        }
-      }
-
-      validatePromoCode(code) {
-        const upperCode = code.toUpperCase();
-        const statusDiv = document.getElementById('promo-status');
-        const discountLine = document.getElementById('discount-line');
-        const discountAmount = document.getElementById('discount-amount');
-        
-        if (this.constants.discountCodes[upperCode]) {
-          const discountPercent = this.constants.discountCodes[upperCode];
-          this.state.discountType = upperCode === 'STAFF2025' ? 'staff' : 'john';
-          
-          statusDiv.textContent = `✅ ${discountPercent * 100}% discount applied!`;
-          statusDiv.style.color = '#10b981';
-          
-          this.calculateDiscounts();
-          
-          if (this.state.currentDiscount > 0) {
-            discountLine.style.display = 'block';
-            discountAmount.textContent = this.state.currentDiscount.toFixed(2);
-          }
-          
-        } else if (code.length > 0) {
-          this.state.discountType = 'none';
-          statusDiv.textContent = '❌ Invalid discount code';
-          statusDiv.style.color = '#ef4444';
-          discountLine.style.display = 'none';
-          this.calculateDiscounts();
-        } else {
-          this.state.discountType = 'none';
-          statusDiv.textContent = '';
-          discountLine.style.display = 'none';
-          this.calculateDiscounts();
-        }
-        
-        this.displayCart();
-      }
-
-      validateForm() {
-        let isValid = true;
-        
-        const familyEmail = document.getElementById('family-email')?.value.trim() || '';
-        if (!familyEmail || !this.isValidEmail(familyEmail)) {
-          isValid = false;
-        }
-        
-        const children = document.querySelectorAll('.child-section');
-        if (children.length === 0) {
-          isValid = false;
-        }
-        
-        children.forEach(child => {
-          const firstName = child.querySelector('.child-first-name')?.value.trim() || '';
-          const lastName = child.querySelector('.child-last-name')?.value.trim() || '';
-          const grade = child.querySelector('.child-grade')?.value || '';
-          
-          if (!firstName || !lastName || !grade) {
-            isValid = false;
-          }
-        });
-        
-        if (this.state.orderItems.length === 0) {
-          isValid = false;
-        }
-        
-        const checkoutBtn = document.getElementById('checkout-btn');
-        if (checkoutBtn) {
-          checkoutBtn.disabled = !isValid;
-        }
-        
-        return isValid;
-      }
-
-      isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      }
-
-      openPaymentModal() {
-        const modal = document.getElementById('payment-modal');
-        modal.classList.add('show');
-        
-        const venmoLink = this.generateVenmoPaymentLink(
-          '@ChanTa-Rivers', 
-          this.state.currentTotal.toFixed(2), 
-          'Artios Cafe Lunch Order'
-        );
-        
-        const venmoPaymentLink = document.getElementById('venmo-payment-link');
-        if (venmoPaymentLink) {
-          venmoPaymentLink.href = venmoLink;
-        }
-        
-        // Focus management
-        const firstFocusable = modal.querySelector('button, a');
-        if (firstFocusable) firstFocusable.focus();
-      }
-
-      closePaymentModal() {
-        document.getElementById('payment-modal')?.classList.remove('show');
-      }
-
-      generateVenmoPaymentLink(target, amount, note) {
-        const venmoBaseUrl = 'venmo://paycharge?txn=pay&audience=private';
-        const params = new URLSearchParams({
-          recipients: target,
-          amount: amount,
-          note: note
-        });
-        return `${venmoBaseUrl}&${params.toString()}`;
-      }
-
-      openConfirmationModal() {
-        const modal = document.getElementById('confirmation-modal');
-        modal.classList.add('show');
-        
-        // Populate confirmation details
-        document.getElementById('conf-order-id').textContent = this.generateOrderId();
-        document.getElementById('conf-date').textContent = new Date().toLocaleDateString();
-        document.getElementById('conf-email').textContent = document.getElementById('family-email').value;
-        document.getElementById('conf-children-count').textContent = document.querySelectorAll('.child-section').length;
-        
-        this.populateConfirmationDetails();
-      }
-
-      populateConfirmationDetails() {
-        // Children list
-        const confChildrenList = document.getElementById('conf-children-list');
-        confChildrenList.innerHTML = '';
-        document.querySelectorAll('.child-section').forEach(child => {
-          const firstName = child.querySelector('.child-first-name').value;
-          const lastName = child.querySelector('.child-last-name').value;
-          const grade = child.querySelector('.child-grade').value;
-          
-          const childDiv = document.createElement('div');
-          childDiv.innerHTML = `<strong>${firstName} ${lastName}</strong> (${grade})`;
-          confChildrenList.appendChild(childDiv);
-        });
-        
-        // Items list
-        const confItemsList = document.getElementById('conf-items-list');
-        confItemsList.innerHTML = '';
-        
-        this.constants.days.forEach(day => {
-          const dayItems = this.state.orderItems.filter(item => 
-            item.day.toLowerCase() === day
-          );
-          
-          if (dayItems.length > 0) {
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'confirmation-day';
-            dayDiv.textContent = day.charAt(0).toUpperCase() + day.slice(1);
-            confItemsList.appendChild(dayDiv);
-            
-            dayItems.forEach(item => {
-              const itemDiv = document.createElement('div');
-              itemDiv.className = 'confirmation-item';
-              itemDiv.innerHTML = `
-                <span>${item.name} - ${item.childName}</span>
-                <span>$${item.price.toFixed(2)}</span>
-              `;
-              confItemsList.appendChild(itemDiv);
-            });
-          }
-        });
-        
-        document.getElementById('conf-total').textContent = `Total: $${this.state.currentTotal.toFixed(2)}`;
-      }
-
-      closeConfirmationModal() {
-        document.getElementById('confirmation-modal')?.classList.remove('show');
-      }
-
-      generateOrderId() {
-        const now = new Date();
-        const datePart = now.toISOString().slice(2, 10).replace(/-/g, '');
-        const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
-        const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        return `${datePart}-${timePart}-${randomPart}`;
-      }
-
-      async submitOrder() {
-        if (!this.config.useGoogleSheets) {
-          console.log('Google Sheets integration is disabled.');
-          await this.simulateOrderSubmission();
-          return;
-        }
-        
-        const orderData = this.prepareOrderData();
-        console.log('Submitting order data:', orderData);
-        
-        try {
-          const response = await fetch(this.config.webAppUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            console.log('Order submitted successfully');
-            this.handleSuccessfulSubmission();
-          } else {
-            throw new Error(result.error || 'Unknown error occurred');
-          }
-          
-        } catch (error) {
-          console.error('Error submitting order:', error);
-          this.showError('Failed to submit order to Google Sheets. Please try again.');
-        }
-      }
-
-      prepareOrderData() {
-        const now = new Date();
-        const timestamp = now.toISOString();
-        const orderId = this.generateOrderId();
-        
-        // Prepare children data
-        const children = [];
-        const items = [];
-        
-        document.querySelectorAll('.child-section').forEach(childSection => {
-          const firstName = childSection.querySelector('.child-first-name').value;
-          const lastName = childSection.querySelector('.child-last-name').value;
-          const grade = childSection.querySelector('.child-grade').value;
-          const childId = childSection.dataset.child;
-          
-          // Add child to children array
-          children.push({
-            id: childId,
-            firstName: firstName,
-            lastName: lastName,
-            grade: grade
-          });
-          
-          // Add child's items to items array
-          this.state.orderItems
-            .filter(item => item.childId === parseInt(childId))
-            .forEach(item => {
-              items.push({
-                childId: childId,
-                name: item.name,
-                price: item.price,
-                date: item.date, // YYYY-MM-DD format
-                day: item.day
-              });
-            });
-        });
-        
-        // Calculate totals
-        const subtotal = this.state.currentTotal;
-        const discount = this.state.discountAmount || 0;
-        const total = subtotal - discount;
-        
-        const orderData = {
-          orderId: orderId,
-          parentEmail: document.getElementById('family-email').value,
-          parentPhone: document.getElementById('family-phone')?.value || '',
-          children: children,
-          items: items,
-          timestamp: timestamp,
-          subtotal: subtotal,
-          discount: discount,
-          total: total,
-          promoCode: this.state.appliedPromoCode || ''
-        };
-        
-        return orderData;
-      }
-
-      async simulateOrderSubmission() {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        this.handleSuccessfulSubmission();
-      }
-
-      handleSuccessfulSubmission() {
-        const confirmBtn = document.getElementById('confirm-payment-btn');
-        if (confirmBtn) {
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = '✅ I\'ve Paid - Submit Order';
-        }
-        
-        this.closePaymentModal();
-        this.openConfirmationModal();
-        this.resetForm();
-      }
-
-      resetForm() {
-        // Clear form fields
-        const emailInput = document.getElementById('family-email');
-        if (emailInput) emailInput.value = '';
-        
-        // Remove extra children
-        const childrenContainer = document.getElementById('children-container');
-        while (childrenContainer?.children.length > 1) {
-          childrenContainer.removeChild(childrenContainer.lastChild);
-        }
-        
-        // Reset first child with proper null checks
-        const firstChild = childrenContainer?.firstChild;
-        if (firstChild) {
-          const firstNameInput = firstChild.querySelector('.child-first-name');
-          const lastNameInput = firstChild.querySelector('.child-last-name');
-          const gradeInput = firstChild.querySelector('.child-grade');
-          
-          if (firstNameInput) firstNameInput.value = '';
-          if (lastNameInput) lastNameInput.value = '';
-          if (gradeInput) gradeInput.value = '';
-        }
-        
-        // Reset state
-        this.state.orderItems = [];
-        this.state.childCount = 1;
-        this.state.discountType = 'none';
-        this.state.currentTotal = 0;
-        this.state.currentSubtotal = 0;
-        this.state.currentDiscount = 0;
-        
-        // Reset UI
-        this.updateCart();
-        const promoInput = document.getElementById('promo-code');
-        if (promoInput) {
-          promoInput.value = '';
-          this.validatePromoCode('');
-        }
-        
-        this.switchDay('monday');
-        
-        // Clear cookies
-        document.cookie = 'artios_family_data=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      }
-
-      showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.textContent = message;
-        notification.setAttribute('role', 'alert');
-        notification.setAttribute('aria-live', 'polite');
-        
-        const colors = {
-          success: { bg: '#10b981', color: 'white' },
-          error: { bg: '#ef4444', color: 'white' },
-          warning: { bg: '#f59e0b', color: 'white' },
-          info: { bg: '#3b82f6', color: 'white' }
-        };
-        
-        const colorScheme = colors[type] || colors.info;
-        Object.assign(notification.style, colorScheme);
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-          notification.style.animation = 'fadeOut 0.3s ease';
-          setTimeout(() => notification.remove(), 300);
-        }, 3000);
-      }
-
-      setupAutoSave() {
-        setInterval(() => this.saveUserDataToCookies(false), 15000);
-      }
-
-      showSavedIndicator() {
-        const indicator = document.createElement('div');
-        Object.assign(indicator.style, {
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: '10px 15px',
-          borderRadius: '8px',
-          zIndex: '10000',
-          fontSize: '14px',
-          fontWeight: '500'
-        });
-        indicator.textContent = '✅ Saved!';
-        document.body.appendChild(indicator);
-
-        setTimeout(() => indicator.remove(), 2000);
-      }
-
-      async loadMenuData() {
-        try {
-          // Simulate loading menu data from an external source (e.g., API)
-          // Replace this with your actual data loading logic
-          await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-          console.log('Menu data loaded successfully');
-        } catch (error) {
-          console.error('Error loading menu data:', error);
-          this.showNotification('Error loading menu. Please refresh the page.', 'error');
-        }
-        this.generateDayTabs();
-        this.generateMenus();
-        
-        const firstAvailableTab = document.querySelector('.day-tab:not(.disabled)');
-        if (firstAvailableTab) {
-          this.switchDay(firstAvailableTab.dataset.day);
-        } else {
-          this.switchDay('monday');
-        }
-      }
-
-      updateCartDisplay() {
-        this.updateCart();
-      }
-
-      showError(message) {
-        this.showNotification(message, 'error');
-      }
-    }
-
-    let orderSystem;
-    document.addEventListener('DOMContentLoaded', () => {
-      window.orderSystem = new OrderSystem();
-      window.orderSystem.loadUserEmail(); // Auto-populate email and user data
-    });
-  </script>
-</body>
-</html>
