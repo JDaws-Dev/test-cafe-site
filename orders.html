@@ -1814,6 +1814,10 @@
       removeChild(childSection) {
         const childNumber = parseInt(childSection.dataset.child);
         
+        document.querySelectorAll(`input[data-child-id="${childNumber}"]`).forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        
         // Remove cart items for this child
         this.state.orderItems = this.state.orderItems.filter(item => item.childId !== childNumber);
         
