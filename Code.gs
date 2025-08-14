@@ -1,3 +1,7 @@
+
+
+
+
 /**
  * Artios Academies Cafe System - Google Apps Script
  * Version: 3.1 - August 14, 2025
@@ -27,13 +31,8 @@ function doPost(e) {
   try {
     console.log('doPost called');
     
-    let data;
-    if (e.postData && e.postData.contents) {
-      console.log('Raw post data:', e.postData.contents);
-      data = JSON.parse(e.postData.contents);
-    } else {
-      throw new Error('No POST data received');
-    }
+    // Parse the incoming data
+    const data = e.parameter.data ? JSON.parse(e.parameter.data) : JSON.parse(e.postData.contents);
     
     // Log received data
     console.log('Parsed data:', JSON.stringify(data));
@@ -677,6 +676,17 @@ function resetFamilyPasscode(email) {
 // ============================================
 
 /**
+ * Generate unique session ID
+ */
+function generateSessionId() {
+  const now = new Date();
+  const datePart = now.toISOString().slice(2, 10).replace(/-/g, '');
+  const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
+  const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `S${datePart}${timePart}${randomPart}`;
+}
+
+/**
  * Enhanced lookupOrders function to properly return cancelled item details
  */
 function lookupOrders(email, orderId = null) {
@@ -738,6 +748,8 @@ function lookupOrders(email, orderId = null) {
                 day: itemData.day,
                 childId: row[10] || '1',
                 childName: `${row[2]} ${row[3]}`.trim(),
+                childFirstName: row[2],
+                childLastName: row[3],
                 grade: row[4],
                 date: row[11], // Keep original date format for processing
                 status: itemStatus,
@@ -945,17 +957,6 @@ function processCancellation(itemId, reason) {
     console.error('Error in processCancellation:', error);
     throw error;
   }
-}
-
-/**
- * Generate unique session ID
- */
-function generateSessionId() {
-  const now = new Date();
-  const datePart = now.toISOString().slice(2, 10).replace(/-/g, '');
-  const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
-  const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `S${datePart}${timePart}${randomPart}`;
 }
 
 /**
@@ -1284,7 +1285,7 @@ function generateFinancialReport(startDate, endDate, adminRecipients) {
 }
 
 // ============================================
-// EMAIL FUNCTIONS
+// EMAIL FUNCTIONS (Complete Section)
 // ============================================
 
 /**
@@ -1632,594 +1633,631 @@ function sendOrderConfirmationEmail(orderData) {
     Object.keys(dayGroups).sort().forEach(day => {
       itemsList += `<h4 style="color: #4285f4; margin-top: 20px;">${day}:</h4><ul>`;
       dayGroups[day].forEach(item => {
-        itemsList += `<li>${item.childName}: ${item.itemName} - ${item.price.toFixed(2)}</li>`;
+        itemsList += `<li>${item.childName}: ${item.itemName} - $${item.price.toFixed(2)}</li>`;
       });
-      itemsList += '</ul>';
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">Order Confirmed!</h1>
-          <p style="margin: 10px 0 0 0; font-size: 1.2em;">Order ID: ${orderData.orderId}</p>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <h3 style="color: #333;">Thank you for your order!</h3>
-          
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 15px 0; color: #333;">Order Details:</h4>
-            ${itemsList}
-          </div>
-          
-          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Payment Information:</h4>
-            <p style="margin: 5px 0;"><strong>Subtotal:</strong> ${orderData.subtotal.toFixed(2)}</p>
-            ${orderData.discount > 0 ? `<p style="margin: 5px 0; color: #d32f2f;"><strong>Discount:</strong> -${orderData.discount.toFixed(2)}</p>` : ''}
-            <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Due:</strong> ${orderData.total.toFixed(2)}</p>
-          </div>
-          
-          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h4 style="margin: 0 0 10px 0; color: #f57c00;">Payment Instructions:</h4>
-            <p style="margin: 5px 0;">Please send payment via <strong>Venmo</strong> to complete your order.</p>
-            <p style="margin: 5px 0;">Include order ID <strong>${orderData.orderId}</strong> in the payment note.</p>
-          </div>
-          
-          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 10px 0; color: #1976d2;">Important Information:</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-              <li>Orders can be cancelled until 8:15 AM on the day of service</li>
-              <li>Login to your family account to view or manage orders</li>
-              <li>Refunds are processed within 24 hours via Venmo</li>
-            </ul>
-          </div>
-          
-          <p style="text-align: center; margin-top: 30px; color: #666;">
-            Questions? Contact us at <strong>${NOTIFICATION_EMAIL}</strong>
-          </p>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      orderData.parentEmail,
-      subject,
-      `Order confirmed! Total: ${orderData.total.toFixed(2)}. Please send payment via Venmo.`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Academies Cafe'
-      }
-    );
-    
-    console.log(`Confirmation email sent to ${orderData.parentEmail}`);
-    
-  } catch (error) {
-    console.error('Error sending confirmation email:', error);
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+itemsList += '</ul>';
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+       <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+         <h1 style="margin: 0;">Order Confirmed!</h1>
+         <p style="margin: 10px 0 0 0; font-size: 1.2em;">Order ID: ${orderData.orderId}</p>
+       </div>
+       
+       <div style="padding: 25px; background: white;">
+         <h3 style="color: #333;">Thank you for your order!</h3>
+         
+         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h4 style="margin: 0 0 15px 0; color: #333;">Order Details:</h4>
+           ${itemsList}
+         </div>
+         
+         <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Payment Information:</h4>
+           <p style="margin: 5px 0;"><strong>Subtotal:</strong> $${orderData.subtotal.toFixed(2)}</p>
+           ${orderData.discount > 0 ? `<p style="margin: 5px 0; color: #d32f2f;"><strong>Discount:</strong> -$${orderData.discount.toFixed(2)}</p>` : ''}
+           <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Due:</strong> $${orderData.total.toFixed(2)}</p>
+         </div>
+         
+         <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+           <h4 style="margin: 0 0 10px 0; color: #f57c00;">Payment Instructions:</h4>
+           <p style="margin: 5px 0;">Please send payment via <strong>Venmo</strong> to complete your order.</p>
+           <p style="margin: 5px 0;">Include order ID <strong>${orderData.orderId}</strong> in the payment note.</p>
+         </div>
+         
+         <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h4 style="margin: 0 0 10px 0; color: #1976d2;">Important Information:</h4>
+           <ul style="margin: 0; padding-left: 20px;">
+             <li>Orders can be cancelled until 8:15 AM on the day of service</li>
+             <li>Login to your family account to view or manage orders</li>
+             <li>Refunds are processed within 24 hours via Venmo</li>
+           </ul>
+         </div>
+         
+         <p style="text-align: center; margin-top: 30px; color: #666;">
+           Questions? Contact us at <strong>${NOTIFICATION_EMAIL}</strong>
+         </p>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   GmailApp.sendEmail(
+     orderData.parentEmail,
+     subject,
+     `Order confirmed! Total: $${orderData.total.toFixed(2)}. Please send payment via Venmo.`,
+     {
+       htmlBody: emailBody,
+       name: 'Artios Academies Cafe'
+     }
+   );
+   
+   console.log(`Confirmation email sent to ${orderData.parentEmail}`);
+   
+ } catch (error) {
+   console.error('Error sending confirmation email:', error);
+ }
 }
 
 /**
- * Send admin notification email for new order
- */
+* Send admin notification email for new order
+*/
 function sendAdminNotificationEmail(orderData) {
-  try {
-    const subject = `New Cafe Order - ${orderData.orderId}`;
-    
-    let itemsDetail = '';
-    orderData.items.forEach(item => {
-      const child = orderData.children.find(c => c.id === item.childId);
-      itemsDetail += `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.firstName + ' ' + child.lastName : 'Unknown'}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.grade : ''}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.day}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.price.toFixed(2)}</td>
-        </tr>
-      `;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
-        <div style="background: #4285f4; color: white; padding: 20px; text-align: center; border-radius: 8px;">
-          <h2 style="margin: 0;">New Cafe Order Received</h2>
-        </div>
-        
-        <div style="padding: 20px; background: white;">
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-            <h3 style="margin: 0 0 10px 0; color: #333;">Order Information:</h3>
-            <p style="margin: 5px 0;"><strong>Order ID:</strong> ${orderData.orderId}</p>
-            <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${orderData.parentEmail}</p>
-            <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
-            <p style="margin: 5px 0;"><strong>Total Amount:</strong> ${orderData.total.toFixed(2)}</p>
-            ${orderData.promoCode ? `<p style="margin: 5px 0;"><strong>Promo Code:</strong> ${orderData.promoCode}</strong></p>` : ''}
-          </div>
-          
-          <h3 style="color: #333;">Items Ordered:</h3>
-          <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-            <thead>
-              <tr style="background: #e3f2fd;">
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Child</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Grade</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsDetail}
-            </tbody>
-          </table>
-          
-          <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
-            <h4 style="margin: 0 0 10px 0; color: #f57c00;">Action Required:</h4>
-            <p style="margin: 5px 0;">Monitor for Venmo payment from <strong>${orderData.parentEmail}</strong></p>
-            <p style="margin: 5px 0;">Expected amount: <strong>${orderData.total.toFixed(2)}</strong></p>
-            <p style="margin: 5px 0;">Order ID in payment note: <strong>${orderData.orderId}</strong></p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      NOTIFICATION_EMAIL,
-      subject,
-      `New order received from ${orderData.parentEmail}. Total: ${orderData.total.toFixed(2)}`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Cafe System'
-      }
-    );
-    
-    console.log(`Admin notification sent for order ${orderData.orderId}`);
-    
-  } catch (error) {
-    console.error('Error sending admin notification:', error);
-  }
+ try {
+   const subject = `New Cafe Order - ${orderData.orderId}`;
+   
+   let itemsDetail = '';
+   orderData.items.forEach(item => {
+     const child = orderData.children.find(c => c.id === item.childId);
+     itemsDetail += `
+       <tr>
+         <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.firstName + ' ' + child.lastName : 'Unknown'}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.grade : ''}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.day}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">$${item.price.toFixed(2)}</td>
+       </tr>
+     `;
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
+       <div style="background: #4285f4; color: white; padding: 20px; text-align: center; border-radius: 8px;">
+         <h2 style="margin: 0;">New Cafe Order Received</h2>
+       </div>
+       
+       <div style="padding: 20px; background: white;">
+         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+           <h3 style="margin: 0 0 10px 0; color: #333;">Order Information:</h3>
+           <p style="margin: 5px 0;"><strong>Order ID:</strong> ${orderData.orderId}</p>
+           <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${orderData.parentEmail}</p>
+           <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
+           <p style="margin: 5px 0;"><strong>Total Amount:</strong> $${orderData.total.toFixed(2)}</p>
+           ${orderData.promoCode ? `<p style="margin: 5px 0;"><strong>Promo Code:</strong> ${orderData.promoCode}</strong></p>` : ''}
+         </div>
+         
+         <h3 style="color: #333;">Items Ordered:</h3>
+         <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+           <thead>
+             <tr style="background: #e3f2fd;">
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Child</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Grade</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Price</th>
+             </tr>
+           </thead>
+           <tbody>
+             ${itemsDetail}
+           </tbody>
+         </table>
+         
+         <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
+           <h4 style="margin: 0 0 10px 0; color: #f57c00;">Action Required:</h4>
+           <p style="margin: 5px 0;">Monitor for Venmo payment from <strong>${orderData.parentEmail}</strong></p>
+           <p style="margin: 5px 0;">Expected amount: <strong>$${orderData.total.toFixed(2)}</strong></p>
+           <p style="margin: 5px 0;">Order ID in payment note: <strong>${orderData.orderId}</strong></p>
+         </div>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   GmailApp.sendEmail(
+     NOTIFICATION_EMAIL,
+     subject,
+     `New order received from ${orderData.parentEmail}. Total: $${orderData.total.toFixed(2)}`,
+     {
+       htmlBody: emailBody,
+       name: 'Artios Cafe System'
+     }
+   );
+   
+   console.log(`Admin notification sent for order ${orderData.orderId}`);
+   
+ } catch (error) {
+   console.error('Error sending admin notification:', error);
+ }
 }
 
 /**
- * Send enhanced daily report email
- */
+* Send enhanced daily report email
+*/
 function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = false) {
-  try {
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const reportDayName = dayNames[reportDate.getDay()];
-    const dateStr = reportDate.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    
-    const subject = isOnDemand 
-      ? `Cafe Report (On-Demand) - ${dateStr}`
-      : `Daily Cafe Orders - ${dateStr} - ${result.orderCount} Items`;
-    
-    if (result.orderCount === 0) {
-      const emailBody = `
-        <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
-            <h2 style="color: #666;">No Orders for ${dateStr}</h2>
-            <p>There are no lunch orders scheduled for today.</p>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      GmailApp.sendEmail(
-        NOTIFICATION_EMAIL,
-        subject,
-        `No orders for ${dateStr}`,
-        {
-          htmlBody: emailBody,
-          name: 'Artios Cafe Daily Report'
-        }
-      );
-      return;
-    }
-    
-    // Build item summary
-    let itemSummaryHtml = '';
-    const sortedItems = Object.entries(result.reportData.itemCounts)
-      .sort((a, b) => b[1].count - a[1].count);
-    
-    sortedItems.forEach(([itemName, data]) => {
-      itemSummaryHtml += `
-        <tr>
-          <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${data.count}</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${data.price.toFixed(2)}</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${data.total.toFixed(2)}</td>
-        </tr>
-      `;
-    });
-    
-    // Build student list by item
-    let studentListHtml = '';
-    const itemStudentMap = {};
-    
-    result.reportData.itemsForThisDate.forEach(order => {
-      const itemName = order.item.name;
-      if (!itemStudentMap[itemName]) {
-        itemStudentMap[itemName] = [];
-      }
-      itemStudentMap[itemName].push({
-        name: order.childName,
-        grade: order.grade
-      });
-    });
-    
-    Object.keys(itemStudentMap).sort().forEach(itemName => {
-      const students = itemStudentMap[itemName]
-        .sort((a, b) => a.name.localeCompare(b.name));
-      
-      studentListHtml += `
-        <div style="margin: 20px 0;">
-          <h4 style="color: #4285f4; margin: 10px 0;">
-            ${itemName} (${students.length} orders)
-          </h4>
-          <ol style="margin: 0; padding-left: 25px; line-height: 1.6;">
-      `;
-      
-      students.forEach(student => {
-        studentListHtml += `<li>${student.name} (Grade ${student.grade})</li>`;
-      });
-      
-      studentListHtml += `
-          </ol>
-        </div>
-      `;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">Daily Cafe Report</h1>
-          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateStr}</p>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <!-- Summary Box -->
-          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <h3 style="color: #1976d2; margin: 0 0 15px 0;">Quick Summary</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-              <div>
-                <strong>Total Orders:</strong> ${result.orderCount} items<br>
-                <strong>Families Served:</strong> ${result.reportData.familiesServed}<br>
-              </div>
-              <div>
-                <strong>Revenue:</strong> ${result.reportData.totalRevenue.toFixed(2)}<br>
-                <strong>Discounts:</strong> ${result.reportData.totalDiscounts.toFixed(2)}<br>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Chick-fil-A Order Summary -->
-          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h3 style="color: #f57c00; margin: 0 0 15px 0;">Chick-fil-A Order Summary</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #ffe0b2;">
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Unit Price</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemSummaryHtml}
-              </tbody>
-              <tfoot>
-                <tr style="background: #f5f5f5; font-weight: bold;">
-                  <td style="padding: 10px; border: 1px solid #ddd;">TOTAL</td>
-                  <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${result.orderCount}</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;"></td>
-                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">
-                    ${result.reportData.totalRevenue.toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          
-          <!-- Student Checklist -->
-          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
-            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">Student Checklist by Item</h3>
-            ${studentListHtml}
-          </div>
-          
-          <!-- Action Items -->
-          <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
-            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">Action Required</h3>
-            <ol style="margin: 0; padding-left: 25px; line-height: 1.8;">
-              <li>Place Chick-fil-A order for <strong>${result.orderCount} total items</strong></li>
-              <li>Print this email or access student checklist on tablet</li>
-              <li>Prepare labels for each student's order</li>
-              <li>Set up distribution area before lunch period</li>
-            </ol>
-          </div>
-          
-          <!-- Footer -->
-          <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-            <p>
-              ${isOnDemand ? 'This report was generated on-demand.' : 'This is an automated daily report generated at 8:15 AM.'}
-            </p>
-            <p>
-              <strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      NOTIFICATION_EMAIL,
-      subject,
-      `Daily report: ${result.orderCount} items for ${dateStr}`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Cafe Daily Report'
-      }
-    );
-    
-    console.log(`Daily report email sent: ${result.orderCount} items for ${dateStr}`);
-    
-  } catch (error) {
-    console.error('Error sending report email:', error);
-    throw error;
-  }
+ try {
+   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+   const reportDayName = dayNames[reportDate.getDay()];
+   const dateStr = reportDate.toLocaleDateString('en-US', { 
+     weekday: 'long', 
+     year: 'numeric', 
+     month: 'long', 
+     day: 'numeric' 
+   });
+   
+   const subject = isOnDemand 
+     ? `Cafe Report (On-Demand) - ${dateStr}`
+     : `Daily Cafe Orders - ${dateStr} - ${result.orderCount} Items`;
+   
+   if (result.orderCount === 0) {
+     const emailBody = `
+       <html>
+       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+         <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
+           <h2 style="color: #666;">No Orders for ${dateStr}</h2>
+           <p>There are no lunch orders scheduled for today.</p>
+         </div>
+       </body>
+       </html>
+     `;
+     
+     GmailApp.sendEmail(
+       NOTIFICATION_EMAIL,
+       subject,
+       `No orders for ${dateStr}`,
+       {
+         htmlBody: emailBody,
+         name: 'Artios Cafe Daily Report'
+       }
+     );
+     return;
+   }
+   
+   // Build item summary
+   let itemSummaryHtml = '';
+   const sortedItems = Object.entries(result.reportData.itemCounts)
+     .sort((a, b) => b[1].count - a[1].count);
+   
+   sortedItems.forEach(([itemName, data]) => {
+     itemSummaryHtml += `
+       <tr>
+         <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
+         <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${data.count}</td>
+         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${data.price.toFixed(2)}</td>
+         <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${data.total.toFixed(2)}</td>
+       </tr>
+     `;
+   });
+   
+   // Build student list by item
+   let studentListHtml = '';
+   const itemStudentMap = {};
+   
+   result.reportData.itemsForThisDate.forEach(order => {
+     const itemName = order.item.name;
+     if (!itemStudentMap[itemName]) {
+       itemStudentMap[itemName] = [];
+     }
+     itemStudentMap[itemName].push({
+       name: order.childName,
+       grade: order.grade
+     });
+   });
+   
+   Object.keys(itemStudentMap).sort().forEach(itemName => {
+     const students = itemStudentMap[itemName]
+       .sort((a, b) => a.name.localeCompare(b.name));
+     
+     studentListHtml += `
+       <div style="margin: 20px 0;">
+         <h4 style="color: #4285f4; margin: 10px 0;">
+           ${itemName} (${students.length} orders)
+         </h4>
+         <ol style="margin: 0; padding-left: 25px; line-height: 1.6;">
+     `;
+     
+     students.forEach(student => {
+       studentListHtml += `<li>${student.name} (Grade ${student.grade})</li>`;
+     });
+     
+     studentListHtml += `
+         </ol>
+       </div>
+     `;
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+       <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+         <h1 style="margin: 0;">Daily Cafe Report</h1>
+         <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateStr}</p>
+       </div>
+       
+       <div style="padding: 25px; background: white;">
+         <!-- Summary Box -->
+         <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
+           <h3 style="color: #1976d2; margin: 0 0 15px 0;">Quick Summary</h3>
+           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+             <div>
+               <strong>Total Orders:</strong> ${result.orderCount} items<br>
+               <strong>Families Served:</strong> ${result.reportData.familiesServed}<br>
+             </div>
+             <div>
+               <strong>Revenue:</strong> $${result.reportData.totalRevenue.toFixed(2)}<br>
+               <strong>Discounts:</strong> $${result.reportData.totalDiscounts.toFixed(2)}<br>
+             </div>
+           </div>
+         </div>
+         
+         <!-- Chick-fil-A Order Summary -->
+         <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+           <h3 style="color: #f57c00; margin: 0 0 15px 0;">Chick-fil-A Order Summary</h3>
+           <table style="width: 100%; border-collapse: collapse;">
+             <thead>
+               <tr style="background: #ffe0b2;">
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Unit Price</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total</th>
+               </tr>
+             </thead>
+             <tbody>
+               ${itemSummaryHtml}
+             </tbody>
+             <tfoot>
+               <tr style="background: #f5f5f5; font-weight: bold;">
+                 <td style="padding: 10px; border: 1px solid #ddd;">TOTAL</td>
+                 <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${result.orderCount}</td>
+                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                 <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">
+                   $${result.reportData.totalRevenue.toFixed(2)}
+                 </td>
+               </tr>
+             </tfoot>
+           </table>
+         </div>
+         
+         <!-- Student Checklist -->
+         <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+           <h3 style="color: #2e7d32; margin: 0 0 15px 0;">Student Checklist by Item</h3>
+           ${studentListHtml}
+         </div>
+         
+         <!-- Action Items -->
+         <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
+           <h3 style="color: #d32f2f; margin: 0 0 15px 0;">Action Required</h3>
+           <ol style="margin: 0; padding-left: 25px; line-height: 1.8;">
+             <li>Place Chick-fil-A order for <strong>${result.orderCount} total items</strong></li>
+             <li>Print this email or access student checklist on tablet</li>
+             <li>Prepare labels for each student's order</li>
+             <li>Set up distribution area before lunch period</li>
+           </ol>
+         </div>
+         
+         <!-- Footer -->
+         <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+           <p>
+             ${isOnDemand ? 'This report was generated on-demand.' : 'This is an automated daily report generated at 8:15 AM.'}
+           </p>
+           <p>
+             <strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}
+           </p>
+         </div>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   GmailApp.sendEmail(
+     NOTIFICATION_EMAIL,
+     subject,
+     `Daily report: ${result.orderCount} items for ${dateStr}`,
+     {
+       htmlBody: emailBody,
+       name: 'Artios Cafe Daily Report'
+     }
+   );
+   
+   console.log(`Daily report email sent: ${result.orderCount} items for ${dateStr}`);
+   
+ } catch (error) {
+   console.error('Error sending report email:', error);
+   throw error;
+ }
 }
 
 /**
- * Send worker daily orders email (for daily-orders.html functionality)
- */
+* Send worker daily orders email (for daily-orders.html functionality)
+*/
 function sendWorkerDailyOrdersEmail(workerEmail, reportData, reportDate) {
-  try {
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const reportDayName = dayNames[reportDate.getDay()];
-    const dateStr = reportDate.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    
-    const subject = `Daily Food Orders - ${dateStr} - ${reportData.orderCount} Items`;
-    
-    if (reportData.orderCount === 0) {
-      const emailBody = `
-        <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
-            <h2 style="color: #666;">No Orders for ${dateStr}</h2>
-            <p>There are no lunch orders scheduled for today. No food preparation needed.</p>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      GmailApp.sendEmail(
-        workerEmail,
-        subject,
-        `No orders for ${dateStr}`,
-        {
-          htmlBody: emailBody,
-          name: 'Artios Cafe Daily Orders'
-        }
-      );
-      return;
-    }
-    
-    // Build detailed email for worker
-    let itemSummaryHtml = '';
-    const sortedItems = Object.entries(reportData.reportData.itemCounts)
-      .sort((a, b) => b[1].count - a[1].count);
-    
-    sortedItems.forEach(([itemName, data]) => {
-      itemSummaryHtml += `
-        <tr>
-          <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${data.count}</td>
-        </tr>
-      `;
-    });
-    
-    // Build student checklist
-    let studentListHtml = '';
-    const itemStudentMap = {};
-    
-    reportData.reportData.itemsForThisDate.forEach(order => {
-      const itemName = order.item.name;
-      if (!itemStudentMap[itemName]) {
-        itemStudentMap[itemName] = [];
-      }
-      itemStudentMap[itemName].push({
-        name: order.childName,
-        grade: order.grade
-      });
-    });
-    
-    Object.keys(itemStudentMap).sort().forEach(itemName => {
-      const students = itemStudentMap[itemName]
-        .sort((a, b) => a.name.split(' ')[1]?.localeCompare(b.name.split(' ')[1]) || a.name.localeCompare(b.name));
-      
-      studentListHtml += `
-        <div style="margin: 20px 0; break-inside: avoid;">
-          <h4 style="color: #4285f4; margin: 10px 0; background: #f0f8ff; padding: 10px; border-radius: 5px;">
-            ${itemName} (${students.length} orders)
-          </h4>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-left: 15px;">
-      `;
-      
-      students.forEach(student => {
-        studentListHtml += `
-          <div style="display: flex; align-items: center; padding: 5px 0;">
-            <input type="checkbox" style="margin-right: 8px; transform: scale(1.2);">
-            <span>${student.name} (${student.grade})</span>
-          </div>
-        `;
-      });
-      
-      studentListHtml += `
-          </div>
-        </div>
-      `;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">🍽️ Daily Food Orders</h1>
-          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateStr}</p>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <!-- Summary Box -->
-          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h3 style="color: #f57c00; margin: 0 0 15px 0;">📋 Order Summary</h3>
-            <div style="font-size: 1.1em; line-height: 1.6;">
-              <strong>Total Items to Prepare:</strong> ${reportData.orderCount}<br>
-              <strong>Students Served:</strong> ${reportData.reportData.familiesServed}<br>
-              <strong>Categories:</strong> ${Object.keys(reportData.reportData.itemCounts).length}
-            </div>
-          </div>
-          
-          <!-- Chick-fil-A Order List -->
-          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <h3 style="color: #1976d2; margin: 0 0 15px 0;">🐔 Chick-fil-A Order List</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #bbdefb;">
-                  <th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-size: 1.1em;">Item</th>
-                  <th style="padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 1.1em;">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemSummaryHtml}
-              </tbody>
-              <tfoot>
-                <tr style="background: #f5f5f5; font-weight: bold; font-size: 1.1em;">
-                  <td style="padding: 12px; border: 1px solid #ddd;">TOTAL ITEMS</td>
-                  <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${reportData.orderCount}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          
-          <!-- Student Checklist -->
-          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
-            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">✅ Student Checklist (Printable)</h3>
-            <p style="color: #666; margin-bottom: 20px; font-style: italic;">
-              Check off each student as you distribute their order. Sorted by last name for easy reference.
-            </p>
-            ${studentListHtml}
-          </div>
-          
-          <!-- Action Items -->
-          <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
-            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">🎯 Today's Tasks</h3>
-            <ol style="margin: 0; padding-left: 25px; line-height: 2; font-size: 1.1em;">
-              <li><strong>Place Chick-fil-A order</strong> for ${reportData.orderCount} total items</li>
-              <li><strong>Print this checklist</strong> or keep email open on tablet</li>
-              <li><strong>Prepare labels</strong> for each student's order</li>
-              <li><strong>Set up distribution area</strong> before lunch period</li>
-              <li><strong>Check off students</strong> as orders are distributed</li>
-            </ol>
-          </div>
-          
-          <!-- Footer -->
-          <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-            <p><strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}</p>
-            <p style="font-size: 0.9em;">This report excludes cancelled items and shows only active orders.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      workerEmail,
-      subject,
-      `Daily orders: ${reportData.orderCount} items for ${dateStr}`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Cafe Daily Orders'
-      }
-    );
-    
-    console.log(`Worker daily orders email sent to ${workerEmail}: ${reportData.orderCount} items for ${dateStr}`);
-    
-  } catch (error) {
-    console.error('Error sending worker daily orders email:', error);
-    throw error;
-  }
+ try {
+   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+   const reportDayName = dayNames[reportDate.getDay()];
+   const dateStr = reportDate.toLocaleDateString('en-US', { 
+     weekday: 'long', 
+     year: 'numeric', 
+     month: 'long', 
+     day: 'numeric' 
+   });
+   
+   const subject = `Daily Food Orders - ${dateStr} - ${reportData.orderCount} Items`;
+   
+   if (reportData.orderCount === 0) {
+     const emailBody = `
+       <html>
+       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+         <div style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
+           <h2 style="color: #666;">No Orders for ${dateStr}</h2>
+           <p>There are no lunch orders scheduled for today. No food preparation needed.</p>
+         </div>
+       </body>
+       </html>
+     `;
+     
+     GmailApp.sendEmail(
+       workerEmail,
+       subject,
+       `No orders for ${dateStr}`,
+       {
+         htmlBody: emailBody,
+         name: 'Artios Cafe Daily Orders'
+       }
+     );
+     return;
+   }
+   
+   // Build detailed email for worker
+   let itemSummaryHtml = '';
+   const sortedItems = Object.entries(reportData.reportData.itemCounts)
+     .sort((a, b) => b[1].count - a[1].count);
+   
+   sortedItems.forEach(([itemName, data]) => {
+     itemSummaryHtml += `
+       <tr>
+         <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
+         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${data.count}</td>
+       </tr>
+     `;
+   });
+   
+   // Build student checklist
+   let studentListHtml = '';
+   const itemStudentMap = {};
+   
+   reportData.reportData.itemsForThisDate.forEach(order => {
+     const itemName = order.item.name;
+     if (!itemStudentMap[itemName]) {
+       itemStudentMap[itemName] = [];
+     }
+     itemStudentMap[itemName].push({
+       name: order.childName,
+       grade: order.grade
+     });
+   });
+   
+   Object.keys(itemStudentMap).sort().forEach(itemName => {
+     const students = itemStudentMap[itemName]
+       .sort((a, b) => {
+         const lastNameA = a.name.split(' ')[1] || a.name;
+         const lastNameB = b.name.split(' ')[1] || b.name;
+         return lastNameA.localeCompare(lastNameB);
+       });
+     
+     studentListHtml += `
+       <div style="margin: 20px 0; break-inside: avoid;">
+         <h4 style="color: #4285f4; margin: 10px 0; background: #f0f8ff; padding: 10px; border-radius: 5px;">
+           ${itemName} (${students.length} orders)
+         </h4>
+         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-left: 15px;">
+     `;
+     
+     students.forEach(student => {
+       studentListHtml += `
+         <div style="display: flex; align-items: center; padding: 5px 0;">
+           <input type="checkbox" style="margin-right: 8px; transform: scale(1.2);">
+           <span>${student.name} (${student.grade})</span>
+         </div>
+       `;
+     });
+     
+     studentListHtml += `
+         </div>
+       </div>
+     `;
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+       <div style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+         <h1 style="margin: 0;">🍽️ Daily Food Orders</h1>
+         <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateStr}</p>
+       </div>
+       
+       <div style="padding: 25px; background: white;">
+         <!-- Summary Box -->
+         <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+           <h3 style="color: #f57c00; margin: 0 0 15px 0;">📋 Order Summary</h3>
+           <div style="font-size: 1.1em; line-height: 1.6;">
+             <strong>Total Items to Prepare:</strong> ${reportData.orderCount}<br>
+             <strong>Students Served:</strong> ${reportData.reportData.familiesServed}<br>
+             <strong>Categories:</strong> ${Object.keys(reportData.reportData.itemCounts).length}
+           </div>
+         </div>
+         
+         <!-- Chick-fil-A Order List -->
+         <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
+           <h3 style="color: #1976d2; margin: 0 0 15px 0;">🐔 Chick-fil-A Order List</h3>
+           <table style="width: 100%; border-collapse: collapse;">
+             <thead>
+               <tr style="background: #bbdefb;">
+                 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-size: 1.1em;">Item</th>
+                 <th style="padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 1.1em;">Quantity</th>
+               </tr>
+             </thead>
+             <tbody>
+               ${itemSummaryHtml}
+             </tbody>
+             <tfoot>
+               <tr style="background: #f5f5f5; font-weight: bold; font-size: 1.1em;">
+                 <td style="padding: 12px; border: 1px solid #ddd;">TOTAL ITEMS</td>
+                 <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${reportData.orderCount}</td>
+               </tr>
+             </tfoot>
+           </table>
+         </div>
+         
+         <!-- Student Checklist -->
+         <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+           <h3 style="color: #2e7d32; margin: 0 0 15px 0;">✅ Student Checklist (Printable)</h3>
+           <p style="color: #666; margin-bottom: 20px; font-style: italic;">
+             Check off each student as you distribute their order. Sorted by last name for easy reference.
+           </p>
+           ${studentListHtml}
+         </div>
+         
+         <!-- Action Items -->
+         <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
+           <h3 style="color: #d32f2f; margin: 0 0 15px 0;">🎯 Today's Tasks</h3>
+           <ol style="margin: 0; padding-left: 25px; line-height: 2; font-size: 1.1em;">
+             <li><strong>Place Chick-fil-A order</strong> for ${reportData.orderCount} total items</li>
+             <li><strong>Print this checklist</strong> or keep email open on tablet</li>
+             <li><strong>Prepare labels</strong> for each student's order</li>
+             <li><strong>Set up distribution area</strong> before lunch period</li>
+             <li><strong>Check off students</strong> as orders are distributed</li>
+           </ol>
+         </div>
+         
+         <!-- Footer -->
+         <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+           <p><strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}</p>
+           <p style="font-size: 0.9em;">This report excludes cancelled items and shows only active orders.</p>
+         </div>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   GmailApp.sendEmail(
+     workerEmail,
+     subject,
+     `Daily orders: ${reportData.orderCount} items for ${dateStr}`,
+     {
+       htmlBody: emailBody,
+       name: 'Artios Cafe Daily Orders'
+     }
+   );
+   
+   console.log(`Worker daily orders email sent to ${workerEmail}: ${reportData.orderCount} items for ${dateStr}`);
+   
+ } catch (error) {
+   console.error('Error sending worker daily orders email:', error);
+   throw error;
+ }
 }
 
 /**
- * Send financial report email
- */
+* Send financial report email
+*/
 function sendFinancialReportEmail(startDate, endDate, reportData, adminRecipients) {
-  try {
-    const subject = `Artios Cafe Financial Report - ${startDate} to ${endDate}`;
-    
-    let itemsList = '';
-    Object.entries(reportData.itemCounts).forEach(([itemName, count]) => {
-      itemsList += `<li>${itemName}: ${count} orders</li>`;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">Financial Report</h1>
-          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${startDate} to ${endDate}</p>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">Summary</h3>
-            <p><strong>Total Revenue:</strong> ${reportData.totalRevenue.toFixed(2)}</p>
-            <p><strong>Total Orders:</strong> ${reportData.totalOrders}</p>
-            <p><strong>Total Discounts:</strong> ${reportData.totalDiscounts.toFixed(2)}</p>
-            <p><strong>Families Served:</strong> ${reportData.familiesServed}</p>
-          </div>
-          
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #333; margin: 0 0 15px 0;">Popular Items</h3>
-            <ul>${itemsList}</ul>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    adminRecipients.forEach(email => {
-      GmailApp.sendEmail(
-        email,
-        subject,
-        `Financial report: ${reportData.totalRevenue.toFixed(2)} revenue from ${reportData.totalOrders} orders`,
-        {
-          htmlBody: emailBody,
-          name: 'Artios Cafe Financial Reports'
-        }
-      );
-    });
-    
-    console.log(`Financial report sent to ${adminRecipients.length} recipients`);
-    
-  } catch (error) {
-    console.error('Error sending financial report email:', error);
-    throw error;
-  }
+ try {
+   const subject = `Artios Cafe Financial Report - ${startDate} to ${endDate}`;
+   
+   let itemsList = '';
+   Object.entries(reportData.itemCounts).forEach(([itemName, count]) => {
+     itemsList += `<li>${itemName}: ${count} orders</li>`;
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
+       <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+         <h1 style="margin: 0;">Financial Report</h1>
+         <p style="margin: 10px 0 0 0; font-size: 1.2em;">${startDate} to ${endDate}</p>
+       </div>
+       
+       <div style="padding: 25px; background: white;">
+         <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h3 style="color: #2e7d32; margin: 0 0 15px 0;">Summary</h3>
+           <p><strong>Total Revenue:</strong> $${reportData.totalRevenue.toFixed(2)}</p>
+           <p><strong>Total Orders:</strong> ${reportData.totalOrders}</p>
+           <p><strong>Total Discounts:</strong> $${reportData.totalDiscounts.toFixed(2)}</p>
+           <p><strong>Families Served:</strong> ${reportData.familiesServed}</p>
+         </div>
+         
+         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h3 style="color: #333; margin: 0 0 15px 0;">Popular Items</h3>
+           <ul>${itemsList}</ul>
+         </div>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   adminRecipients.forEach(email => {
+     GmailApp.sendEmail(
+       email,
+       subject,
+       `Financial report: $${reportData.totalRevenue.toFixed(2)} revenue from ${reportData.totalOrders} orders`,
+       {
+         htmlBody: emailBody,
+         name: 'Artios Cafe Financial Reports'
+       }
+     );
+   });
+   
+   console.log(`Financial report sent to ${adminRecipients.length} recipients`);
+   
+ } catch (error) {
+   console.error('Error sending financial report email:', error);
+   throw error;
+ }
 }
 
 // ============================================
@@ -2227,193 +2265,186 @@ function sendFinancialReportEmail(startDate, endDate, reportData, adminRecipient
 // ============================================
 
 /**
- * Run this ONCE to set up the complete system with family authentication
- */
+* Run this ONCE to set up the complete system with family authentication
+*/
 function setupFamilyAuthentication() {
-  try {
-    console.log('🚀 Setting up Artios Cafe Family Authentication System...');
-    console.log('');
-    
-    // 1. Create the Family Accounts sheet
-    console.log('📋 Step 1: Setting up Family Accounts sheet...');
-    const familySheet = getFamilyAccountsSheet();
-    console.log('✅ Family Accounts sheet ready');
-    
-    // 2. Create the Orders sheet
-    console.log('📊 Step 2: Setting up Orders sheet...');
-    const ordersSheet = getOrdersSheet();
-    console.log('✅ Orders sheet ready');
-    
-    // 3. Test the hashing function
-    console.log('🔐 Step 3: Testing password hashing...');
-    const testHash1 = hashPasscode('1234');
-    const testHash2 = hashPasscode('1234');
-    const testHash3 = hashPasscode('5678');
-    
-    console.log('✅ Hash consistency test:', testHash1 === testHash2 ? 'PASSED' : 'FAILED');
-    console.log('✅ Hash uniqueness test:', testHash1 !== testHash3 ? 'PASSED' : 'FAILED');
-    
-    // 4. Set up daily trigger for 8:15 AM reports
-    console.log('⏰ Step 4: Setting up daily automation...');
-    setupDailyTrigger();
-    
-    // 5. Test basic functionality
-    console.log('🧪 Step 5: Running system tests...');
-    
-    // Test report generation
-    const testReport = generateEmailOnlyReport(new Date());
-    console.log(`✅ Report generation test: ${testReport.orderCount} orders found for today`);
-    
-    // Test authentication endpoints
-    console.log('✅ Authentication endpoints configured');
-    console.log('✅ Order lookup endpoints configured'); 
-    console.log('✅ Cancellation endpoints configured');
-    console.log('✅ Email system configured');
-    
-    console.log('');
-    console.log('🎉 SETUP COMPLETE! 🎉');
-    console.log('');
-    console.log('📋 SUMMARY:');
-    console.log('✅ Family authentication system ready');
-    console.log('✅ Google Sheets configured with proper columns');
-    console.log('✅ Daily email automation scheduled for 8:15 AM');
-    console.log('✅ Session-based cancellation system ready');
-    console.log('✅ All email templates configured');
-    console.log('');
-    console.log('🚀 NEXT STEPS:');
-    console.log('1. Deploy this script as a Web App');
-    console.log('2. Update your HTML files with the new Web App URL');
-    console.log('3. Test the complete system!');
-    console.log('');
-    console.log('🔗 Your API endpoints:');
-    console.log(`Base URL: ${ScriptApp.getService().getUrl()}`);
-    console.log('• ?action=test - Test system');
-    console.log('• ?action=verify_family_login&email=X&passcode=X - Login');
-    console.log('• ?action=create_family_account&email=X&passcode=X - Signup');
-    console.log('• ?action=lookup_orders&email=X - Get orders');
-    console.log('• ?action=cancel_item&item_id=X&reason=X - Cancel item');
-    console.log('• ?action=cancel_multiple_items&session_id=X&items=X&reason=X - Batch cancel');
-    console.log('');
-    
-  } catch (error) {
-    console.error('❌ Error during setup:', error);
-    console.error('Stack:', error.stack);
-  }
+ try {
+   console.log('🚀 Setting up Artios Cafe Family Authentication System...');
+   console.log('');
+   
+   // 1. Create the Family Accounts sheet
+   console.log('📋 Step 1: Setting up Family Accounts sheet...');
+   const familySheet = getFamilyAccountsSheet();
+   console.log('✅ Family Accounts sheet ready');
+   
+   // 2. Create the Orders sheet
+   console.log('📊 Step 2: Setting up Orders sheet...');
+   const ordersSheet = getOrdersSheet();
+   console.log('✅ Orders sheet ready');
+   
+   // 3. Test the hashing function
+   console.log('🔐 Step 3: Testing password hashing...');
+   const testHash1 = hashPasscode('1234');
+   const testHash2 = hashPasscode('1234');
+   const testHash3 = hashPasscode('5678');
+   
+   console.log('✅ Hash consistency test:', testHash1 === testHash2 ? 'PASSED' : 'FAILED');
+   console.log('✅ Hash uniqueness test:', testHash1 !== testHash3 ? 'PASSED' : 'FAILED');
+   
+   // 4. Set up daily trigger for 8:15 AM reports
+   console.log('⏰ Step 4: Setting up daily automation...');
+   setupDailyTrigger();
+   
+   // 5. Test basic functionality
+   console.log('🧪 Step 5: Running system tests...');
+   
+   // Test report generation
+   const testReport = generateEmailOnlyReport(new Date());
+   console.log(`✅ Report generation test: ${testReport.orderCount} orders found for today`);
+   
+   // Test authentication endpoints
+   console.log('✅ Authentication endpoints configured');
+   console.log('✅ Order lookup endpoints configured'); 
+   console.log('✅ Cancellation endpoints configured');
+   console.log('✅ Email system configured');
+   
+   console.log('');
+   console.log('🎉 SETUP COMPLETE! 🎉');
+   console.log('');
+   console.log('📋 SUMMARY:');
+   console.log('✅ Family authentication system ready');
+   console.log('✅ Google Sheets configured with proper columns');
+   console.log('✅ Daily email automation scheduled for 8:15 AM');
+   console.log('✅ Session-based cancellation system ready');
+   console.log('✅ All email templates configured');
+   console.log('');
+   console.log('🚀 NEXT STEPS:');
+   console.log('1. Deploy this script as a Web App');
+   console.log('2. Update your HTML files with the new Web App URL');
+   console.log('3. Test the complete system!');
+   console.log('');
+   
+ } catch (error) {
+   console.error('❌ Error during setup:', error);
+   console.error('Stack:', error.stack);
+ }
 }
 
 /**
- * Set up daily trigger for 8:15 AM reports
- */
+* Set up daily trigger for 8:15 AM reports
+*/
 function setupDailyTrigger() {
-  try {
-    // Delete existing triggers first
-    const triggers = ScriptApp.getProjectTriggers();
-    triggers.forEach(trigger => {
-      if (trigger.getHandlerFunction() === 'compileDailyOrders') {
-        ScriptApp.deleteTrigger(trigger);
-      }
-    });
-    
-    // Create new trigger for 8:15 AM
-    ScriptApp.newTrigger('compileDailyOrders')
-      .timeBased()
-      .everyDays(1)
-      .atHour(8)
-      .nearMinute(15)
-      .create();
-      
-    console.log('✅ Daily trigger set for 8:15 AM EST');
-    
-  } catch (error) {
-    console.error('❌ Error setting up daily trigger:', error);
-  }
+ try {
+   // Delete existing triggers first
+   const triggers = ScriptApp.getProjectTriggers();
+   triggers.forEach(trigger => {
+     if (trigger.getHandlerFunction() === 'compileDailyOrders') {
+       ScriptApp.deleteTrigger(trigger);
+     }
+   });
+   
+   // Create new trigger for 8:15 AM
+   ScriptApp.newTrigger('compileDailyOrders')
+     .timeBased()
+     .everyDays(1)
+     .atHour(8)
+     .nearMinute(15)
+     .create();
+     
+   console.log('✅ Daily trigger set for 8:15 AM EST');
+   
+ } catch (error) {
+   console.error('❌ Error setting up daily trigger:', error);
+ }
 }
 
 /**
- * Test function to verify all endpoints work
- */
+* Test function to verify all endpoints work
+*/
 function testAllEndpoints() {
-  console.log('🧪 Testing all API endpoints...');
-  
-  try {
-    // Test 1: System test
-    console.log('1. Testing system endpoint...');
-    const testResult = doGet({ parameter: { action: 'test' } });
-    const testData = JSON.parse(testResult.getContent());
-    console.log(testData.success ? '✅ System test passed' : '❌ System test failed');
-    
-    // Test 2: Create test account
-    console.log('2. Testing account creation...');
-    const createResult = createFamilyAccount('test@example.com', '1234');
-    console.log(createResult.success ? '✅ Account creation works' : '❌ Account creation failed');
-    
-    // Test 3: Test login
-    console.log('3. Testing login...');
-    const loginResult = verifyFamilyLogin('test@example.com', '1234');
-    console.log(loginResult.success ? '✅ Login works' : '❌ Login failed');
-    
-    console.log('');
-    console.log('🎉 All endpoint tests completed!');
-    
-  } catch (error) {
-    console.error('❌ Error during endpoint testing:', error);
-  }
+ console.log('🧪 Testing all API endpoints...');
+ 
+ try {
+   // Test 1: System test
+   console.log('1. Testing system endpoint...');
+   const testResult = doGet({ parameter: { action: 'test' } });
+   const testData = JSON.parse(testResult.getContent());
+   console.log(testData.success ? '✅ System test passed' : '❌ System test failed');
+   
+   // Test 2: Create test account
+   console.log('2. Testing account creation...');
+   const createResult = createFamilyAccount('test@example.com', '1234');
+   console.log(createResult.success ? '✅ Account creation works' : '❌ Account creation failed');
+   
+   // Test 3: Test login
+   console.log('3. Testing login...');
+   const loginResult = verifyFamilyLogin('test@example.com', '1234');
+   console.log(loginResult.success ? '✅ Login works' : '❌ Login failed');
+   
+   console.log('');
+   console.log('🎉 All endpoint tests completed!');
+   
+ } catch (error) {
+   console.error('❌ Error during endpoint testing:', error);
+ }
 }
 
 /**
- * Clean up old/test data (run manually if needed)
- */
+* Clean up old/test data (run manually if needed)
+*/
 function cleanupTestData() {
-  console.log('🧹 Cleaning up test data...');
-  
-  try {
-    const familySheet = getFamilyAccountsSheet();
-    const data = familySheet.getDataRange().getValues();
-    
-    let deletedCount = 0;
-    
-    // Clean up test accounts (working backwards to avoid index issues)
-    for (let i = data.length - 1; i >= 1; i--) {
-      const email = data[i][0];
-      if (email && (email.includes('test@') || email.includes('example.com'))) {
-        familySheet.deleteRow(i + 1);
-        deletedCount++;
-        console.log(`🗑️ Deleted test account: ${email}`);
-      }
-    }
-    
-    console.log(`✅ Cleanup complete - removed ${deletedCount} test accounts`);
-    
-  } catch (error) {
-    console.error('❌ Error during cleanup:', error);
-  }
+ console.log('🧹 Cleaning up test data...');
+ 
+ try {
+   const familySheet = getFamilyAccountsSheet();
+   const data = familySheet.getDataRange().getValues();
+   
+   let deletedCount = 0;
+   
+   // Clean up test accounts (working backwards to avoid index issues)
+   for (let i = data.length - 1; i >= 1; i--) {
+     const email = data[i][0];
+     if (email && (email.includes('test@') || email.includes('example.com'))) {
+       familySheet.deleteRow(i + 1);
+       deletedCount++;
+       console.log(`🗑️ Deleted test account: ${email}`);
+     }
+   }
+   
+   console.log(`✅ Cleanup complete - removed ${deletedCount} test accounts`);
+   
+ } catch (error) {
+   console.error('❌ Error during cleanup:', error);
+ }
 }
 
 /**
- * View current family accounts (for admin debugging)
- */
+* View current family accounts (for admin debugging)
+*/
 function viewFamilyAccounts() {
-  try {
-    console.log('👨‍👩‍👧‍👦 Current Family Accounts:');
-    console.log('==========================');
-    
-    const familySheet = getFamilyAccountsSheet();
-    const data = familySheet.getDataRange().getValues();
-    
-    if (data.length <= 1) {
-      console.log('No family accounts found.');
-      return;
-    }
-    
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      console.log(`${i}. ${row[0]} | Created: ${row[2]} | Last Login: ${row[3]} | Type: ${row[4]}`);
-    }
-    
-    console.log('==========================');
-    console.log(`Total families: ${data.length - 1}`);
-    
-  } catch (error) {
-    console.error('❌ Error viewing family accounts:', error);
-  }
+ try {
+   console.log('👨‍👩‍👧‍👦 Current Family Accounts:');
+   console.log('==========================');
+   
+   const familySheet = getFamilyAccountsSheet();
+   const data = familySheet.getDataRange().getValues();
+   
+   if (data.length <= 1) {
+     console.log('No family accounts found.');
+     return;
+   }
+   
+   for (let i = 1; i < data.length; i++) {
+     const row = data[i];
+     console.log(`${i}. ${row[0]} | Created: ${row[2]} | Last Login: ${row[3]} | Type: ${row[4]}`);
+   }
+   
+   console.log('==========================');
+   console.log(`Total families: ${data.length - 1}`);
+   
+ } catch (error) {
+   console.error('❌ Error viewing family accounts:', error);
+ }
 }
+
+// End of Code.gs file
