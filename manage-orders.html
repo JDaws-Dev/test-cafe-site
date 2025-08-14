@@ -5,67 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Orders - Artios Academies Lunch Program</title>
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f9fa;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             line-height: 1.6;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            background: var(--bg-primary);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            min-height: 100vh;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             color: white;
-            padding: 20px 0;
-            margin-bottom: 30px;
-            border-radius: 10px;
+            padding: 2rem 2.5rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
-        .header h1 {
+        .back-btn {
+            position: absolute;
+            top: 1.25rem;
+            left: 1.25rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 250ms ease;
+            font-size: 0.875rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .artios-logo {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+
+        .header-text {
+            text-align: left;
+        }
+
+        .header-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
             margin: 0;
-            text-align: center;
-            font-size: 2.5em;
-            font-weight: 300;
+            line-height: 1.2;
         }
 
-        .nav {
+        .subtitle {
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            backdrop-filter: blur(10px);
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 250ms ease;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Main Layout Grid */
+        .refund-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 2rem;
+        }
+
+        .orders-section {
             background: white;
-            padding: 15px;
             border-radius: 10px;
-            margin-bottom: 30px;
+            padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-        }
-
-        .nav a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .nav a:hover, .nav a.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .main-section {
+        .email-section {
             background: white;
             padding: 30px;
             border-radius: 10px;
@@ -73,14 +155,10 @@
             margin-bottom: 30px;
         }
 
-        .email-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
         .email-section h2 {
             color: #333;
             margin-bottom: 20px;
+            text-align: center;
         }
 
         .email-input-group {
@@ -100,165 +178,363 @@
         }
 
         .btn {
-            background: #667eea;
+            background: var(--primary-gradient);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 0.75rem;
             cursor: pointer;
             font-size: 16px;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            transition: all 250ms ease;
         }
 
         .btn:hover {
-            background: #5a6fd8;
             transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
-        .btn-danger {
-            background: #dc3545;
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .order-group {
-            margin-bottom: 25px;
+        /* Date Group Styles */
+        .date-group {
+            margin-bottom: 20px;
             border: 1px solid #e9ecef;
             border-radius: 8px;
             overflow: hidden;
         }
 
-        .group-header {
+        .date-header {
             background: #f8f9fa;
             padding: 15px 20px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #e9ecef;
             transition: background-color 0.3s ease;
         }
 
-        .group-header:hover {
+        .date-header:hover {
             background: #e9ecef;
         }
 
-        .group-title {
+        .date-header.today {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .date-header.past {
+            background: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .date-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .date-title {
             font-weight: 600;
-            color: #495057;
+            font-size: 1.1em;
+            color: #333;
         }
 
-        .group-icon {
-            font-size: 14px;
+        .item-count {
+            background: #667eea;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .refundable-count {
+            background: #10b981;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .toggle-icon {
             transition: transform 0.3s ease;
+            color: #6c757d;
         }
 
-        .group-icon.rotated {
+        .date-group.collapsed .toggle-icon {
             transform: rotate(-90deg);
         }
 
-        .orders-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
+        .date-items {
+            padding: 0;
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
         }
 
-        .orders-table th,
-        .orders-table td {
-            padding: 12px;
-            text-align: left;
+        .date-group.collapsed .date-items {
+            max-height: 0;
+        }
+
+        /* Refund Item Styles */
+        .refund-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
             border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
         }
 
-        .orders-table th {
+        .refund-item:hover {
             background: #f8f9fa;
+        }
+
+        .refund-item.disabled {
+            opacity: 0.5;
+            background: #f8f9fa;
+        }
+
+        .refund-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .refund-item input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+        }
+
+        .refund-item label {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .item-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .child-name {
             font-weight: 600;
+            color: #333;
+            min-width: 120px;
+        }
+
+        .item-name {
             color: #495057;
         }
 
-        .orders-table tr:hover {
-            background: #f8f9fa;
+        .item-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 1.1em;
         }
 
         .status-badge {
             padding: 4px 8px;
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 0.8em;
             font-weight: 500;
             text-transform: uppercase;
+            margin-left: 10px;
         }
 
-        .status-active {
+        .status-refundable {
             background: #d4edda;
             color: #155724;
         }
 
-        .status-cancelled {
+        .status-deadline-passed {
             background: #f8d7da;
             color: #721c24;
         }
 
-        .empty-group {
+        .status-refunded {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        /* Refund Cart Styles */
+        .refund-cart {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-header {
+            background: var(--primary-gradient);
+            color: white;
             padding: 20px;
             text-align: center;
+        }
+
+        .cart-header h3 {
+            margin: 0;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cart-items {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .empty-cart {
+            text-align: center;
             color: #6c757d;
+            padding: 40px 20px;
             font-style: italic;
         }
 
-        .order-summary {
-            padding: 10px 15px;
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-
-        .advanced-search {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .search-row {
+        .cart-item {
             display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            position: relative;
         }
 
-        .search-field {
+        .cart-item-info {
             flex: 1;
-            min-width: 200px;
         }
 
-        .search-field label {
-            display: block;
-            margin-bottom: 5px;
+        .cart-item-name {
             font-weight: 500;
-            color: #495057;
+            color: #333;
+            margin-bottom: 4px;
         }
 
-        .search-field input,
-        .search-field select {
+        .cart-item-child {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .cart-item-price {
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .remove-from-cart {
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+        }
+
+        .remove-from-cart:hover {
+            background: #c82333;
+        }
+
+        .cart-summary {
+            border-top: 2px solid #e9ecef;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .cart-total strong {
+            color: #333;
+        }
+
+        .total-amount {
+            color: #28a745;
+            font-weight: 700;
+            font-size: 1.3em;
+        }
+
+        .process-refunds-btn {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 14px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 0.75rem;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 250ms ease;
         }
 
+        .process-refunds-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .process-refunds-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clear-cart-btn {
+            width: 100%;
+            background: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-cart-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -270,13 +546,20 @@
             background-color: rgba(0,0,0,0.5);
         }
 
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .modal-content {
             background-color: white;
-            margin: 5% auto;
             padding: 30px;
             border-radius: 10px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
             position: relative;
         }
 
@@ -297,17 +580,7 @@
 
         .modal h2 {
             margin-top: 0;
-            color: #dc3545;
-        }
-
-        .modal textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            resize: vertical;
-            min-height: 80px;
-            margin: 15px 0;
+            color: #333;
         }
 
         .modal-buttons {
@@ -317,6 +590,54 @@
             margin-top: 20px;
         }
 
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Loading Spinner */
         .loading {
             text-align: center;
             padding: 40px;
@@ -328,7 +649,7 @@
             width: 20px;
             height: 20px;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #4285f4;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-right: 10px;
@@ -339,71 +660,36 @@
             100% { transform: rotate(360deg); }
         }
 
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #dc3545;
+        /* Mobile Responsive */
+        @media (min-width: 769px) {
+            .header-top-row {
+                position: relative;
+                height: 0; /* Don't take up space */
+            }
+            
+            .back-btn {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            
+            .header-actions {
+                position: absolute;
+                top: 0;
+                right: 0;
+            }
         }
 
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #28a745;
-        }
+        @media (max-width: 1024px) {
+            .refund-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
 
-        .info {
-            background: #d1ecf1;
-            color: #0c5460;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            border-left: 4px solid #17a2b8;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .group-content {
-            padding: 0;
-            max-height: 1000px;
-            overflow: hidden;
-            transition: max-height 0.3s ease, opacity 0.3s ease;
-        }
-
-        .group-content.collapsed {
-            max-height: 0;
-            opacity: 0;
-        }
-
-        .cancelled-item {
-            background-color: #f8f9fa !important;
-            opacity: 0.7;
-        }
-
-        .cancelled-badge {
-            background: #dc3545;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: 500;
+            .refund-cart {
+                position: static;
+                margin-top: 2rem;
+            }
         }
 
         @media (max-width: 768px) {
@@ -411,8 +697,33 @@
                 padding: 10px;
             }
 
-            .header h1 {
-                font-size: 2em;
+            .header {
+                padding: 1rem;
+            }
+            
+            .back-btn {
+                position: static;
+                margin-bottom: 1rem;
+                width: fit-content;
+            }
+            
+            .header-actions {
+                position: static;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .header-brand {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-text {
+                text-align: center;
+            }
+            
+            .header-text h1 {
+                font-size: 1.5rem;
             }
 
             .nav ul {
@@ -425,17 +736,15 @@
                 align-items: center;
             }
 
-            .search-row {
+            .item-main {
                 flex-direction: column;
+                align-items: flex-start;
             }
 
-            .orders-table {
-                font-size: 14px;
-            }
-
-            .orders-table th,
-            .orders-table td {
-                padding: 8px 4px;
+            .refund-item label {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
         }
     </style>
@@ -443,193 +752,170 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Manage Orders</h1>
+            <div class="header-top-row">
+                <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <span id="user-email"></span>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            
+            <div class="header-brand">
+                <img class="artios-logo" src="artios-logo.png" alt="Artios Academies Logo">
+                <div class="header-text">
+                    <h1>Artios Academies of Sugar Hill</h1>
+                    <div class="subtitle">Manage Your Lunch Orders</div>
+                </div>
+            </div>
         </div>
 
-        <nav class="nav">
-            <ul>
-                <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="manage-orders.html" class="active">Manage Orders</a></li>
-                <li><a href="login.html">Logout</a></li>
-            </ul>
-        </nav>
+        <div id="status-message" class="status-message"></div>
 
-        <div class="main-section">
-            <div class="email-section">
-                <h2>View Your Orders</h2>
-                <p>Enter your email address to view and manage your lunch orders</p>
-                <div class="email-input-group">
-                    <input type="email" id="parentEmail" placeholder="Enter your email address" required>
-                    <button class="btn" onclick="loadMyOrders()">Load My Orders</button>
-                </div>
-                <button class="btn btn-secondary" id="advanced-search-btn" onclick="toggleAdvancedSearch()">Show Advanced Search</button>
-            </div>
-
-            <div id="grouped-orders-section" style="display: none;">
-                <h3>Your Orders</h3>
-                
-                <div class="order-group">
-                    <div class="group-header" onclick="toggleGroup('today')">
-                        <span class="group-title">Today's Orders</span>
-                        <span class="group-icon" id="today-icon">▼</span>
-                    </div>
-                    <div class="group-content" id="today-content">
-                        <!-- Today's orders will be loaded here -->
+        <div id="refund-interface" style="display: none;">
+            <div class="refund-container">
+                <div class="orders-section" id="orders-section">
+                    <div class="loading">
+                        <span class="loading-spinner"></span>
+                        Loading your orders...
                     </div>
                 </div>
 
-                <div class="order-group">
-                    <div class="group-header" onclick="toggleGroup('upcoming')">
-                        <span class="group-title">Upcoming Orders (Next 7 Days)</span>
-                        <span class="group-icon" id="upcoming-icon">▼</span>
+                <div class="refund-cart" id="refund-cart">
+                    <div class="cart-header">
+                        <h3>🛒 Refund Cart</h3>
                     </div>
-                    <div class="group-content" id="upcoming-content">
-                        <!-- Upcoming orders will be loaded here -->
+                    <div class="cart-items" id="cart-items">
+                        <div class="empty-cart">
+                            Select items to refund
+                        </div>
                     </div>
-                </div>
-
-                <div class="order-group">
-                    <div class="group-header" onclick="toggleGroup('recent')">
-                        <span class="group-title">Recent Orders (Last 30 Days)</span>
-                        <span class="group-icon" id="recent-icon">▼</span>
-                    </div>
-                    <div class="group-content" id="recent-content">
-                        <!-- Recent orders will be loaded here -->
+                    <div class="cart-summary">
+                        <div class="cart-total">
+                            <strong>Total Refund:</strong>
+                            <span class="total-amount">$<span id="refund-total">0.00</span></span>
+                        </div>
+                        <button class="process-refunds-btn" id="process-refunds-btn" onclick="processAllRefunds()" disabled>
+                            Process Refunds
+                        </button>
+                        <button class="clear-cart-btn" onclick="clearRefundCart()">
+                            Clear Cart
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="advanced-search" id="advanced-search">
-                <h3>Advanced Search</h3>
-                <div class="search-row">
-                    <div class="search-field">
-                        <label for="searchEmail">Email Address:</label>
-                        <input type="email" id="searchEmail" placeholder="parent@example.com">
-                    </div>
-                    <div class="search-field">
-                        <label for="searchOrderId">Order ID:</label>
-                        <input type="text" id="searchOrderId" placeholder="Enter order ID">
-                    </div>
-                </div>
-                <div class="search-row">
-                    <div class="search-field">
-                        <label for="searchDate">Date:</label>
-                        <input type="date" id="searchDate">
-                    </div>
-                    <div class="search-field">
-                        <label for="searchStatus">Status:</label>
-                        <select id="searchStatus">
-                            <option value="">All Statuses</option>
-                            <option value="active">Active</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn" onclick="searchOrders()">Search Orders</button>
-                </div>
+        <div style="text-align: center; color: #666; font-size: 0.9em; padding: 20px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Artios Academies of Sugar Hill</strong></p>
+            <p>Questions? Contact <strong>CRivers@artiosacademies.com</strong></p>
+        </div>
+    </div>
+
+    <!-- Batch Confirmation Modal -->
+    <div id="batchConfirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBatchModal()">&times;</span>
+            <h2>Confirm Refunds</h2>
+            <p>You are about to process the following refunds:</p>
+            <div id="batchRefundDetails" style="max-height: 300px; overflow-y: auto; margin: 20px 0;">
+                <!-- Refund items will be listed here -->
             </div>
-
-            <div id="results-section">
-                <!-- Search results will appear here -->
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <strong>Total Refund Amount: $<span id="batchTotalAmount">0.00</span></strong>
+            </div>
+            <p style="color: #666;">
+                These refunds will be processed and you will receive a confirmation email. 
+                Refunds will be issued via Venmo within 24 hours.
+            </p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeBatchModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmBatchBtn" onclick="confirmBatchRefunds()">
+                    Confirm & Process Refunds
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Cancel Order Modal -->
-    <div id="cancelModal" class="modal">
+    <!-- Results Modal -->
+    <div id="resultsModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Cancel Order Item</h2>
-            <p>Are you sure you want to cancel this item?</p>
-            <div id="cancelItemDetails"></div>
-            <label for="cancelReason">Reason for cancellation (optional):</label>
-            <textarea id="cancelReason" placeholder="Please let us know why you're cancelling this item..."></textarea>
+            <span class="close" onclick="closeResultsModal()">&times;</span>
+            <h2>Refund Processing Results</h2>
+            <div id="refundResults">
+                <!-- Results will be displayed here -->
+            </div>
             <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeModal()">Keep Item</button>
-                <button class="btn btn-danger" id="confirmCancelBtn" onclick="confirmCancellation()">Confirm Cancellation</button>
+                <button class="btn" onclick="closeResultsModal()">Close</button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec';
-        let currentItemToCancel = null;
+        // Fixed API URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec';
+        
         let allOrders = [];
+        let refundCart = [];
 
         document.addEventListener('DOMContentLoaded', function() {
-            setupEventListeners();
-            setDefaultDate();
-            // Try to load saved email from localStorage
-            const savedEmail = localStorage.getItem('parentEmail');
-            if (savedEmail) {
-                document.getElementById('parentEmail').value = savedEmail;
-                showInfo(`Welcome back! Loading orders for ${savedEmail}...`);
-                setTimeout(() => loadMyOrders(), 500);
+            // Get authenticated email from session
+            const authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
+            const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
+            
+            // Check if authenticated
+            if (!authenticatedEmail || !authExpiry || Date.now() >= authExpiry) {
+                // Not authenticated, redirect to login
+                window.location.href = 'login.html';
+                return;
             }
+            
+            // Automatically load orders for authenticated user
+            loadOrdersForAuthenticatedUser(authenticatedEmail);
+            
+            setupEventListeners();
         });
 
         function setupEventListeners() {
-            // Modal close events
-            document.querySelector('.close').onclick = closeModal;
+            // Close modals when clicking outside
             window.onclick = function(event) {
-                const modal = document.getElementById('cancelModal');
-                if (event.target === modal) {
-                    closeModal();
+                if (event.target.classList.contains('modal')) {
+                    event.target.classList.remove('show');
                 }
             };
-
-            // Enter key functionality
-            document.getElementById('parentEmail').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    loadMyOrders();
-                }
-            });
-
-            document.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && document.getElementById('advanced-search').style.display !== 'none') {
-                    searchOrders();
-                }
-            });
-
-            // Added keyboard navigation for groups
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && document.getElementById('cancelModal').style.display === 'block') {
-                    closeModal();
-                }
-            });
         }
 
-        // Enhanced loadMyOrders with better error handling and user feedback
-        async function loadMyOrders() {
-            const email = document.getElementById('parentEmail').value.trim();
-            if (!email) {
-                showError('Please enter your email address to view your orders');
-                document.getElementById('parentEmail').focus();
-                return;
+        function checkAuthentication() {
+            const authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
+            const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
+            
+            if (!authenticatedEmail || !authExpiry || Date.now() >= authExpiry) {
+                // Session expired or not authenticated
+                alert('Your session has expired. Please log in again.');
+                window.location.href = 'login.html';
+                return null;
             }
+            
+            return authenticatedEmail;
+        }
 
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showError('Please enter a valid email address');
-                document.getElementById('parentEmail').focus();
-                return;
-            }
+        function logout() {
+            sessionStorage.removeItem('authenticatedEmail');
+            sessionStorage.removeItem('authExpiry');
+            window.location.href = 'login.html';
+        }
 
-            // Save email for future visits
-            localStorage.setItem('parentEmail', email);
-
-            const loadBtn = document.querySelector('button[onclick="loadMyOrders()"]');
-            const originalText = loadBtn.textContent;
-            loadBtn.disabled = true;
-            loadBtn.innerHTML = '<span class="loading-spinner"></span>Loading Orders...';
-
-            showLoading(true, 'Loading your orders...');
+        async function loadOrdersForAuthenticatedUser(email) {
+            // No need to ask for email - we already have it
+            document.getElementById('user-email').textContent = email;
+            
+            showMessage('Loading your orders...', 'info');
+            document.getElementById('refund-interface').style.display = 'block';
+            document.getElementById('orders-section').innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading your orders...</div>';
 
             try {
-                const searchUrl = `${API_URL}?action=lookup_orders&email=${encodeURIComponent(email)}`;
-                const response = await fetch(searchUrl);
+                const response = await fetch(`${API_URL}?action=lookup_orders&email=${encodeURIComponent(email)}`);
                 
                 if (!response.ok) {
                     throw new Error(`Server error: ${response.status}`);
@@ -639,545 +925,433 @@
 
                 if (data.success && data.orders && data.orders.length > 0) {
                     allOrders = data.orders;
-                    displayGroupedOrders(data.orders);
-                    document.getElementById('grouped-orders-section').style.display = 'block';
-                    showSuccess(`Found ${data.orders.length} order${data.orders.length !== 1 ? 's' : ''} for ${email}`);
-                } else if (data.success && (!data.orders || data.orders.length === 0)) {
-                    showInfo(`No orders found for ${email}. Orders will appear here after you place them.`);
-                    document.getElementById('grouped-orders-section').style.display = 'none';
+                    displayOrdersByDate(data.orders);
+                    showMessage(`Found ${data.orders.length} order${data.orders.length !== 1 ? 's' : ''}`, 'success');
                 } else {
-                    showError(data.error || 'Unable to load orders. Please try again.');
-                    document.getElementById('grouped-orders-section').style.display = 'none';
+                    showMessage('No orders found for this email address', 'info');
+                    document.getElementById('orders-section').innerHTML = '<div class="empty-cart">No orders found</div>';
                 }
             } catch (error) {
-                console.error('Load orders error:', error);
-                showError('Unable to connect to the server. Please check your internet connection and try again.');
-                document.getElementById('grouped-orders-section').style.display = 'none';
-            } finally {
-                loadBtn.disabled = false;
-                loadBtn.textContent = originalText;
-                showLoading(false);
+                console.error('Error loading orders:', error);
+                showMessage('Unable to load orders. Please try again.', 'error');
             }
         }
 
-        // Enhanced displayGroupedOrders with better animations
-        function displayGroupedOrders(orders) {
+        function displayOrdersByDate(orders) {
+            const ordersSection = document.getElementById('orders-section');
             const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
-            const sevenDaysFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-            const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            today.setHours(0, 0, 0, 0);
+            
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const endOfWeek = new Date(today);
+            endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
 
-            // Group orders by category
-            const todayOrders = [];
-            const upcomingOrders = [];
-            const recentOrders = [];
-
+            // Group items by date
+            const itemsByDate = {};
+            
             orders.forEach(order => {
                 order.items.forEach(item => {
-                    const itemDate = new Date(item.date);
-                    const orderWithItem = { ...order, currentItem: item };
-
-                    if (item.date === todayStr) {
-                        todayOrders.push(orderWithItem);
-                    } else if (itemDate > today && itemDate <= sevenDaysFromNow) {
-                        upcomingOrders.push(orderWithItem);
-                    } else if (itemDate >= thirtyDaysAgo && itemDate < today) {
-                        recentOrders.push(orderWithItem);
+                    // Skip cancelled items
+                    if (item.status === 'cancelled') return;
+                    
+                    // Clean the date - remove timezone info
+                    const itemDate = item.date.split('T')[0]; // Get just YYYY-MM-DD
+                    
+                    if (!itemsByDate[itemDate]) {
+                        itemsByDate[itemDate] = [];
                     }
+                    
+                    itemsByDate[itemDate].push({
+                        ...item,
+                        date: itemDate, // Store cleaned date
+                        orderId: order.orderId,
+                        email: order.email,
+                        grade: item.grade || item.childGrade || 'N/A' // Make sure we're getting the right field
+                    });
                 });
             });
 
-            // Display each group with animation
-            setTimeout(() => displayOrderGroup('today', todayOrders, 'No orders for today'), 100);
-            setTimeout(() => displayOrderGroup('upcoming', upcomingOrders, 'No upcoming orders in the next 7 days'), 200);
-            setTimeout(() => displayOrderGroup('recent', recentOrders, 'No recent orders in the last 30 days'), 300);
+            // Sort dates
+            const sortedDates = Object.keys(itemsByDate).sort();
+            
+            let html = '';
+            
+            sortedDates.forEach(dateStr => {
+                const date = new Date(dateStr + 'T12:00:00'); // Use noon to avoid timezone issues
+                const items = itemsByDate[dateStr];
+                const refundableItems = items.filter(item => canRefundItem(dateStr));
+                
+                const isToday = date.toDateString() === today.toDateString();
+                const isPast = date < today;
+                
+                html += createDateGroup(date, items, refundableItems, isToday, isPast, dateStr);
+            });
+
+            ordersSection.innerHTML = html || '<div class="empty-cart">No orders found</div>';
         }
 
-        // Enhanced displayOrderGroup with simplified cancelled item display
-        function displayOrderGroup(groupId, orders, emptyMessage) {
-            const contentDiv = document.getElementById(`${groupId}-content`);
-            
-            if (orders.length === 0) {
-                contentDiv.innerHTML = `<div class="empty-group">${emptyMessage}</div>`;
-                contentDiv.classList.add('fade-in');
-                return;
+        function createDateGroup(date, items, refundableItems, isToday, isPast, dateStr) {
+            // Validate date first
+            if (isNaN(date.getTime())) {
+                console.error('Invalid date:', dateStr);
+                // Create date from string manually
+                const [year, month, day] = dateStr.split('-');
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
             }
+            
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            const dayName = dayNames[date.getDay()];
+            const monthName = monthNames[date.getMonth()];
+            const dateDisplay = `${dayName}, ${monthName} ${date.getDate()}, ${date.getFullYear()}`;
+            
+            let headerClass = '';
+            if (isToday) headerClass = 'today';
+            else if (isPast) headerClass = 'past';
 
-            // Sort orders by date
-            orders.sort((a, b) => new Date(a.currentItem.date) - new Date(b.currentItem.date));
-
-            const totalItems = orders.length;
-            const activeItems = orders.filter(order => order.currentItem.status === 'active').length;
-            const cancelledItems = totalItems - activeItems;
-
-            let tableHtml = `
-                <div class="order-summary">
-                    ${totalItems} item${totalItems !== 1 ? 's' : ''} found
-                    ${cancelledItems > 0 ? ` (${activeItems} active, ${cancelledItems} cancelled)` : ''}
-                </div>
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Child Name</th>
-                            <th>Item</th>
-                            <th>Day</th>
-                            <th>Date</th>
-                            <th>Price</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            let html = `
+                <div class="date-group" data-date="${dateStr}">
+                    <div class="date-header ${headerClass}" onclick="toggleDateGroup('${dateStr}')">
+                        <div class="date-info">
+                            <span class="date-title">${dateDisplay}</span>
+                            <span class="item-count">${items.length} item${items.length !== 1 ? 's' : ''}</span>
+                            ${refundableItems.length > 0 ? `<span class="refundable-count">${refundableItems.length} refundable</span>` : ''}
+                        </div>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="date-items">
             `;
 
-            orders.forEach(order => {
-                const item = order.currentItem;
-                const statusClass = item.status === 'cancelled' ? 'status-cancelled' : 'status-active';
-                const itemDate = new Date(item.date);
-                const today = new Date();
-                const cutoffTime = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate(), 8, 15, 0);
-                const canCancel = item.status === 'active' && new Date() <= cutoffTime;
+            items.forEach(item => {
+                const canRefund = canRefundItem(dateStr);
+                const itemId = `${item.orderId}-${item.id || Math.random().toString(36).substr(2, 9)}`;
                 
-                // Row styling for cancelled items
-                const rowClass = item.status === 'cancelled' ? 'cancelled-item' : '';
-                const itemNameDisplay = item.status === 'cancelled' ? `<del>${item.name}</del>` : item.name;
-                const priceDisplay = item.status === 'cancelled' ? `<del>${item.price.toFixed(2)}</del>` : `${item.price.toFixed(2)}`;
-                
-                let actionButton;
-                if (item.status === 'cancelled') {
-                    const cancelDate = item.cancellationDate ? new Date(item.cancellationDate).toLocaleDateString() : 'Unknown';
-                    actionButton = `<span class="cancelled-badge">Cancelled ${cancelDate}</span>`;
-                } else if (!canCancel) {
-                    actionButton = '<span style="color: #6c757d;" title="Past 8:15 AM deadline">Cannot Cancel</span>';
-                } else {
-                    actionButton = `<button class="btn btn-danger" onclick="showCancelModal('${item.id}', '${item.name}', '${item.childName}', '${item.day}', '${item.date}', ${item.price})" title="Cancel this item">Cancel</button>`;
-                }
-
-                tableHtml += `
-                    <tr class="${rowClass}">
-                        <td>${item.childName}</td>
-                        <td>${itemNameDisplay}</td>
-                        <td>${item.day}</td>
-                        <td>${itemDate.toLocaleDateString()}</td>
-                        <td>${priceDisplay}</td>
-                        <td><span class="status-badge ${statusClass}">${item.status === 'cancelled' ? `Cancelled - ${item.price.toFixed(2)} refund` : item.status}</span></td>
-                        <td>${actionButton}</td>
-                    </tr>
+                html += `
+                    <div class="refund-item ${!canRefund ? 'disabled' : ''}">
+                        <input type="checkbox" 
+                               id="item-${itemId}" 
+                               data-item-id="${itemId}"
+                               data-order-id="${item.orderId}"
+                               data-amount="${item.price}"
+                               data-item-name="${item.name}"
+                               data-child-name="${item.childName}"
+                               data-date="${dateStr}"
+                               data-day="${item.day}"
+                               onchange="updateRefundCart('${itemId}')"
+                               ${!canRefund ? 'disabled' : ''}>
+                        <label for="item-${itemId}">
+                            <div class="item-details">
+                                <div class="item-main">
+                                    <span class="child-name">${item.childName}</span>
+                                    <span class="item-name">${item.name}</span>
+                                </div>
+                                <div class="item-meta">
+                                    <span>${item.day}</span>
+                                    <span>Grade: ${item.grade || 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                <span class="item-price">$${item.price.toFixed(2)}</span>
+                                ${canRefund ? 
+                                    '<span class="status-badge status-refundable">Refundable</span>' : 
+                                    '<span class="status-badge status-deadline-passed">Past Deadline</span>'}
+                            </div>
+                        </label>
+                    </div>
                 `;
             });
 
-            tableHtml += '</tbody></table>';
-            contentDiv.innerHTML = tableHtml;
-            contentDiv.classList.add('fade-in');
-        }
-
-        function toggleGroup(groupId) {
-            const content = document.getElementById(`${groupId}-content`);
-            const icon = document.getElementById(`${groupId}-icon`);
-            
-            if (content.classList.contains('collapsed')) {
-                content.classList.remove('collapsed');
-                icon.classList.remove('rotated');
-                icon.textContent = '▼';
-            } else {
-                content.classList.add('collapsed');
-                icon.classList.add('rotated');
-                icon.textContent = '▶';
-            }
-        }
-
-        function toggleAdvancedSearch() {
-            const searchSection = document.getElementById('advanced-search');
-            const btn = document.getElementById('advanced-search-btn');
-            
-            if (searchSection.style.display === 'none') {
-                searchSection.style.display = 'block';
-                searchSection.classList.add('fade-in');
-                btn.textContent = 'Hide Advanced Search';
-            } else {
-                searchSection.style.display = 'none';
-                btn.textContent = 'Show Advanced Search';
-            }
-        }
-
-        function setDefaultDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('searchDate').value = today;
-        }
-
-        async function searchOrders() {
-            const email = document.getElementById('searchEmail').value.trim();
-            const orderId = document.getElementById('searchOrderId').value.trim();
-            const date = document.getElementById('searchDate').value;
-            const status = document.getElementById('searchStatus').value;
-
-            if (!email && !orderId && !date) {
-                showError('Please enter at least one search criteria');
-                return;
-            }
-
-            showLoading(true, 'Searching orders...');
-
-            try {
-                let searchUrl = `${API_URL}?action=lookup_orders`;
-                
-                if (email) searchUrl += `&email=${encodeURIComponent(email)}`;
-                if (orderId) searchUrl += `&order_id=${encodeURIComponent(orderId)}`;
-
-                const response = await fetch(searchUrl);
-                const data = await response.json();
-
-                if (data.success && data.orders) {
-                    let filteredOrders = data.orders;
-
-                    // Filter by date if specified
-                    if (date) {
-                        filteredOrders = filteredOrders.filter(order => {
-                            return order.items.some(item => item.date === date);
-                        });
-                    }
-
-                    // Filter by status if specified
-                    if (status) {
-                        filteredOrders = filteredOrders.filter(order => {
-                            return order.items.some(item => item.status === status);
-                        });
-                    }
-
-                    displayOrders(filteredOrders);
-                } else {
-                    showError(data.error || 'No orders found matching your search criteria');
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                showError('Search failed. Please check your connection and try again.');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function displayOrders(orders) {
-            const resultsSection = document.getElementById('results-section');
-            
-            if (orders.length === 0) {
-                resultsSection.innerHTML = '<div class="info">No orders found matching your search criteria. Try adjusting your filters.</div>';
-                return;
-            }
-
-            let tableHtml = `
-                <h3>Search Results (${orders.length} order${orders.length !== 1 ? 's' : ''} found)</h3>
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Parent Email</th>
-                            <th>Child Name</th>
-                            <th>Item</th>
-                            <th>Day</th>
-                            <th>Date</th>
-                            <th>Price</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            orders.forEach(order => {
-                order.items.forEach(item => {
-                    const statusClass = item.status === 'cancelled' ? 'status-cancelled' : 'status-active';
-                    const itemDate = new Date(item.date);
-                    const cutoffTime = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate(), 8, 15, 0);
-                    const canCancel = item.status === 'active' && new Date() <= cutoffTime;
-                    
-                    // Row styling for cancelled items
-                    const rowClass = item.status === 'cancelled' ? 'cancelled-item' : '';
-                    const itemNameDisplay = item.status === 'cancelled' ? `<del>${item.name}</del>` : item.name;
-                    const priceDisplay = item.status === 'cancelled' ? `<del>${item.price.toFixed(2)}</del>` : `${item.price.toFixed(2)}`;
-                    
-                    let actionButton;
-                    if (item.status === 'cancelled') {
-                        const cancelDate = item.cancellationDate ? new Date(item.cancellationDate).toLocaleDateString() : 'Unknown';
-                        actionButton = `<span class="cancelled-badge">Cancelled ${cancelDate}</span>`;
-                    } else if (!canCancel) {
-                        actionButton = '<span style="color: #6c757d;" title="Past 8:15 AM deadline">Cannot Cancel</span>';
-                    } else {
-                        actionButton = `<button class="btn btn-danger" onclick="showCancelModal('${item.id}', '${item.name}', '${item.childName}', '${item.day}', '${item.date}', ${item.price})">Cancel</button>`;
-                    }
-
-                    tableHtml += `
-                        <tr class="${rowClass}">
-                            <td>${order.orderId}</td>
-                            <td>${order.email}</td>
-                            <td>${item.childName}</td>
-                            <td>${itemNameDisplay}</td>
-                            <td>${item.day}</td>
-                            <td>${itemDate.toLocaleDateString()}</td>
-                            <td>${priceDisplay}</td>
-                            <td><span class="status-badge ${statusClass}">${item.status === 'cancelled' ? `Cancelled - ${item.price.toFixed(2)} refund` : item.status}</span></td>
-                            <td>${actionButton}</td>
-                        </tr>
-                    `;
-                });
-            });
-
-            tableHtml += '</tbody></table>';
-            resultsSection.innerHTML = tableHtml;
-        }
-
-        function showCancelModal(itemId, itemName, childName, day, date, price) {
-            currentItemToCancel = itemId;
-            
-            document.getElementById('cancelItemDetails').innerHTML = `
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-                    <strong>Item:</strong> ${itemName}<br>
-                    <strong>Student:</strong> ${childName}<br>
-                    <strong>Day:</strong> ${day}<br>
-                    <strong>Date:</strong> ${new Date(date).toLocaleDateString()}<br>
-                    <strong>Price:</strong> ${price.toFixed(2)}
-                </div>
-                <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #2196f3;">
-                    <strong>Refund Information:</strong><br>
-                    • You will receive a confirmation email<br>
-                    • Refund will be sent via Venmo within 24 hours<br>
-                    • Amount: ${price.toFixed(2)}<br>
-                    • This cancellation will be processed as part of your current session
+            html += `
+                    </div>
                 </div>
             `;
-            
-            document.getElementById('cancelModal').style.display = 'block';
-            document.getElementById('cancelReason').focus();
+
+            return html;
         }
 
-        function closeModal() {
-            document.getElementById('cancelModal').style.display = 'none';
-            currentItemToCancel = null;
-        }
-
-        // Enhanced confirmCancellation with session-based processing
-        async function confirmCancellation() {
-            if (!currentItemToCancel) return;
-
-            const reason = document.getElementById('cancelReason').value;
-            const confirmBtn = document.getElementById('confirmCancelBtn');
-            
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<span class="loading-spinner"></span>Processing...';
-
-            try {
-                // Generate session ID for this cancellation
-                const sessionId = generateSessionId();
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        action: 'cancel_item',
-                        item_id: currentItemToCancel,
-                        reason: reason,
-                        session_id: sessionId
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showSuccess(`Item cancelled successfully! You will receive a confirmation email with refund details.`);
-                    closeModal();
-                    
-                    // Auto-refresh the orders after successful cancellation
-                    const email = document.getElementById('parentEmail').value.trim();
-                    if (email && document.getElementById('grouped-orders-section').style.display !== 'none') {
-                        setTimeout(() => {
-                            showInfo('Refreshing your orders...');
-                            loadMyOrders();
-                        }, 2000);
-                    } else {
-                        setTimeout(() => {
-                            searchOrders();
-                        }, 1000);
-                    }
-                } else {
-                    showError(`Cancellation failed: ${result.message || result.error}`);
-                }
-            } catch (error) {
-                console.error('Cancellation error:', error);
-                showError('Unable to process cancellation. Please check your connection and try again.');
-            } finally {
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Confirm Cancellation';
-            }
-        }
-
-        // Generate session ID
-        function generateSessionId() {
+        function canRefundItem(itemDateStr) {
             const now = new Date();
-            const datePart = now.toISOString().slice(2, 10).replace(/-/g, '');
-            const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
-            const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            return `S${datePart}${timePart}${randomPart}`;
+            const cleanDateStr = itemDateStr.split('T')[0];
+            const itemDate = new Date(cleanDateStr + 'T12:00:00');
+            
+            const cutoffTime = new Date(
+                itemDate.getFullYear(),
+                itemDate.getMonth(),
+                itemDate.getDate(),
+                8, 15, 0
+            );
+            
+            return now < cutoffTime;
         }
 
-        // Enhanced loading function with custom messages
-        function showLoading(show, message = 'Loading...') {
-            const resultsSection = document.getElementById('results-section');
-            if (show) {
-                resultsSection.innerHTML = `<div class="loading" id="loading"><div class="loading-spinner"></div><p>${message}</p></div>`;
+        function toggleDateGroup(dateStr) {
+            const group = document.querySelector(`.date-group[data-date="${dateStr}"]`);
+            if (group) {
+                group.classList.toggle('collapsed');
             }
         }
 
-        function showError(message) {
-            const resultsSection = document.getElementById('results-section');
-            resultsSection.innerHTML = `<div class="error">❌ ${message}</div>`;
-            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        function updateRefundCart(itemId) {
+            const checkbox = document.getElementById(`item-${itemId}`);
+            
+            if (checkbox.checked) {
+                // Add to cart
+                const item = {
+                    id: itemId,
+                    orderId: checkbox.dataset.orderId,
+                    name: checkbox.dataset.itemName,
+                    childName: checkbox.dataset.childName,
+                    date: checkbox.dataset.date,
+                    day: checkbox.dataset.day,
+                    amount: parseFloat(checkbox.dataset.amount)
+                };
+                refundCart.push(item);
+            } else {
+                // Remove from cart
+                refundCart = refundCart.filter(item => item.id !== itemId);
+            }
+            
+            updateCartDisplay();
         }
 
-        function showSuccess(message) {
-            const resultsSection = document.getElementById('results-section');
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success fade-in';
-            successDiv.innerHTML = `✅ ${message}`;
-            resultsSection.insertBefore(successDiv, resultsSection.firstChild);
+        function updateCartDisplay() {
+            const cartItemsDiv = document.getElementById('cart-items');
+            const refundTotalSpan = document.getElementById('refund-total');
+            const processBtn = document.getElementById('process-refunds-btn');
             
-            successDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (refundCart.length === 0) {
+                cartItemsDiv.innerHTML = '<div class="empty-cart">Select items to refund</div>';
+                refundTotalSpan.textContent = '0.00';
+                processBtn.disabled = true;
+                return;
+            }
             
-            setTimeout(() => {
-                if (successDiv.parentNode) {
-                    successDiv.remove();
-                }
-            }, 8000);
+            let html = '';
+            let total = 0;
+            
+            refundCart.forEach(item => {
+                html += `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-child">${item.childName} - ${item.day}</div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="cart-item-price">$${item.amount.toFixed(2)}</span>
+                            <button class="remove-from-cart" onclick="removeFromCart('${item.id}')">✕</button>
+                        </div>
+                    </div>
+                `;
+                total += item.amount;
+            });
+            
+            cartItemsDiv.innerHTML = html;
+            refundTotalSpan.textContent = total.toFixed(2);
+            processBtn.disabled = false;
         }
 
-        // Added showInfo function for informational messages
-        function showInfo(message) {
-            const resultsSection = document.getElementById('results-section');
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'info fade-in';
-            infoDiv.innerHTML = `ℹ️ ${message}`;
-            resultsSection.insertBefore(infoDiv, resultsSection.firstChild);
+        function removeFromCart(itemId) {
+            // Uncheck the checkbox
+            const checkbox = document.getElementById(`item-${itemId}`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+            
+            // Remove from cart
+            refundCart = refundCart.filter(item => item.id !== itemId);
+            updateCartDisplay();
+        }
+
+        function clearRefundCart() {
+            // Uncheck all checkboxes
+            refundCart.forEach(item => {
+                const checkbox = document.getElementById(`item-${item.id}`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            });
+            
+            refundCart = [];
+            updateCartDisplay();
+        }
+
+        function formatDateForAPI(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        async function processAllRefunds() {
+            if (refundCart.length === 0) {
+                showMessage('No items selected for refund', 'error');
+                return;
+            }
+            
+            // Show confirmation modal
+            showBatchConfirmation();
+        }
+
+        function showBatchConfirmation() {
+            const modal = document.getElementById('batchConfirmModal');
+            const detailsDiv = document.getElementById('batchRefundDetails');
+            const totalSpan = document.getElementById('batchTotalAmount');
+            
+            let html = '<ul style="list-style: none; padding: 0;">';
+            let total = 0;
+            
+            // Group by child for better display
+            const itemsByChild = {};
+            refundCart.forEach(item => {
+                if (!itemsByChild[item.childName]) {
+                    itemsByChild[item.childName] = [];
+                }
+                itemsByChild[item.childName].push(item);
+                total += item.amount;
+            });
+            
+            Object.keys(itemsByChild).forEach(childName => {
+                html += `<li style="margin-bottom: 15px;"><strong>${childName}:</strong><ul>`;
+                itemsByChild[childName].forEach(item => {
+                    html += `<li style="margin-left: 20px;">• ${item.name} (${item.day}) - $${item.amount.toFixed(2)}</li>`;
+                });
+                html += '</ul></li>';
+            });
+            html += '</ul>';
+            
+            detailsDiv.innerHTML = html;
+            totalSpan.textContent = total.toFixed(2);
+            modal.classList.add('show');
+        }
+
+        function closeBatchModal() {
+            document.getElementById('batchConfirmModal').classList.remove('show');
+        }
+
+        async function confirmBatchRefunds() {
+            const confirmBtn = document.getElementById('confirmBatchBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Processing...';
+            
+            const results = [];
+            
+            for (const item of refundCart) {
+                try {
+                    const response = await fetch(`${API_URL}?action=cancel_item&item_id=${encodeURIComponent(item.id)}&reason=${encodeURIComponent('Batch refund request')}`, {
+                        method: 'GET'
+                    });
+                    
+                    const result = await response.json();
+                    results.push({
+                        item: item,
+                        success: result.success,
+                        message: result.message || result.error
+                    });
+                } catch (error) {
+                    results.push({
+                        item: item,
+                        success: false,
+                        message: error.message
+                    });
+                }
+            }
+            
+            closeBatchModal();
+            showRefundResults(results);
+            
+            // Clear successful items from cart
+            const successfulItems = results.filter(r => r.success).map(r => r.item.id);
+            refundCart = refundCart.filter(item => !successfulItems.includes(item.id));
+            updateCartDisplay();
+            
+            // Reload orders to reflect changes
+            const email = checkAuthentication();
+            if (email) {
+                setTimeout(() => loadOrdersForAuthenticatedUser(email), 2000);
+            }
+            
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Confirm & Process Refunds';
+        }
+
+        function showRefundResults(results) {
+            const modal = document.getElementById('resultsModal');
+            const resultsDiv = document.getElementById('refundResults');
+            
+            const successful = results.filter(r => r.success);
+            const failed = results.filter(r => !r.success);
+            
+            let html = '';
+            
+            if (successful.length > 0) {
+                html += `
+                    <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <h3 style="color: #155724; margin-top: 0;">✅ Successfully Refunded (${successful.length})</h3>
+                        <ul>
+                `;
+                
+                let totalRefunded = 0;
+                successful.forEach(r => {
+                    html += `<li>${r.item.childName} - ${r.item.name} ($${r.item.amount.toFixed(2)})</li>`;
+                    totalRefunded += r.item.amount;
+                });
+                
+                html += `
+                        </ul>
+                        <strong>Total Refunded: $${totalRefunded.toFixed(2)}</strong>
+                    </div>
+                `;
+            }
+            
+            if (failed.length > 0) {
+                html += `
+                    <div style="background: #f8d7da; padding: 15px; border-radius: 8px;">
+                        <h3 style="color: #721c24; margin-top: 0;">❌ Failed (${failed.length})</h3>
+                        <ul>
+                `;
+                
+                failed.forEach(r => {
+                    html += `<li>${r.item.childName} - ${r.item.name}: ${r.message}</li>`;
+                });
+                
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <p style="margin: 0; color: #0c5460;">
+                        <strong>Next Steps:</strong><br>
+                        • You will receive a confirmation email for successful refunds<br>
+                        • Refunds will be processed via Venmo within 24 hours<br>
+                        • Contact CRivers@artiosacademies.com with any questions
+                    </p>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+            modal.classList.add('show');
+        }
+
+        function closeResultsModal() {
+            document.getElementById('resultsModal').classList.remove('show');
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('status-message');
+            messageDiv.textContent = message;
+            messageDiv.className = `status-message ${type} show`;
             
             setTimeout(() => {
-                if (infoDiv.parentNode) {
-                    infoDiv.remove();
-                }
+                messageDiv.classList.remove('show');
             }, 5000);
         }
     </script>
 </body>
-</html>      // Enhanced showInfo function for session-based messaging
-      function showInfo(message) {
-        const resultsSection = document.getElementById('results-section');
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'info fade-in';
-        infoDiv.innerHTML = `ℹ️ ${message}`;
-        resultsSection.insertBefore(infoDiv, resultsSection.firstChild);
-        
-        setTimeout(() => {
-          if (infoDiv.parentNode) {
-            infoDiv.remove();
-          }
-        }, 5000);
-      }
-
-      // Initialize session-based features on page load
-      document.addEventListener('DOMContentLoaded', function() {
-        setupEventListeners();
-        setDefaultDate();
-        initializeBatchCancellation();
-        
-        // Try to load saved email from localStorage
-        const savedEmail = localStorage.getItem('parentEmail');
-        if (savedEmail) {
-          document.getElementById('parentEmail').value = savedEmail;
-          showInfo(`Welcome back! Loading orders for ${savedEmail}...`);
-          setTimeout(() => loadMyOrders(), 500);
-        }
-      });    .cancelled-item {
-      background-color: #f8f9fa !important;
-      opacity: 0.7;
-    }
-
-    .cancelled-badge {
-      background: #dc3545;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 0.75em;
-      font-weight: 500;
-    }    // Enhanced displayOrderGroup with simplified cancelled item display
-    function displayOrderGroup(groupId, orders, emptyMessage) {
-      const contentDiv = document.getElementById(`${groupId}-content`);
-      
-      if (orders.length === 0) {
-        contentDiv.innerHTML = `<div class="empty-group">${emptyMessage}</div>`;
-        contentDiv.classList.add('fade-in');
-        return;
-      }
-
-      // Sort orders by date
-      orders.sort((a, b) => new Date(a.currentItem.date) - new Date(b.currentItem.date));
-
-      const totalItems = orders.length;
-      const activeItems = orders.filter(order => order.currentItem.status === 'active').length;
-      const cancelledItems = totalItems - activeItems;
-
-      let tableHtml = `
-        <div class="order-summary">
-          ${totalItems} item${totalItems !== 1 ? 's' : ''} found
-          ${cancelledItems > 0 ? ` (${activeItems} active, ${cancelledItems} cancelled)` : ''}
-        </div>
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>Child Name</th>
-              <th>Item</th>
-              <th>Day</th>
-              <th>Date</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      orders.forEach(order => {
-        const item = order.currentItem;
-        const statusClass = item.status === 'cancelled' ? 'status-cancelled' : 'status-active';
-        const itemDate = new Date(item.date);
-        const today = new Date();
-        const cutoffTime = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate(), 8, 15, 0);
-        const canCancel = item.status === 'active' && new Date() <= cutoffTime;
-        
-        // Row styling for cancelled items
-        const rowClass = item.status === 'cancelled' ? 'cancelled-item' : '';
-        const itemNameDisplay = item.status === 'cancelled' ? `<del>${item.name}</del>` : item.name;
-        const priceDisplay = item.status === 'cancelled' ? `<del>$${item.price.toFixed(2)}</del>` : `$${item.price.toFixed(2)}`;
-        
-        let actionButton;
-        if (item.status === 'cancelled') {
-          const cancelDate = item.cancellationDate ? new Date(item.cancellationDate).toLocaleDateString() : 'Unknown';
-          actionButton = `<span class="cancelled-badge">Cancelled ${cancelDate}</span>`;
-        } else if (!canCancel) {
-          actionButton = '<span style="color: #6c757d;" title="Past 8:15 AM deadline">Cannot Cancel</span>';
-        } else {
-          actionButton = `<button class="btn btn-danger" onclick="showCancelModal('${item.id}', '${item.name}', '${item.childName}', '${item.day}', '${item.date}', ${item.price})" title="Cancel this item">Cancel</button>`;
-        }
-
-        tableHtml += `
-          <tr class="${rowClass}">
-            <td>${item.childName}</td>
-            <td>${itemNameDisplay}</td>
-            <td>${item.day}</td>
-            <td>${itemDate.toLocaleDateString()}</td>
-            <td>${priceDisplay}</td>
-            <td><span class="status-badge ${statusClass}">${item.status === 'cancelled' ? `Cancelled - $${item.price.toFixed(2)} refund` : item.status}</span></td>
-            <td>${actionButton}</td>
-          </tr>
-        `;
-      });
-
-      tableHtml += '</tbody></table>';
-      contentDiv.innerHTML = tableHtml;
-      contentDiv.classList.add('fade-in');
-    }
+</html>
