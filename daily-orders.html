@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artios Cafe - Daily Orders</title>
+  <title>Artios Academies Cafe Admin Portal</title>
   <style>
     * {
       margin: 0;
@@ -13,7 +13,7 @@
 
     body {
       font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -22,59 +22,30 @@
       padding: 20px;
     }
 
-    .worker-container {
+    .admin-container {
       background: white;
       border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       padding: 40px;
-      max-width: 600px;
+      max-width: 700px;
       width: 100%;
       text-align: center;
     }
 
-    .worker-header {
+    .admin-header {
       margin-bottom: 30px;
     }
 
-    .worker-title {
+    .admin-title {
       font-size: 2.2em;
       font-weight: 700;
-      color: #ff9800;
+      color: #4285f4;
       margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
     }
 
-    .worker-subtitle {
+    .admin-subtitle {
       color: #666;
       font-size: 1.1em;
-      margin-bottom: 20px;
-    }
-
-    .instructions {
-      background: #fff3e0;
-      border: 2px solid #ff9800;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 30px;
-      text-align: left;
-    }
-
-    .instructions h3 {
-      color: #f57c00;
-      margin-bottom: 10px;
-      font-size: 1.1em;
-    }
-
-    .instructions ul {
-      margin-left: 20px;
-      color: #666;
-    }
-
-    .instructions li {
-      margin-bottom: 5px;
     }
 
     /* Form Styles */
@@ -90,7 +61,7 @@
       color: #333;
     }
 
-    .date-input, .email-input {
+    .date-input {
       width: 100%;
       padding: 15px;
       border: 2px solid #e0e0e0;
@@ -100,33 +71,98 @@
       background: white;
     }
 
-    .date-input:focus, .email-input:focus {
+    .date-input:focus {
       outline: none;
-      border-color: #ff9800;
-      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+      border-color: #4285f4;
+      box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
     }
 
-    .email-input {
-      font-family: monospace;
+    .date-range-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
     }
 
-    /* Day Display */
-    .day-display {
+    .date-range-preview {
       margin-top: 12px;
       padding: 12px 16px;
-      background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 20%);
-      border: 2px solid #ff9800;
+      background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+      border: 2px solid #4caf50;
       border-radius: 8px;
-      font-weight: 700;
-      color: #f57c00;
+      font-weight: 600;
+      color: #2e7d32;
       text-align: center;
-      font-size: 1.1em;
+      font-size: 1em;
       display: none;
     }
 
+    /* Email Recipients Section */
+    .email-recipients {
+      background: linear-gradient(135deg, rgba(66, 133, 244, 0.1) 0%, rgba(52, 168, 83, 0.1) 100%);
+      border: 2px solid #4285f4;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .email-recipients h4 {
+      color: #4285f4;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+      text-align: center;
+    }
+
+    .email-checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .email-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .email-checkbox:hover {
+      border-color: #4285f4;
+      background: rgba(66, 133, 244, 0.05);
+    }
+
+    .email-checkbox.checked {
+      border-color: #34a853;
+      background: rgba(52, 168, 83, 0.1);
+    }
+
+    .email-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .email-checkbox label {
+      cursor: pointer;
+      margin: 0;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .email-address {
+      font-family: monospace;
+      color: #666;
+      font-size: 0.9em;
+    }
+
     /* Button Styles */
-    .orders-btn {
-      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    .generate-btn {
+      background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
       color: white;
       border: none;
       padding: 18px 35px;
@@ -139,12 +175,12 @@
       margin-bottom: 20px;
     }
 
-    .orders-btn:hover:not(:disabled) {
+    .generate-btn:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(255, 152, 0, 0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
-    .orders-btn:disabled {
+    .generate-btn:disabled {
       background: #ccc;
       cursor: not-allowed;
       transform: none;
@@ -184,232 +220,286 @@
       border: 1px solid #bbdefb;
     }
 
-    /* Features List */
-    .features {
-      background: #f8f9fa;
-      border-radius: 10px;
+    /* Info Box */
+    .info-box {
+      background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
+      border: 2px solid #2196f3;
+      border-radius: 12px;
       padding: 20px;
-      margin-top: 20px;
-      text-align: left;
-    }
-
-    .features h4 {
-      color: #ff9800;
-      margin-bottom: 15px;
+      margin-bottom: 25px;
       text-align: center;
     }
 
-    .features ul {
-      margin-left: 20px;
-      color: #666;
+    .info-box h3 {
+      color: #1976d2;
+      margin-bottom: 10px;
     }
 
-    .features li {
-      margin-bottom: 8px;
+    .info-box p {
+      color: #666;
+      margin: 0;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
-      .worker-container {
+      .admin-container {
         padding: 20px;
         margin: 10px;
       }
 
-      .worker-title {
-        font-size: 1.8em;
+      .date-range-inputs {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <div class="worker-container">
-    <div class="worker-header">
-      <h1 class="worker-title">🍽️ Artios Cafe Daily Orders</h1>
-      <p class="worker-subtitle">Daily Food Order Portal</p>
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1 class="admin-title">Artios Academies Admin Portal</h1>
+      <p class="admin-subtitle">Financial Reports &amp; Analysis</p>
     </div>
 
-    <div class="instructions">
-      <h3>📋 How to Use:</h3>
-      <ul>
-        <li>Select the date you need food orders for</li>
-        <li>Enter your email address</li>
-        <li>Click "Get Daily Orders" to receive the order list</li>
-        <li>You'll get a formatted email with student checklist and Chick-fil-A orders</li>
-      </ul>
+    <div class="info-box">
+      <h3>Enhanced Financial Report</h3>
+      <p>Generate comprehensive financial analysis including revenue, refunds, orders, analytics, and business insights for any date range or single day</p>
     </div>
 
-    <form id="daily-orders-form">
+    <form id="report-form">
+      
+      <!-- Date Range Section -->
       <div class="form-group">
-        <label for="orders-date">Select Date for Food Orders:</label>
-        <input type="date" id="orders-date" class="date-input" required>
-        <div class="day-display" id="orders-day-display"></div>
+        <label>Select Date Range (or same date for single day):</label>
+        <div class="date-range-inputs">
+          <div>
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date" class="date-input" required>
+          </div>
+          <div>
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date" class="date-input" required>
+          </div>
+        </div>
+        <div class="date-range-preview" id="date-range-preview"></div>
       </div>
 
-      <div class="form-group">
-        <label for="worker-email">Your Email Address:</label>
-        <input type="email" 
-               id="worker-email" 
-               class="email-input" 
-               placeholder="worker@example.com"
-               required>
+      <!-- Admin Recipients Section -->
+      <div class="email-recipients">
+        <h4>Report Recipients</h4>
+        <div class="email-checkbox-group">
+          <div class="email-checkbox checked" id="admin-checkbox">
+            <input type="checkbox" id="email-admin" checked>
+            <label for="email-admin">
+              <strong>Jeremiah Daws</strong>
+              <div class="email-address">jedaws@gmail.com</div>
+            </label>
+          </div>
+          <div class="email-checkbox checked" id="crivers-checkbox">
+            <input type="checkbox" id="email-crivers" checked>
+            <label for="email-crivers">
+              <strong>Chan Ta Rivers</strong>
+              <div class="email-address">CRivers@artiosacademies.com</div>
+            </label>
+          </div>
+        </div>
       </div>
 
-      <button type="submit" class="orders-btn" id="daily-orders-btn">
-        📋 Get Daily Food Orders
+      <button type="submit" class="generate-btn" id="generate-btn">
+        Generate Enhanced Financial Report
       </button>
 
-      <div class="status-message" id="daily-orders-status"></div>
+      <div class="status-message" id="status-message"></div>
     </form>
-
-    <div class="features">
-      <h4>📧 What You'll Receive:</h4>
-      <ul>
-        <li><strong>Chick-fil-A Order List</strong> - Organized by categories (Entrees, Salads, Sides)</li>
-        <li><strong>Student Checklist</strong> - Printable with checkboxes sorted by last name</li>
-        <li><strong>Artios Items List</strong> - Items to prepare at school</li>
-        <li><strong>Professional Formatting</strong> - Clean and easy to read/print</li>
-        <li><strong>Order Totals</strong> - Clear counts for each category</li>
-      </ul>
-    </div>
   </div>
 
   <script>
-    // FIXED: Configuration to match your Google Apps Script
+    // FIXED: Configuration to match working Google Apps Script URL
     const GOOGLE_SHEETS_CONFIG = {
       webAppUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
       useGoogleSheets: true
     };
 
     document.addEventListener('DOMContentLoaded', function() {
-      // Set default date to today
+      // Set default dates (today)
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
       
-      document.getElementById('orders-date').value = todayStr;
-      updateOrdersDayDisplay();
+      document.getElementById('start-date').value = todayStr;
+      document.getElementById('end-date').value = todayStr;
+      
+      updateDateRangePreview();
 
       // Setup event listeners
       setupEventListeners();
+      updateEmailCheckboxStyles();
     });
 
     function setupEventListeners() {
-      // Form submission
-      document.getElementById('daily-orders-form').addEventListener('submit', function(e) {
+      // Report form submission
+      document.getElementById('report-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        sendDailyOrders();
+        generateReport();
       });
 
-      // Date change listener
-      const ordersDateInput = document.getElementById('orders-date');
-      if (ordersDateInput) {
-        ordersDateInput.addEventListener('change', updateOrdersDayDisplay);
+      // Date change listeners
+      const startDateInput = document.getElementById('start-date');
+      const endDateInput = document.getElementById('end-date');
+      if (startDateInput) {
+        startDateInput.addEventListener('change', updateDateRangePreview);
       }
+      if (endDateInput) {
+        endDateInput.addEventListener('change', updateDateRangePreview);
+      }
+
+      // Checkbox event listeners
+      document.querySelectorAll('.email-checkbox input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateEmailCheckboxStyles);
+      });
     }
 
-    function updateOrdersDayDisplay() {
-      const dateInput = document.getElementById('orders-date');
-      const dayDisplay = document.getElementById('orders-day-display');
+    function updateDateRangePreview() {
+      const startDate = document.getElementById('start-date').value;
+      const endDate = document.getElementById('end-date').value;
+      const preview = document.getElementById('date-range-preview');
       
-      if (dateInput && dayDisplay && dateInput.value) {
-        const selectedDate = new Date(dateInput.value + 'T12:00:00');
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const dayName = dayNames[selectedDate.getDay()];
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
         
-        dayDisplay.textContent = `🍽️ ${dayName}, ${selectedDate.toLocaleDateString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
-        })}`;
-        dayDisplay.style.display = 'block';
-      } else if (dayDisplay) {
-        dayDisplay.style.display = 'none';
+        if (start > end) {
+          preview.textContent = '⚠️ End date must be after or same as start date';
+          preview.style.background = '#ffebee';
+          preview.style.borderColor = '#f44336';
+          preview.style.color = '#d32f2f';
+        } else {
+          const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+          const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          
+          if (daysDiff === 1) {
+            preview.textContent = `Single day report: ${startStr}`;
+          } else {
+            preview.textContent = `${daysDiff} days: ${startStr} to ${endStr}`;
+          }
+          
+          preview.style.background = 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)';
+          preview.style.borderColor = '#4caf50';
+          preview.style.color = '#2e7d32';
+        }
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
       }
     }
 
-    function sendDailyOrders() {
-      const dateInput = document.getElementById('orders-date').value;
-      const workerEmail = document.getElementById('worker-email').value.trim();
-      const dailyOrdersBtn = document.getElementById('daily-orders-btn');
+    function updateEmailCheckboxStyles() {
+      document.querySelectorAll('.email-checkbox').forEach(checkboxDiv => {
+        const checkbox = checkboxDiv.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+          checkboxDiv.classList.add('checked');
+        } else {
+          checkboxDiv.classList.remove('checked');
+        }
+      });
+    }
+
+    function generateReport() {
+      const generateBtn = document.getElementById('generate-btn');
+      const startDate = document.getElementById('start-date').value;
+      const endDate = document.getElementById('end-date').value;
       
-      // Validate inputs
-      if (!dateInput) {
-        showDailyOrdersStatus('Please select a date', 'error');
+      if (!startDate || !endDate) {
+        showStatus('Please select both start and end dates', 'error');
         return;
       }
       
-      if (!workerEmail || !workerEmail.includes('@')) {
-        showDailyOrdersStatus('Please enter a valid email address', 'error');
+      if (new Date(startDate) > new Date(endDate)) {
+        showStatus('End date must be after or same as start date', 'error');
+        return;
+      }
+      
+      // Get admin email recipients
+      const emailAdmin = document.getElementById('email-admin').checked;
+      const emailCrivers = document.getElementById('email-crivers').checked;
+      
+      const adminRecipients = [];
+      if (emailAdmin) adminRecipients.push('jedaws@gmail.com');
+      if (emailCrivers) adminRecipients.push('CRivers@artiosacademies.com');
+      
+      if (adminRecipients.length === 0) {
+        showStatus('Please select at least one recipient', 'error');
         return;
       }
 
       if (!GOOGLE_SHEETS_CONFIG.webAppUrl) {
-        showDailyOrdersStatus('System configuration error. Please contact admin.', 'error');
+        showStatus('Google Sheets URL not configured', 'error');
         return;
       }
 
-      dailyOrdersBtn.disabled = true;
-      dailyOrdersBtn.textContent = '⏳ Preparing Your Daily Orders...';
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Generating Enhanced Report...';
       
-      showDailyOrdersStatus(`Preparing daily food orders for ${dateInput}...`, 'info');
+      const daysDiff = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+      const reportDescription = daysDiff === 1 
+        ? `enhanced financial report for ${startDate}`
+        : `enhanced financial report for ${daysDiff} days (${startDate} to ${endDate})`;
+      
+      showStatus(`Generating ${reportDescription} for ${adminRecipients.length} recipient${adminRecipients.length > 1 ? 's' : ''}...`, 'info');
 
-      // FIXED: Build URL for daily orders to match your Google Apps Script
-      const reportUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_report&date=${encodeURIComponent(dateInput)}&worker_recipients=${encodeURIComponent(workerEmail)}`;
+      // FIXED: Build API URL with correct Google Apps Script URL
+      const apiUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_financial_report&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&admin_recipients=${encodeURIComponent(adminRecipients.join(','))}`;
 
-      console.log('Calling daily orders URL:', reportUrl);
+      console.log('Calling URL:', apiUrl);
 
-      fetch(reportUrl)
+      fetch(apiUrl)
         .then(response => {
-          console.log('Daily orders response status:', response.status);
+          console.log('Response status:', response.status);
           return response.json();
         })
         .then(data => {
-          console.log('Daily orders response:', data);
+          console.log('Report response:', data);
           
           if (data.success) {
-            let message = `✅ Daily Food Orders Sent Successfully!\n\n`;
-            message += `📅 Date: ${dateInput}\n`;
-            message += `🍽️ Orders Found: ${data.orderCount || 0}\n`;
-            message += `📧 Email sent to: ${workerEmail}\n\n`;
+            let message = `Enhanced Financial Report Generated Successfully!\n\n`;
+            message += `Date Range: ${startDate} to ${endDate}\n`;
+            message += `Total Revenue: $${(data.totalRevenue || 0).toFixed(2)}\n`;
+            message += `Total Orders: ${data.totalOrders || 0}\n`;
+            message += `Families Served: ${data.familiesServed || 0}\n`;
+            message += `Detailed report sent to:\n`;
             
-            if (data.orderCount > 0) {
-              message += `Your email includes:\n`;
-              message += `• Chick-fil-A orders organized by categories\n`;
-              message += `• Student checklist sorted by last name\n`;
-              message += `• Artios items to prepare at school\n`;
-              message += `• Professional formatting for easy printing\n\n`;
-              message += `Check your email and start preparing! 🍽️`;
-            } else {
-              message += `No orders found for this date.\n`;
-              message += `Email sent confirming no food is needed. 👍`;
-            }
+            adminRecipients.forEach(email => {
+              if (email === 'jedaws@gmail.com') message += `  • Jeremiah Daws (${email})\n`;
+              else if (email === 'CRivers@artiosacademies.com') message += `  • Chan Ta Rivers (${email})\n`;
+              else message += `  • ${email}\n`;
+            });
             
             // Show success message
-            const statusDiv = document.getElementById('daily-orders-status');
+            const statusDiv = document.getElementById('status-message');
             statusDiv.innerHTML = message.replace(/\n/g, '<br>');
             statusDiv.className = 'status-message success show';
 
           } else {
-            showDailyOrdersStatus(`Error: ${data.error || 'Failed to send daily orders'}`, 'error');
+            showStatus(`Report failed: ${data.error}`, 'error');
           }
         })
         .catch(error => {
-          console.error('Daily orders error:', error);
-          showDailyOrdersStatus('Network error. Please check your connection and try again.', 'error');
+          console.error('Report error:', error);
+          showStatus('Network error generating report', 'error');
         })
         .finally(() => {
-          dailyOrdersBtn.disabled = false;
-          dailyOrdersBtn.textContent = '📋 Get Daily Food Orders';
+          generateBtn.disabled = false;
+          generateBtn.textContent = 'Generate Enhanced Financial Report';
         });
     }
 
-    function showDailyOrdersStatus(message, type) {
-      const statusDiv = document.getElementById('daily-orders-status');
-      statusDiv.textContent = message;
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('status-message');
+      statusDiv.innerHTML = message.replace(/\n/g, '<br>');
       statusDiv.className = `status-message ${type} show`;
 
       setTimeout(() => {
         statusDiv.classList.remove('show');
-      }, 10000); // Show longer for worker messages
+      }, 10000);
     }
   </script>
 </body>
