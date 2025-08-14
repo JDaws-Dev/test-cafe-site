@@ -683,55 +683,12 @@
         @media (max-width: 1024px) {
             .refund-container {
                 grid-template-columns: 1fr;
+                padding: 1rem;
             }
 
             .refund-cart {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                overflow: visible;
-                z-index: 100;
-            }
-
-            .refund-cart.expanded {
-                width: 90%;
-                height: 80vh;
-                border-radius: 10px;
-                right: 5%;
-                bottom: 10vh;
-            }
-
-            .cart-header {
-                padding: 18px;
-                cursor: pointer;
-            }
-
-            .refund-cart:not(.expanded) .cart-header h3 {
-                font-size: 1.5em;
-            }
-
-            .refund-cart:not(.expanded) .cart-items,
-            .refund-cart:not(.expanded) .cart-summary {
-                display: none;
-            }
-
-            .refund-cart:not(.expanded) .cart-header::after {
-                content: attr(data-count);
-                position: absolute;
-                top: -5px;
-                right: -5px;
-                background: #dc3545;
-                color: white;
-                border-radius: 50%;
-                width: 24px;
-                height: 24px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 0.8em;
+                position: static;
+                margin-top: 2rem;
             }
         }
 
@@ -826,7 +783,7 @@
                 </div>
 
                 <div class="refund-cart" id="refund-cart">
-                    <div class="cart-header" onclick="toggleCartMobile()">
+                    <div class="cart-header">
                         <h3>🛒 Refund Cart</h3>
                     </div>
                     <div class="cart-items" id="cart-items">
@@ -901,7 +858,6 @@
         
         let allOrders = [];
         let refundCart = [];
-        let isMobile = window.innerWidth <= 1024;
 
         document.addEventListener('DOMContentLoaded', function() {
             // Get authenticated email from session
@@ -919,11 +875,6 @@
             loadOrdersForAuthenticatedUser(authenticatedEmail);
             
             setupEventListeners();
-
-            // Check if mobile
-            window.addEventListener('resize', () => {
-                isMobile = window.innerWidth <= 1024;
-            });
         });
 
         function setupEventListeners() {
@@ -1016,7 +967,8 @@
                         ...item,
                         date: itemDate, // Store cleaned date
                         orderId: order.orderId,
-                        email: order.email
+                        email: order.email,
+                        grade: item.grade || item.childGrade || 'N/A' // Make sure we're getting the right field
                     });
                 });
             });
@@ -1175,11 +1127,6 @@
                 cartItemsDiv.innerHTML = '<div class="empty-cart">Select items to refund</div>';
                 refundTotalSpan.textContent = '0.00';
                 processBtn.disabled = true;
-                
-                // Update mobile cart count
-                if (isMobile) {
-                    document.querySelector('.cart-header').setAttribute('data-count', '0');
-                }
                 return;
             }
             
@@ -1205,11 +1152,6 @@
             cartItemsDiv.innerHTML = html;
             refundTotalSpan.textContent = total.toFixed(2);
             processBtn.disabled = false;
-            
-            // Update mobile cart count
-            if (isMobile) {
-                document.querySelector('.cart-header').setAttribute('data-count', refundCart.length.toString());
-            }
         }
 
         function removeFromCart(itemId) {
@@ -1299,14 +1241,8 @@
             
             for (const item of refundCart) {
                 try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: new URLSearchParams({
-                            action: 'cancel_item',
-                            item_id: item.id,
-                            reason: 'Batch refund request'
-                        })
+                    const response = await fetch(`${API_URL}?action=cancel_item&item_id=${encodeURIComponent(item.id)}&reason=${encodeURIComponent('Batch refund request')}`, {
+                        method: 'GET'
                     });
                     
                     const result = await response.json();
@@ -1405,13 +1341,6 @@
 
         function closeResultsModal() {
             document.getElementById('resultsModal').classList.remove('show');
-        }
-
-        function toggleCartMobile() {
-            if (isMobile) {
-                const cart = document.getElementById('refund-cart');
-                cart.classList.toggle('expanded');
-            }
         }
 
         function showMessage(message, type) {
