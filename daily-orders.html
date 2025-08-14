@@ -208,47 +208,6 @@
       margin-bottom: 8px;
     }
 
-    /* Alternative Method Notice */
-    .alternative-method {
-      background: #e8f5e8;
-      border: 2px solid #4caf50;
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 30px;
-      text-align: left;
-    }
-
-    .alternative-method h4 {
-      color: #2e7d32;
-      margin-bottom: 15px;
-    }
-
-    .generated-url {
-      background: #f5f5f5;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 0.9em;
-      word-break: break-all;
-      margin: 10px 0;
-    }
-
-    .copy-btn {
-      background: #4caf50;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-left: 10px;
-    }
-
-    .copy-btn:hover {
-      background: #45a049;
-    }
-
     /* Responsive Design */
     @media (max-width: 768px) {
       .worker-container {
@@ -274,8 +233,8 @@
       <ul>
         <li>Select the date you need food orders for</li>
         <li>Enter your email address</li>
-        <li>Click "Generate Order URL" to create a direct link</li>
-        <li>Click the generated link to trigger the order email</li>
+        <li>Click "Get Daily Orders" to receive the order list</li>
+        <li>You'll get a formatted email with student checklist and Chick-fil-A orders</li>
       </ul>
     </div>
 
@@ -296,31 +255,11 @@
       </div>
 
       <button type="submit" class="orders-btn" id="daily-orders-btn">
-        🔗 Generate Daily Orders URL
+        📋 Get Daily Food Orders
       </button>
 
       <div class="status-message" id="daily-orders-status"></div>
     </form>
-
-    <!-- Alternative Method Section -->
-    <div class="alternative-method" id="alternative-method" style="display: none;">
-      <h4>📧 Direct Order Link Generated!</h4>
-      <p>Click the link below to send the daily orders email to your address:</p>
-      
-      <div class="generated-url" id="generated-url"></div>
-      
-      <div style="text-align: center; margin-top: 15px;">
-        <a href="#" id="direct-link" target="_blank" style="background: #ff9800; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
-          📧 Send Daily Orders Email
-        </a>
-        <button class="copy-btn" onclick="copyUrl()">📋 Copy Link</button>
-      </div>
-      
-      <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-        <strong>Note:</strong> This link directly accesses the Google Apps Script. 
-        Click it to trigger the email, or copy and save it for future use.
-      </p>
-    </div>
 
     <div class="features">
       <h4>📧 What You'll Receive:</h4>
@@ -335,7 +274,7 @@
   </div>
 
   <script>
-    // Configuration - Use the EXACT same URL as your working pages
+    // FIXED: Configuration to match your Google Apps Script
     const GOOGLE_SHEETS_CONFIG = {
       webAppUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
       useGoogleSheets: true
@@ -357,7 +296,7 @@
       // Form submission
       document.getElementById('daily-orders-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        generateOrderUrl();
+        sendDailyOrders();
       });
 
       // Date change listener
@@ -387,7 +326,7 @@
       }
     }
 
-    function generateOrderUrl() {
+    function sendDailyOrders() {
       const dateInput = document.getElementById('orders-date').value;
       const workerEmail = document.getElementById('worker-email').value.trim();
       const dailyOrdersBtn = document.getElementById('daily-orders-btn');
@@ -408,57 +347,59 @@
         return;
       }
 
-      // Generate the direct URL
-      const directUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_report&date=${encodeURIComponent(dateInput)}&worker_recipients=${encodeURIComponent(workerEmail)}`;
-
-      // Show the alternative method
-      document.getElementById('generated-url').textContent = directUrl;
-      document.getElementById('direct-link').href = directUrl;
-      document.getElementById('alternative-method').style.display = 'block';
-      
-      // Update button text
-      dailyOrdersBtn.textContent = '✅ URL Generated! Use the link below';
       dailyOrdersBtn.disabled = true;
+      dailyOrdersBtn.textContent = '⏳ Preparing Your Daily Orders...';
       
-      showDailyOrdersStatus('✅ Direct link generated! Click the link below to send the email.', 'success');
-      
-      // Scroll to show the generated link
-      document.getElementById('alternative-method').scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
-      });
-    }
+      showDailyOrdersStatus(`Preparing daily food orders for ${dateInput}...`, 'info');
 
-    function copyUrl() {
-      const urlText = document.getElementById('generated-url').textContent;
-      
-      // Try to copy to clipboard
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(urlText).then(() => {
-          showDailyOrdersStatus('✅ URL copied to clipboard!', 'success');
-        }).catch(() => {
-          fallbackCopy(urlText);
+      // FIXED: Build URL for daily orders to match your Google Apps Script
+      const reportUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_report&date=${encodeURIComponent(dateInput)}&worker_recipients=${encodeURIComponent(workerEmail)}`;
+
+      console.log('Calling daily orders URL:', reportUrl);
+
+      fetch(reportUrl)
+        .then(response => {
+          console.log('Daily orders response status:', response.status);
+          return response.json();
+        })
+        .then(data => {
+          console.log('Daily orders response:', data);
+          
+          if (data.success) {
+            let message = `✅ Daily Food Orders Sent Successfully!\n\n`;
+            message += `📅 Date: ${dateInput}\n`;
+            message += `🍽️ Orders Found: ${data.orderCount || 0}\n`;
+            message += `📧 Email sent to: ${workerEmail}\n\n`;
+            
+            if (data.orderCount > 0) {
+              message += `Your email includes:\n`;
+              message += `• Chick-fil-A orders organized by categories\n`;
+              message += `• Student checklist sorted by last name\n`;
+              message += `• Artios items to prepare at school\n`;
+              message += `• Professional formatting for easy printing\n\n`;
+              message += `Check your email and start preparing! 🍽️`;
+            } else {
+              message += `No orders found for this date.\n`;
+              message += `Email sent confirming no food is needed. 👍`;
+            }
+            
+            // Show success message
+            const statusDiv = document.getElementById('daily-orders-status');
+            statusDiv.innerHTML = message.replace(/\n/g, '<br>');
+            statusDiv.className = 'status-message success show';
+
+          } else {
+            showDailyOrdersStatus(`Error: ${data.error || 'Failed to send daily orders'}`, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Daily orders error:', error);
+          showDailyOrdersStatus('Network error. Please check your connection and try again.', 'error');
+        })
+        .finally(() => {
+          dailyOrdersBtn.disabled = false;
+          dailyOrdersBtn.textContent = '📋 Get Daily Food Orders';
         });
-      } else {
-        fallbackCopy(urlText);
-      }
-    }
-
-    function fallbackCopy(text) {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      
-      try {
-        document.execCommand('copy');
-        showDailyOrdersStatus('✅ URL copied to clipboard!', 'success');
-      } catch (err) {
-        showDailyOrdersStatus('❌ Could not copy URL. Please copy manually.', 'error');
-      }
-      
-      document.body.removeChild(textArea);
     }
 
     function showDailyOrdersStatus(message, type) {
@@ -468,7 +409,7 @@
 
       setTimeout(() => {
         statusDiv.classList.remove('show');
-      }, 10000);
+      }, 10000); // Show longer for worker messages
     }
   </script>
 </body>
