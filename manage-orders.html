@@ -661,6 +661,25 @@
         }
 
         /* Mobile Responsive */
+        @media (min-width: 769px) {
+            .header-top-row {
+                position: relative;
+                height: 0; /* Don't take up space */
+            }
+            
+            .back-btn {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            
+            .header-actions {
+                position: absolute;
+                top: 0;
+                right: 0;
+            }
+        }
+
         @media (max-width: 1024px) {
             .refund-container {
                 grid-template-columns: 1fr;
@@ -721,8 +740,33 @@
                 padding: 10px;
             }
 
-            .header h1 {
-                font-size: 2em;
+            .header {
+                padding: 1rem;
+            }
+            
+            .back-btn {
+                position: static;
+                margin-bottom: 1rem;
+                width: fit-content;
+            }
+            
+            .header-actions {
+                position: static;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .header-brand {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-text {
+                text-align: center;
+            }
+            
+            .header-text h1 {
+                font-size: 1.5rem;
             }
 
             .nav ul {
@@ -751,7 +795,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+            <div class="header-top-row">
+                <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <span id="user-email"></span>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
             
             <div class="header-brand">
                 <img class="artios-logo" src="artios-logo.png" alt="Artios Academies Logo">
@@ -759,13 +811,6 @@
                     <h1>Artios Academies of Sugar Hill</h1>
                     <div class="subtitle">Manage Your Lunch Orders</div>
                 </div>
-            </div>
-            
-            <div class="header-actions">
-                <div class="user-info">
-                    Logged in as: <strong id="user-email"></strong>
-                </div>
-                <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </div>
 
@@ -979,7 +1024,7 @@
             let html = '';
             
             sortedDates.forEach(dateStr => {
-                const date = new Date(dateStr + 'T00:00:00');
+                const date = new Date(dateStr + 'T12:00:00'); // Use noon to avoid timezone issues
                 const items = itemsByDate[dateStr];
                 const refundableItems = items.filter(item => canRefundItem(dateStr));
                 
@@ -993,6 +1038,14 @@
         }
 
         function createDateGroup(date, items, refundableItems, isToday, isPast, dateStr) {
+            // Validate date first
+            if (isNaN(date.getTime())) {
+                console.error('Invalid date:', dateStr);
+                // Create date from string manually
+                const [year, month, day] = dateStr.split('-');
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
+            }
+            
             const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                                'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1067,7 +1120,7 @@
 
         function canRefundItem(itemDateStr) {
             const now = new Date();
-            const itemDate = new Date(itemDateStr + 'T00:00:00');
+            const itemDate = new Date(itemDateStr + 'T12:00:00'); // Use noon for date parsing
             
             // Set cutoff to 8:15 AM on the item's date
             const cutoffTime = new Date(
@@ -1076,6 +1129,13 @@
                 itemDate.getDate(),
                 8, 15, 0
             );
+            
+            // Debug logging
+            console.log('Checking refund eligibility:');
+            console.log('Item date:', itemDate);
+            console.log('Cutoff time:', cutoffTime);
+            console.log('Current time:', now);
+            console.log('Can refund:', now < cutoffTime);
             
             return now < cutoffTime;
         }
