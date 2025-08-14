@@ -27,13 +27,22 @@ function doPost(e) {
   try {
     console.log('doPost called');
     
-    let data;
-    if (e.postData && e.postData.contents) {
-      console.log('Raw post data:', e.postData.contents);
-      data = JSON.parse(e.postData.contents);
-    } else {
-      throw new Error('No POST data received');
-    }
+
+
+let data;
+if (e.parameter && e.parameter.data) {
+  console.log('Form-encoded data received');
+  data = JSON.parse(e.parameter.data);
+} else if (e.postData && e.postData.contents) {
+  console.log('Raw post data:', e.postData.contents);
+  data = JSON.parse(e.postData.contents);
+} else {
+  throw new Error('No POST data received');
+}
+
+
+
+
     
     // Log received data
     console.log('Parsed data:', JSON.stringify(data));
@@ -622,7 +631,7 @@ function lookupOrders(email, orderId = null) {
           if (!orderMap[currentOrderId]) {
             orderMap[currentOrderId] = {
               orderId: currentOrderId,
-              timestamp: row[0],
+              timestamp: row[8],
               email: row[1],
               items: [],
               children: [],
