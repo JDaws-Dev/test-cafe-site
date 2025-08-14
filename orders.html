@@ -2311,46 +2311,30 @@
         console.log('Submitting order data:', orderData);
         
         try {
-          // Create hidden iframe for form submission
-          let iframe = document.getElementById('order-submit-iframe');
-          if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'order-submit-iframe';
-            iframe.name = 'order-submit-iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
+          const response = await fetch(this.config.webAppUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
           
-          // Create form for submission
-          const form = document.createElement('form');
-          form.method = 'POST';
-          form.action = this.config.webAppUrl;
-          form.target = 'order-submit-iframe';
-          form.style.display = 'none';
+          const result = await response.json();
           
-          // Add order data as JSON in a hidden field
-          const dataField = document.createElement('input');
-          dataField.type = 'hidden';
-          dataField.name = 'orderData';
-          dataField.value = JSON.stringify(orderData);
-          form.appendChild(dataField);
-          
-          // Add form to page and submit
-          document.body.appendChild(form);
-          
-          // Set up iframe load handler
-          iframe.onload = () => {
-            console.log('Order submitted successfully via form');
+          if (result.success) {
+            console.log('Order submitted successfully');
             this.handleSuccessfulSubmission();
-            document.body.removeChild(form);
-          };
-          
-          // Submit the form
-          form.submit();
+          } else {
+            throw new Error(result.error || 'Unknown error occurred');
+          }
           
         } catch (error) {
           console.error('Error submitting order:', error);
-          this.showError('Failed to submit order. Please try again.');
+          this.showError('Failed to submit order to Google Sheets. Please try again.');
         }
       }
 
@@ -2440,12 +2424,16 @@
           childrenContainer.removeChild(childrenContainer.lastChild);
         }
         
-        // Reset first child
+        // Reset first child with proper null checks
         const firstChild = childrenContainer?.firstChild;
         if (firstChild) {
-          firstChild.querySelector('.child-first-name').value = '';
-          firstChild.querySelector('.child-last-name').value = '';
-          firstChild.querySelector('.child-grade').value = '';
+          const firstNameInput = firstChild.querySelector('.child-first-name');
+          const lastNameInput = firstChild.querySelector('.child-last-name');
+          const gradeInput = firstChild.querySelector('.child-grade');
+          
+          if (firstNameInput) firstNameInput.value = '';
+          if (lastNameInput) lastNameInput.value = '';
+          if (gradeInput) gradeInput.value = '';
         }
         
         // Reset state
