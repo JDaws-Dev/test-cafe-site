@@ -240,6 +240,51 @@
       margin: 0;
     }
 
+    /* Link Section */
+    .report-link-section {
+      background: #e8f5e8;
+      border: 2px solid #4caf50;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 30px;
+      text-align: left;
+      display: none;
+    }
+
+    .report-link-section h4 {
+      color: #2e7d32;
+      margin-bottom: 15px;
+    }
+
+    .generated-url {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 0.9em;
+      word-break: break-all;
+      margin: 10px 0;
+    }
+
+    .report-link {
+      display: block;
+      background: #4285f4;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    .report-link:hover {
+      background: #3367d6;
+      text-decoration: none;
+      color: white;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .admin-container {
@@ -257,19 +302,19 @@
   <div class="admin-container">
     <div class="admin-header">
       <h1 class="admin-title">Artios Academies Admin Portal</h1>
-      <p class="admin-subtitle">Financial Reports &amp; Analysis</p>
+      <p class="admin-subtitle">Enhanced Financial Reports & Analytics</p>
     </div>
 
     <div class="info-box">
-      <h3>Financial Report</h3>
-      <p>Generate detailed financial analysis including revenue, orders, popular items, families, and discounts for any date range</p>
+      <h3>Enhanced Financial Report</h3>
+      <p>Generate comprehensive financial analysis including revenue, refunds, orders, analytics, and business insights for any date range or single day</p>
     </div>
 
     <form id="report-form">
       
       <!-- Date Range Section -->
       <div class="form-group">
-        <label>Select Date Range:</label>
+        <label>Select Date Range (or same date for single day):</label>
         <div class="date-range-inputs">
           <div>
             <label for="start-date">Start Date:</label>
@@ -305,17 +350,33 @@
       </div>
 
       <button type="submit" class="generate-btn" id="generate-btn">
-        Generate Financial Report
+        Generate Report Link
       </button>
 
       <div class="status-message" id="status-message"></div>
     </form>
+
+    <!-- Report Link Section -->
+    <div class="report-link-section" id="report-link-section">
+      <h4>Enhanced Financial Report Link Generated!</h4>
+      <p>Click the link below to generate and send the enhanced financial report:</p>
+      
+      <div class="generated-url" id="generated-url"></div>
+      
+      <a href="#" id="report-link" target="_blank" class="report-link">
+        Generate & Send Enhanced Financial Report
+      </a>
+      
+      <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+        <strong>Note:</strong> This link directly accesses the Google Apps Script to generate and send the comprehensive financial report with all analytics.
+      </p>
+    </div>
   </div>
 
   <script>
-    // FIXED: Configuration to match your Google Apps Script
+    // FIXED: Configuration to match working Google Apps Script URL
     const GOOGLE_SHEETS_CONFIG = {
-      webAppUrl: 'https://script.google.com/macros/s/AKfycbxWSO9AKq5uWU7iReEoZcSx3Vn0oeL30ovCeTryKOmC2ze1kP-r7PhWBeAeIY4-82G3/exec',
+      webAppUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
       useGoogleSheets: true
     };
 
@@ -338,7 +399,7 @@
       // Report form submission
       document.getElementById('report-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        generateReport();
+        generateReportLink();
       });
 
       // Date change listeners
@@ -367,7 +428,7 @@
         const end = new Date(endDate);
         
         if (start > end) {
-          preview.textContent = '⚠️ End date must be after start date';
+          preview.textContent = 'End date must be after or same as start date';
           preview.style.background = '#ffebee';
           preview.style.borderColor = '#f44336';
           preview.style.color = '#d32f2f';
@@ -403,7 +464,7 @@
       });
     }
 
-    function generateReport() {
+    function generateReportLink() {
       const generateBtn = document.getElementById('generate-btn');
       const startDate = document.getElementById('start-date').value;
       const endDate = document.getElementById('end-date').value;
@@ -414,7 +475,7 @@
       }
       
       if (new Date(startDate) > new Date(endDate)) {
-        showStatus('End date must be after start date', 'error');
+        showStatus('End date must be after or same as start date', 'error');
         return;
       }
       
@@ -436,57 +497,30 @@
         return;
       }
 
+      // Generate the direct URL for enhanced financial report
+      const reportUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_financial_report&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&admin_recipients=${encodeURIComponent(adminRecipients.join(','))}`;
+
+      // Show the report link section
+      document.getElementById('generated-url').textContent = reportUrl;
+      document.getElementById('report-link').href = reportUrl;
+      document.getElementById('report-link-section').style.display = 'block';
+      
+      // Update button text
+      generateBtn.textContent = 'Report Link Generated!';
       generateBtn.disabled = true;
-      generateBtn.textContent = 'Generating Report...';
       
       const daysDiff = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
-      const reportDescription = `financial report for ${daysDiff} day${daysDiff > 1 ? 's' : ''} (${startDate} to ${endDate})`;
+      const reportDescription = daysDiff === 1 
+        ? `single day enhanced financial report for ${startDate}`
+        : `${daysDiff}-day enhanced financial report (${startDate} to ${endDate})`;
       
-      showStatus(`Generating ${reportDescription} for ${adminRecipients.length} recipient${adminRecipients.length > 1 ? 's' : ''}...`, 'info');
-
-      // FIXED: Build API URL to match your Google Apps Script endpoints
-      const apiUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?secret=cafe2025&action=generate_financial_report&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&admin_recipients=${encodeURIComponent(adminRecipients.join(','))}`;
-
-      console.log('Calling URL:', apiUrl);
-
-      fetch(apiUrl)
-        .then(response => {
-          console.log('Response status:', response.status);
-          return response.json();
-        })
-        .then(data => {
-          console.log('Report response:', data);
-          
-          if (data.success) {
-            let message = `Financial Report Generated Successfully!\n\n`;
-            message += `Date Range: ${startDate} to ${endDate}\n`;
-            message += `Total Revenue: $${(data.totalRevenue || 0).toFixed(2)}\n`;
-            message += `Total Orders: ${data.totalOrders || 0}\n`;
-            message += `Detailed report sent to:\n`;
-            
-            adminRecipients.forEach(email => {
-              if (email === 'jedaws@gmail.com') message += `  • Jeremiah Daws (${email})\n`;
-              else if (email === 'CRivers@artiosacademies.com') message += `  • Chan Ta Rivers (${email})\n`;
-              else message += `  • ${email}\n`;
-            });
-            
-            // Show success message
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.innerHTML = message.replace(/\n/g, '<br>');
-            statusDiv.className = 'status-message success show';
-
-          } else {
-            showStatus(`Report failed: ${data.error}`, 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Report error:', error);
-          showStatus('Network error generating report', 'error');
-        })
-        .finally(() => {
-          generateBtn.disabled = false;
-          generateBtn.textContent = 'Generate Financial Report';
-        });
+      showStatus(`Direct link generated for ${reportDescription}! Click the link below to send the report.`, 'success');
+      
+      // Scroll to show the generated link
+      document.getElementById('report-link-section').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
     }
 
     function showStatus(message, type) {
