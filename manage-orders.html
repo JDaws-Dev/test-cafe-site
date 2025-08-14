@@ -859,6 +859,15 @@
         let allOrders = [];
         let refundCart = [];
 
+        // Helper function to generate session ID
+        function generateSessionId() {
+            const now = new Date();
+            const datePart = now.toISOString().slice(2, 10).replace(/-/g, '');
+            const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
+            const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `S${datePart}${timePart}${randomPart}`;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Get authenticated email from session
             const authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
@@ -1192,8 +1201,48 @@
                 return;
             }
             
-            // Show confirmation modal
-            showBatchConfirmation();
+            // Generate ONE session ID for ALL items
+            const sessionId = generateSessionId();
+            
+            // Prepare ALL items for batch processing
+            const itemsToCancel = refundCart.map(item => ({
+                itemId: item.id,
+                reason: 'Parent requested'
+            }));
+            
+            const confirmBtn = document.getElementById('process-refunds-btn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Processing...';
+            
+            try {
+                // Send ALL items in ONE API call
+                const url = `${API_URL}?action=cancel_multiple_items&session_id=${sessionId}&items=${encodeURIComponent(JSON.stringify(itemsToCancel))}&reason=Parent%20requested`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`Successfully cancelled ${result.cancelledCount} items. Total refund: $${result.totalRefund.toFixed(2)}. You will receive ONE confirmation email.`, 'success');
+                    
+                    // Clear the cart
+                    refundCart = [];
+                    updateCartDisplay();
+                    
+                    // Reload orders to show updated status
+                    const email = checkAuthentication();
+                    if (email) {
+                        setTimeout(() => loadOrdersForAuthenticatedUser(email), 2000);
+                    }
+                } else {
+                    showMessage(`Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error processing refunds:', error);
+                showMessage('Failed to process refunds. Please try again.', 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Process Refunds';
+            }
         }
 
         function showBatchConfirmation() {
