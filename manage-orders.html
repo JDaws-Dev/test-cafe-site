@@ -1005,13 +1005,16 @@
                     // Skip cancelled items
                     if (item.status === 'cancelled') return;
                     
-                    const itemDate = item.date; // YYYY-MM-DD format
+                    // Clean the date - remove timezone info
+                    const itemDate = item.date.split('T')[0]; // Get just YYYY-MM-DD
+                    
                     if (!itemsByDate[itemDate]) {
                         itemsByDate[itemDate] = [];
                     }
                     
                     itemsByDate[itemDate].push({
                         ...item,
+                        date: itemDate, // Store cleaned date
                         orderId: order.orderId,
                         email: order.email
                     });
@@ -1120,22 +1123,15 @@
 
         function canRefundItem(itemDateStr) {
             const now = new Date();
-            const itemDate = new Date(itemDateStr + 'T12:00:00'); // Use noon for date parsing
+            const cleanDateStr = itemDateStr.split('T')[0];
+            const itemDate = new Date(cleanDateStr + 'T12:00:00');
             
-            // Set cutoff to 8:15 AM on the item's date
             const cutoffTime = new Date(
                 itemDate.getFullYear(),
                 itemDate.getMonth(),
                 itemDate.getDate(),
                 8, 15, 0
             );
-            
-            // Debug logging
-            console.log('Checking refund eligibility:');
-            console.log('Item date:', itemDate);
-            console.log('Cutoff time:', cutoffTime);
-            console.log('Current time:', now);
-            console.log('Can refund:', now < cutoffTime);
             
             return now < cutoffTime;
         }
