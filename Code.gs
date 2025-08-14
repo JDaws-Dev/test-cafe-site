@@ -11,7 +11,7 @@
 // ============================================
 
 const SHEET_ID = '1vBlYUsY7lt0k4x7I_OxvjYbHvQn0hbR6HwHh_aCsHxA';
-const ORDERS_SHEET = 'CafeOrders';
+const ORDERS_SHEET = 'orders';
 const FAMILY_ACCOUNTS_SHEET = 'Family_Accounts';
 const CANCELLATIONS_SHEET = 'Cancellations';
 const NOTIFICATION_EMAIL = 'CRivers@artiosacademies.com';
@@ -967,9 +967,8 @@ function getDiscountDescription(promoCode) {
   if (!promoCode) return '';
   
   const code = promoCode.toUpperCase();
-  if (code === 'EARLYBIRD') return '10% Early Bird Discount Applied';
-  if (code === 'FAMILY5') return '5% Family Discount Applied';
-  if (code === 'WELCOME15') return '15% Welcome Discount Applied';
+  if (code === 'STAFF2025') return '10% Staff Discount Applied';
+  if (code === 'JOHN') return '50% Special Discount Applied';
   return 'Discount Applied';
 }
 
