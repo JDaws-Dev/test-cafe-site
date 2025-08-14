@@ -444,53 +444,27 @@ function getFamilyAccountsSheet() {
  */
 function getOrdersSheet() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
-  let ordersSheet;
-  
-  try {
-    ordersSheet = spreadsheet.getSheetByName(ORDERS_SHEET);
-  } catch (e) {
-    // Sheet doesn't exist, create it
+  let ordersSheet = spreadsheet.getSheetByName(ORDERS_SHEET);
+  if (!ordersSheet) {
     ordersSheet = spreadsheet.insertSheet(ORDERS_SHEET);
-    
-    // Set up headers
     const headers = [
-      'Order_ID',           // A
-      'Parent_Email',       // B
-      'Child_First_Name',   // C
-      'Child_Last_Name',    // D
-      'Grade',              // E
-      'Items_JSON',         // F
-      'Item_Price',         // G
-      'Reserved',           // H
-      'Timestamp',          // I
-      'Parent_Phone',       // J
-      'Child_ID',           // K
-      'Item_Date',          // L
-      'Day_Name',           // M
-      'Subtotal',           // N
-      'Discount',           // O
-      'Total',              // P
-      'Promo_Code',         // Q
-      'Item_Status',        // R
-      'Cancellation_Date',  // S
-      'Refund_Amount',      // T
-      'Cancellation_Reason', // U
-      'Cancellation_Session_ID' // V
+      'Order_ID','Parent_Email','Child_First_Name','Child_Last_Name','Child_Grade',
+      'Items_JSON','Item_Price','Reserved','Timestamp','Parent_Phone','Child_ID',
+      'Item_Date','Day_Name','Subtotal','Discount','Total','Promo_Code','Item_Status',
+      'Cancellation_Date','Refund_Amount','Cancellation_Reason','Cancellation_Session_ID'
     ];
-    
     ordersSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    
-    // Format the header row
     const headerRange = ordersSheet.getRange(1, 1, 1, headers.length);
-    headerRange.setBackground('#4285f4');
-    headerRange.setFontColor('#ffffff');
-    headerRange.setFontWeight('bold');
-    
-    console.log('Created new Orders sheet');
+    headerRange.setBackground('#4285f4').setFontColor('#ffffff').setFontWeight('bold');
   }
-  
+
+  // 🔒 Force column E (Child_Grade) to Plain text for the whole sheet
+  ordersSheet.getRange(1, 5, ordersSheet.getMaxRows(), 1).setNumberFormat('@');
+
   return ordersSheet;
 }
+
+
 
 /**
  * Hash a passcode for secure storage
@@ -1045,55 +1019,66 @@ function logCancellation(orderId, itemData, refundAmount, reason, email) {
  */
 function saveMultiChildOrderToSheet(orderData) {
   try {
-    console.log('Saving multi-child order to sheet:', orderData.orderId);
-    const sheet = getOrdersSheet();
-    
-    // Process each item for each child
-    orderData.items.forEach((item, itemIndex) => {
+    const sheet = getOrdersSheet(); // formats col E as text (see above)
+
+    // Build all rows first (don’t call appendRow in a loop)
+    const rows = [];
+
+    orderData.items.forEach(item => {
       const childId = item.childId || '1';
       const child = orderData.children.find(c => c.id === childId) || orderData.children[0];
-      
-      if (!child) {
-        console.error('No child found for item:', item);
-        return;
-      }
-      
-      const rowData = [
-        orderData.orderId,                    // A: Order ID
-        orderData.parentEmail,                // B: Parent Email
-        child.firstName,                       // C: Child First Name
-        child.lastName,                        // D: Child Last Name
-        child.grade,                           // E: Grade
-        JSON.stringify([item]),                // F: Items (as JSON array)
-        item.price,                            // G: Item Price
-        '',                                    // H: Reserved
-        orderData.timestamp,                   // I: Timestamp
-        orderData.parentPhone || '',          // J: Parent Phone
-        childId,                               // K: Child ID
-        item.date,                            // L: Item Date (YYYY-MM-DD)
-        item.day,                             // M: Day Name
-        orderData.subtotal,                   // N: Subtotal
-        orderData.discount || 0,              // O: Discount
-        orderData.total,                      // P: Total
-        orderData.promoCode || '',           // Q: Promo Code
-        'active',                             // R: Item Status (for cancellation)
-        '',                                   // S: Cancellation Date
-        '',                                   // T: Refund Amount
-        '',                                   // U: Cancellation Reason
-        ''                                    // V: Cancellation Session ID
-      ];
-      
-      sheet.appendRow(rowData);
-      console.log(`Saved item for ${child.firstName} ${child.lastName}: ${item.name}`);
+      if (!child) return;
+
+      // 👇 Force grade to be treated as literal text by Sheets
+      // The leading apostrophe prevents date parsing.
+      const gradeText = "'" + String(child.grade ?? '');
+
+      rows.push([
+        orderData.orderId,              // A
+        orderData.parentEmail,          // B
+        child.firstName || '',          // C
+        child.lastName  || '',          // D
+        gradeText,                      // E  <-- TEXT, cannot be auto-dated
+        JSON.stringify([item]),         // F
+        item.price,                     // G
+        '',                             // H
+        orderData.timestamp,            // I
+        orderData.parentPhone || '',    // J
+        childId,                        // K
+        item.date,                      // L  (leave as-is)
+        item.day,                       // M
+        orderData.subtotal,             // N
+        orderData.discount || 0,        // O
+        orderData.total,                // P
+        orderData.promoCode || '',      // Q
+        'active',                       // R
+        '', '', '', ''                  // S–V
+      ]);
     });
-    
-    console.log(`Order ${orderData.orderId} saved successfully with ${orderData.items.length} items`);
-    
+
+    if (!rows.length) return;
+
+    // Write in one shot
+    const startRow = sheet.getLastRow() + 1;
+    const range = sheet.getRange(startRow, 1, rows.length, rows[0].length);
+
+    // Double down: ensure the target grade cells are text before the write
+    sheet.getRange(startRow, 5, rows.length, 1).setNumberFormat('@');
+
+    range.setValues(rows);
+
+    // And once more after write (paranoid but harmless)
+    sheet.getRange(startRow, 5, rows.length, 1).setNumberFormat('@');
+
+    console.log(`Order ${orderData.orderId} saved (${rows.length} items) with grade as TEXT.`);
   } catch (error) {
     console.error('Error saving order to sheet:', error);
     throw error;
   }
 }
+
+
+
 
 /**
  * Get discount description for email
