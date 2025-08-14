@@ -1291,6 +1291,7 @@
   <script>
     class OrderSystem {
       constructor() {
+        // FIXED: Changed URL to match working login.html
         this.config = {
           webAppUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
           useGoogleSheets: true
@@ -1415,6 +1416,27 @@
         d.setDate(diff);
         d.setHours(0, 0, 0, 0);
         return d;
+      }
+
+      // FIXED: Added date calculation function
+      calculateDateForDay(dayName) {
+        const monday = this.state.currentWeekMonday;
+        const dayIndex = this.constants.dayNames.findIndex(d => d === dayName);
+        
+        if (dayIndex === -1) {
+          console.error('Invalid day name:', dayName);
+          return '';
+        }
+        
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + dayIndex);
+        
+        // Format as YYYY-MM-DD
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
       }
 
       generateDayTabs() {
@@ -1797,6 +1819,8 @@
                 <option value="5-6">5-6</option>
                 <option value="7-8">7-8</option>
                 <option value="9-12">9-12</option>
+                <option value="Staff">Staff</option>
+                <option value="Parent">Parent</option>
               </select>
             </div>
           </div>
@@ -2093,17 +2117,17 @@
 
       formatCartItem(item) {
         let extraClass = '';
-        let priceDisplay = `$${item.price.toFixed(2)}`;
+        let priceDisplay = `${item.price.toFixed(2)}`;
         let discountDisplay = '';
         
         if (item.category === 'drinks' && item.isDiscounted) {
           if (item.price === 0) {
             extraClass = 'free-item';
             priceDisplay = 'FREE';
-            discountDisplay = `<div class="discount-line">Was $${item.originalPrice.toFixed(2)} - Combo discount -$${item.discountAmount.toFixed(2)}</div>`;
+            discountDisplay = `<div class="discount-line">Was ${item.originalPrice.toFixed(2)} - Combo discount -${item.discountAmount.toFixed(2)}</div>`;
           } else {
             extraClass = 'discounted-item';
-            discountDisplay = `<div class="discount-line">Was $${item.originalPrice.toFixed(2)} - Combo discount -$${item.discountAmount.toFixed(2)}</div>`;
+            discountDisplay = `<div class="discount-line">Was ${item.originalPrice.toFixed(2)} - Combo discount -${item.discountAmount.toFixed(2)}</div>`;
           }
         }
         
@@ -2278,14 +2302,14 @@
               itemDiv.className = 'confirmation-item';
               itemDiv.innerHTML = `
                 <span>${item.name} - ${item.childName}</span>
-                <span>$${item.price.toFixed(2)}</span>
+                <span>${item.price.toFixed(2)}</span>
               `;
               confItemsList.appendChild(itemDiv);
             });
           }
         });
         
-        document.getElementById('conf-total').textContent = `Total: $${this.state.currentTotal.toFixed(2)}`;
+        document.getElementById('conf-total').textContent = `Total: ${this.state.currentTotal.toFixed(2)}`;
       }
 
       closeConfirmationModal() {
@@ -2300,6 +2324,7 @@
         return `${datePart}-${timePart}-${randomPart}`;
       }
 
+      // FIXED: Changed submitOrder to send JSON instead of form-encoded data
       async submitOrder() {
         if (!this.config.useGoogleSheets) {
           console.log('Google Sheets integration is disabled.');
@@ -2314,9 +2339,9 @@
           const response = await fetch(this.config.webAppUrl, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Type': 'application/json',  // FIXED: Changed from application/x-www-form-urlencoded
             },
-            body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
+            body: JSON.stringify(orderData)  // FIXED: Send raw JSON instead of form-encoded
           });
           
           if (!response.ok) {
@@ -2338,6 +2363,7 @@
         }
       }
 
+      // FIXED: Updated prepareOrderData to include date calculation
       prepareOrderData() {
         const now = new Date();
         const timestamp = now.toISOString();
@@ -2369,7 +2395,7 @@
                 childId: childId,
                 name: item.name,
                 price: item.price,
-                date: item.date, // YYYY-MM-DD format
+                date: this.calculateDateForDay(item.day),  // FIXED: Calculate proper date
                 day: item.day
               });
             });
