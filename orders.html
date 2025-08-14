@@ -1380,18 +1380,13 @@
       }
 
       loadUserEmail() {
-        try {
-          // Check for logged-in user email in sessionStorage or localStorage
-          const loggedInEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
-          
-          if (loggedInEmail) {
-            const emailInput = document.getElementById('family-email');
-            if (emailInput) {
-              emailInput.value = loggedInEmail;
-            }
+        // Try to get email from login session
+        const userEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
+        if (userEmail) {
+          const emailField = document.getElementById('family-email');
+          if (emailField) {
+            emailField.value = userEmail;
           }
-        } catch (error) {
-          console.error('Error loading user email:', error);
         }
       }
 
