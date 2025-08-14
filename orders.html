@@ -2311,21 +2311,43 @@
         console.log('Submitting order data:', orderData);
         
         try {
-          const response = await fetch(this.config.webAppUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(orderData)
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            console.log('Order submitted successfully:', result);
-            this.handleSuccessfulSubmission();
-          } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          // Create hidden iframe for form submission
+          let iframe = document.getElementById('order-submit-iframe');
+          if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'order-submit-iframe';
+            iframe.name = 'order-submit-iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
           }
+          
+          // Create form for submission
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = this.config.webAppUrl;
+          form.target = 'order-submit-iframe';
+          form.style.display = 'none';
+          
+          // Add order data as JSON in a hidden field
+          const dataField = document.createElement('input');
+          dataField.type = 'hidden';
+          dataField.name = 'orderData';
+          dataField.value = JSON.stringify(orderData);
+          form.appendChild(dataField);
+          
+          // Add form to page and submit
+          document.body.appendChild(form);
+          
+          // Set up iframe load handler
+          iframe.onload = () => {
+            console.log('Order submitted successfully via form');
+            this.handleSuccessfulSubmission();
+            document.body.removeChild(form);
+          };
+          
+          // Submit the form
+          form.submit();
+          
         } catch (error) {
           console.error('Error submitting order:', error);
           this.showError('Failed to submit order. Please try again.');
