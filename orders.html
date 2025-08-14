@@ -2308,89 +2308,84 @@
         }
         
         const orderData = this.prepareOrderData();
+        console.log('Submitting order data:', orderData);
         
         try {
-          // Use form submission to bypass CORS entirely
-          await this.submitOrderViaForm(orderData);
+          const response = await fetch(this.config.webAppUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData)
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Order submitted successfully:', result);
+            this.handleSuccessfulSubmission();
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
         } catch (error) {
           console.error('Error submitting order:', error);
           this.showError('Failed to submit order. Please try again.');
         }
       }
 
-      async submitOrderViaForm(orderData) {
-        // Create a hidden iframe to submit form without page redirect
-        const iframe = document.createElement('iframe');
-        iframe.name = 'order-submit-frame';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        
-        // Create form that targets the hidden iframe
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = this.config.webAppUrl;
-        form.target = 'order-submit-frame';
-        form.style.display = 'none';
-        
-        // Add order data as form fields
-        const dataInput = document.createElement('input');
-        dataInput.type = 'hidden';
-        dataInput.name = 'orderData';
-        dataInput.value = JSON.stringify(orderData);
-        form.appendChild(dataInput);
-        
-        document.body.appendChild(form);
-        
-        // Submit form and handle response
-        return new Promise((resolve, reject) => {
-          iframe.onload = () => {
-            console.log('Order submitted successfully via form');
-            this.handleSuccessfulSubmission();
-            document.body.removeChild(form);
-            document.body.removeChild(iframe);
-            resolve();
-          };
-          
-          iframe.onerror = () => {
-            console.error('Form submission failed');
-            document.body.removeChild(form);
-            document.body.removeChild(iframe);
-            reject(new Error('Form submission failed'));
-          };
-          
-          form.submit();
-        });
-      }
-
       prepareOrderData() {
-        const orderData = {
-          orderId: this.generateOrderId(),
-          date: new Date().toLocaleDateString(),
-          email: document.getElementById('family-email').value,
-          children: [],
-          total: this.state.currentTotal
-        };
+        const now = new Date();
+        const timestamp = now.toISOString();
+        const orderId = this.generateOrderId();
         
-        document.querySelectorAll('.child-section').forEach(child => {
-          const firstName = child.querySelector('.child-first-name').value;
-          const lastName = child.querySelector('.child-last-name').value;
-          const grade = child.querySelector('.child-grade').value;
-          const childId = parseInt(child.dataset.child);
+        // Prepare children data
+        const children = [];
+        const items = [];
+        
+        document.querySelectorAll('.child-section').forEach(childSection => {
+          const firstName = childSection.querySelector('.child-first-name').value;
+          const lastName = childSection.querySelector('.child-last-name').value;
+          const grade = childSection.querySelector('.child-grade').value;
+          const childId = childSection.dataset.child;
           
-          const childData = {
-            name: `${firstName} ${lastName}`,
-            grade: grade,
-            items: this.state.orderItems
-              .filter(item => item.childId === childId)
-              .map(item => ({
+          // Add child to children array
+          children.push({
+            id: childId,
+            firstName: firstName,
+            lastName: lastName,
+            grade: grade
+          });
+          
+          // Add child's items to items array
+          this.state.orderItems
+            .filter(item => item.childId === parseInt(childId))
+            .forEach(item => {
+              items.push({
+                childId: childId,
                 name: item.name,
                 price: item.price,
-                day: item.day.toLowerCase()
-              }))
-          };
-          
-          orderData.children.push(childData);
+                date: item.date, // YYYY-MM-DD format
+                day: item.day
+              });
+            });
         });
+        
+        // Calculate totals
+        const subtotal = this.state.currentTotal;
+        const discount = this.state.discountAmount || 0;
+        const total = subtotal - discount;
+        
+        const orderData = {
+          orderId: orderId,
+          parentEmail: document.getElementById('family-email').value,
+          parentPhone: document.getElementById('family-phone')?.value || '',
+          children: children,
+          items: items,
+          timestamp: timestamp,
+          subtotal: subtotal,
+          discount: discount,
+          total: total,
+          promoCode: this.state.appliedPromoCode || ''
+        };
         
         return orderData;
       }
