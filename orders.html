@@ -1353,18 +1353,10 @@
         this.init();
       }
 
-      init() {
-        this.loadUserEmail(); // Add this line to auto-populate email
-        this.loadUserDataFromCookies();
-        this.updateChildCheckboxes();
-        this.validateForm();
-        this.updateCartDisplay();
-      }
-
       async init() {
         try {
           await this.loadMenuData();
-          this.loadUserEmail(); // Load login email instead of cookie data
+          this.loadUserEmail(); // Load login email
           this.setupEventListeners();
           this.setupAutoSave();
           this.validateForm();
@@ -1381,8 +1373,8 @@
       }
 
       loadUserEmail() {
-        // Try to get email from login session
-        const userEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
+        // FIXED: Get email from correct session storage key
+        const userEmail = sessionStorage.getItem('authenticatedEmail');
         if (userEmail) {
           const emailField = document.getElementById('family-email');
           if (emailField) {
@@ -2440,9 +2432,14 @@
       }
 
       resetForm() {
-        // Clear form fields
-        const emailInput = document.getElementById('family-email');
-        if (emailInput) emailInput.value = '';
+        // DON'T clear email - user is logged in
+        // const emailInput = document.getElementById('family-email');
+        // if (emailInput) emailInput.value = '';
+        
+        // Uncheck all checkboxes first
+        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+          checkbox.checked = false;
+        });
         
         // Remove extra children
         const childrenContainer = document.getElementById('children-container');
@@ -2450,8 +2447,8 @@
           childrenContainer.removeChild(childrenContainer.lastChild);
         }
         
-        // Reset first child with proper null checks
-        const firstChild = childrenContainer?.firstChild;
+        // Reset first child with proper null checks - FIXED: use firstElementChild
+        const firstChild = childrenContainer?.firstElementChild;
         if (firstChild) {
           const firstNameInput = firstChild.querySelector('.child-first-name');
           const lastNameInput = firstChild.querySelector('.child-last-name');
@@ -2478,7 +2475,8 @@
           this.validatePromoCode('');
         }
         
-        this.switchDay('monday');
+        // DON'T switch day - stay on current day
+        // this.switchDay('monday');
         
         // Clear cookies
         document.cookie = 'artios_family_data=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
