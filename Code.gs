@@ -83,21 +83,40 @@ function doPost(e) {
 /**
  * Complete doGet handler with all existing and new endpoints
  */
+/**
+ * Complete doGet handler with all existing and new endpoints + JSONP support
+ */
+
+
 function doGet(e) {
   try {
     const action = e.parameter.action;
+    const callback = e.parameter.callback; // JSONP callback parameter
     console.log('doGet called with action:', action);
+    
+    // Helper function to return response (JSON or JSONP)
+    function createResponse(data) {
+      if (callback) {
+        // JSONP response
+        return ContentService
+          .createTextOutput(`${callback}(${JSON.stringify(data)});`)
+          .setMimeType(ContentService.MimeType.JAVASCRIPT);
+      } else {
+        // Regular JSON response
+        return ContentService
+          .createTextOutput(JSON.stringify(data))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
     
     // Test endpoint
     if (action === 'test' || e.parameter.test === 'true') {
-      return ContentService
-        .createTextOutput(JSON.stringify({
-          success: true,
-          message: 'Google Apps Script is working correctly!',
-          timestamp: new Date().toISOString(),
-          version: '3.1'
-        }))
-        .setMimeType(ContentService.MimeType.JSON);
+      return createResponse({
+        success: true,
+        message: 'Google Apps Script is working correctly!',
+        timestamp: new Date().toISOString(),
+        version: '3.1'
+      });
     }
     
     // ============================================
@@ -109,27 +128,21 @@ function doGet(e) {
       const passcode = e.parameter.passcode;
       
       if (!email || !passcode) {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Email and passcode required'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Email and passcode required'
+        });
       }
       
       try {
         const result = verifyFamilyLogin(email, passcode);
-        return ContentService
-          .createTextOutput(JSON.stringify(result))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse(result);
       } catch (authError) {
         console.error('Authentication error:', authError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: authError.toString()
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: authError.toString()
+        });
       }
     }
     
@@ -138,27 +151,21 @@ function doGet(e) {
       const passcode = e.parameter.passcode;
       
       if (!email || !passcode) {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Email and passcode required'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Email and passcode required'
+        });
       }
       
       try {
         const result = createFamilyAccount(email, passcode);
-        return ContentService
-          .createTextOutput(JSON.stringify(result))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse(result);
       } catch (createError) {
         console.error('Account creation error:', createError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: createError.toString()
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: createError.toString()
+        });
       }
     }
     
@@ -166,27 +173,21 @@ function doGet(e) {
       const email = e.parameter.email;
       
       if (!email) {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Email required'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Email required'
+        });
       }
       
       try {
         const result = resetFamilyPasscode(email);
-        return ContentService
-          .createTextOutput(JSON.stringify(result))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse(result);
       } catch (resetError) {
         console.error('Password reset error:', resetError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: resetError.toString()
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: resetError.toString()
+        });
       }
     }
     
@@ -199,27 +200,21 @@ function doGet(e) {
       const orderId = e.parameter.order_id;
       
       if (!email) {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Email parameter required'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Email parameter required'
+        });
       }
       
       try {
         const result = lookupOrders(email, orderId);
-        return ContentService
-          .createTextOutput(JSON.stringify(result))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse(result);
       } catch (lookupError) {
         console.error('Lookup error:', lookupError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: `Order lookup failed: ${lookupError.toString()}`
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: `Order lookup failed: ${lookupError.toString()}`
+        });
       }
     }
     
@@ -229,27 +224,21 @@ function doGet(e) {
       const reason = e.parameter.reason || 'Parent requested';
       
       if (!itemId) {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Item ID parameter required'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Item ID parameter required'
+        });
       }
       
       try {
         const result = processCancellation(itemId, reason);
-        return ContentService
-          .createTextOutput(JSON.stringify(result))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse(result);
       } catch (cancellationError) {
         console.error('Cancellation error:', cancellationError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: `Cancellation failed: ${cancellationError.toString()}`
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: `Cancellation failed: ${cancellationError.toString()}`
+        });
       }
     }
     
@@ -260,28 +249,22 @@ function doGet(e) {
       const reason = e.parameter.reason || 'Parent requested';
       
       if (!sessionId || !itemsParam) {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Session ID and items parameters required'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Session ID and items parameters required'
+        });
       }
       
       try {
         const items = JSON.parse(itemsParam);
         const result = processBatchCancellation(items, sessionId, reason);
-        return ContentService
-          .createTextOutput(JSON.stringify(result))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse(result);
       } catch (batchError) {
         console.error('Batch cancellation error:', batchError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: `Batch cancellation failed: ${batchError.toString()}`
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: `Batch cancellation failed: ${batchError.toString()}`
+        });
       }
     }
     
@@ -292,12 +275,10 @@ function doGet(e) {
     if (action === 'generate_report') {
       const secret = e.parameter.secret;
       if (secret !== 'cafe2025') {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Invalid secret key'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Invalid secret key'
+        });
       }
       
       try {
@@ -320,34 +301,28 @@ function doGet(e) {
           sendWorkerDailyOrdersEmail(workerRecipients, result, reportDate);
         }
         
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: true,
-            date: reportDate.toDateString(),
-            orderCount: result.orderCount,
-            reportData: result.reportData
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: true,
+          date: reportDate.toDateString(),
+          orderCount: result.orderCount,
+          reportData: result.reportData
+        });
       } catch (reportError) {
         console.error('Report generation error:', reportError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: `Report generation failed: ${reportError.toString()}`
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: `Report generation failed: ${reportError.toString()}`
+        });
       }
     }
 
     if (action === 'generate_financial_report') {
       const secret = e.parameter.secret;
       if (secret !== 'cafe2025') {
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: 'Invalid secret key'
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: 'Invalid secret key'
+        });
       }
       
       try {
@@ -361,37 +336,42 @@ function doGet(e) {
         
         const result = generateFinancialReport(startDate, endDate, adminRecipients);
         
-        return ContentService
-          .createTextOutput(JSON.stringify(result))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse(result);
       } catch (financialError) {
         console.error('Financial report error:', financialError);
-        return ContentService
-          .createTextOutput(JSON.stringify({
-            success: false,
-            error: `Financial report failed: ${financialError.toString()}`
-          }))
-          .setMimeType(ContentService.MimeType.JSON);
+        return createResponse({
+          success: false,
+          error: `Financial report failed: ${financialError.toString()}`
+        });
       }
     }
     
-    return ContentService
-      .createTextOutput(JSON.stringify({
-        success: false,
-        error: 'Unknown action: ' + action
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return createResponse({
+      success: false,
+      error: 'Unknown action: ' + action
+    });
     
   } catch (error) {
     console.error('Error in doGet:', error);
-    return ContentService
-      .createTextOutput(JSON.stringify({
-        success: false,
-        error: error.toString()
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+    const callback = e.parameter.callback;
+    const errorResponse = {
+      success: false,
+      error: error.toString()
+    };
+    
+    if (callback) {
+      return ContentService
+        .createTextOutput(`${callback}(${JSON.stringify(errorResponse)});`)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      return ContentService
+        .createTextOutput(JSON.stringify(errorResponse))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
 }
+    
+
 
 // ============================================
 // AUTHENTICATION FUNCTIONS
@@ -1099,6 +1079,9 @@ function getDiscountDescription(promoCode) {
 /**
  * Generate email-only report excluding cancelled items
  */
+/**
+ * Generate email-only report excluding cancelled items - FIXED DATE MATCHING
+ */
 function generateEmailOnlyReport(reportDate) {
   try {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -1109,48 +1092,77 @@ function generateEmailOnlyReport(reportDate) {
     const sheet = getOrdersSheet();
     const data = sheet.getDataRange().getValues();
     
-    // Format report date as YYYY-MM-DD for comparison
+    // FIXED: Ensure proper date formatting with zero-padding
     const reportDateStr = `${reportDate.getFullYear()}-${String(reportDate.getMonth() + 1).padStart(2, '0')}-${String(reportDate.getDate()).padStart(2, '0')}`;
+    
+    console.log(`Looking for items with date: ${reportDateStr} and day: ${reportDayName}`);
     
     const itemsForThisDate = [];
     
     // Process orders for this specific date
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      const itemDateStr = row[11]; // Item date column
-      const itemStatus = row[17] || 'active'; // Status column
+      const itemDateStr = row[11]; // Item date column (L)
+      const itemStatus = row[17] || 'active'; // Status column (R)
       
       // Skip cancelled items
       if (itemStatus === 'cancelled') {
         continue;
       }
       
-      // Check if this item is for the report date
-      if (itemDateStr === reportDateStr) {
-        const items = JSON.parse(row[5] || '[]');
-        
-        items.forEach(item => {
-          if (item.day === reportDayName) {
-            itemsForThisDate.push({
-              orderId: row[0],
-              email: row[1],
-              childFirstName: row[2],
-              childLastName: row[3],
-              childName: `${row[2]} ${row[3]}`,
-              grade: row[4],
-              item: item,
-              itemPrice: parseFloat(row[6]) || 0,
-              childId: row[10] || '1',
-              subtotal: parseFloat(row[13]) || 0,
-              discount: parseFloat(row[14]) || 0,
-              total: parseFloat(row[15]) || 0,
-              promoCode: row[16] || '',
-              status: itemStatus
-            });
+      // FIXED: Convert itemDateStr to same format for comparison
+      let normalizedItemDate = '';
+      if (itemDateStr) {
+        if (itemDateStr instanceof Date) {
+          // If it's a Date object, format it properly
+          normalizedItemDate = `${itemDateStr.getFullYear()}-${String(itemDateStr.getMonth() + 1).padStart(2, '0')}-${String(itemDateStr.getDate()).padStart(2, '0')}`;
+        } else if (typeof itemDateStr === 'string') {
+          // If it's already a string, ensure proper formatting
+          const dateParts = itemDateStr.split('-');
+          if (dateParts.length === 3) {
+            normalizedItemDate = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
           }
-        });
+        }
+      }
+      
+      // DEBUG: Log first few items to see what we're comparing
+      if (i <= 5) {
+        console.log(`Row ${i}: ItemDate="${itemDateStr}" -> Normalized="${normalizedItemDate}", Status="${itemStatus}"`);
+      }
+      
+      // Check if this item is for the report date
+      if (normalizedItemDate === reportDateStr) {
+        try {
+          const items = JSON.parse(row[5] || '[]');
+          
+          items.forEach(item => {
+            // FIXED: Check both date match AND day match for double verification
+            if (item.day === reportDayName) {
+              itemsForThisDate.push({
+                orderId: row[0],
+                email: row[1],
+                childFirstName: row[2],
+                childLastName: row[3],
+                childName: `${row[2]} ${row[3]}`,
+                grade: row[4],
+                item: item,
+                itemPrice: parseFloat(row[6]) || 0,
+                childId: row[10] || '1',
+                subtotal: parseFloat(row[13]) || 0,
+                discount: parseFloat(row[14]) || 0,
+                total: parseFloat(row[15]) || 0,
+                promoCode: row[16] || '',
+                status: itemStatus
+              });
+            }
+          });
+        } catch (parseError) {
+          console.error(`Error parsing items for row ${i}:`, parseError);
+        }
       }
     }
+    
+    console.log(`Found ${itemsForThisDate.length} items for ${reportDateStr} (${reportDayName})`);
     
     if (itemsForThisDate.length === 0) {
       return {
@@ -1232,76 +1244,412 @@ function compileDailyOrders() {
 }
 
 /**
- * Generate financial report (placeholder for existing functionality)
+/**
+ * Generate enhanced financial report with comprehensive analytics
  */
 function generateFinancialReport(startDate, endDate, adminRecipients) {
   try {
-    console.log(`Generating financial report from ${startDate} to ${endDate}`);
+    console.log(`Generating enhanced financial report from ${startDate} to ${endDate}`);
     
     const sheet = getOrdersSheet();
     const data = sheet.getDataRange().getValues();
     
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
+    const startDateObj = new Date(startDate + 'T00:00:00');
+    const endDateObj = new Date(endDate + 'T23:59:59');
     
-    let totalRevenue = 0;
-    let totalOrders = 0;
+    // Initialize analytics objects
+    let grossRevenue = 0;
     let totalDiscounts = 0;
+    let totalRefunds = 0;
+    let totalOrders = 0;
     const familyEmails = new Set();
     const itemCounts = {};
+    const chickFilAItems = {};
+    const artiosItems = {};
+    const discountAnalysis = { STAFF2025: { count: 0, amount: 0 }, JOHN: { count: 0, amount: 0 } };
+    const dailyRevenue = {};
+    const familyOrderCounts = {};
     
-    // Process orders within date range
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      const itemDateStr = row[11];
-      const itemStatus = row[17] || 'active';
+    // FIXED: Replace this section in your generateFinancialReport function
+// Find this part in your existing function and replace it:
+
+// Process orders within date range
+for (let i = 1; i < data.length; i++) {
+  const row = data[i];
+  const itemDateStr = row[11]; // Item_Date column (L)
+  const itemStatus = row[17] || 'active'; // Status column (R)
+  
+  if (!itemDateStr) continue;
+  
+  // FIXED: Handle date format with day name (e.g., "2025-08-15 Friday")
+  let itemDateOnly = '';
+  if (typeof itemDateStr === 'string') {
+    // Extract just the date part (before any space)
+    itemDateOnly = itemDateStr.split(' ')[0];
+  } else if (itemDateStr instanceof Date) {
+    // If it's a Date object, format it properly
+    itemDateOnly = `${itemDateStr.getFullYear()}-${String(itemDateStr.getMonth() + 1).padStart(2, '0')}-${String(itemDateStr.getDate()).padStart(2, '0')}`;
+  }
+  
+  // Parse the date for comparison
+  const itemDate = new Date(itemDateOnly + 'T12:00:00');
+  
+  if (itemDate >= startDateObj && itemDate <= endDateObj) {
+    const orderId = row[0];
+    const email = row[1];
+    const orderTotal = parseFloat(row[15]) || 0; // Total column (P)
+    const orderDiscount = parseFloat(row[14]) || 0; // Discount column (O)
+    const promoCode = row[16] || ''; // Promo_Code column (Q)
+    const itemPrice = parseFloat(row[6]) || 0; // Item_Price column (G)
+    
+    // Track families and their order counts
+    familyEmails.add(email);
+    if (!familyOrderCounts[email]) familyOrderCounts[email] = 0;
+    familyOrderCounts[email]++;
+    
+    // Track daily revenue
+    const dayKey = itemDateOnly; // Use the clean date string
+    if (!dailyRevenue[dayKey]) dailyRevenue[dayKey] = 0;
+    
+    if (itemStatus === 'cancelled') {
+      // Handle refunds
+      const refundAmount = parseFloat(row[19]) || itemPrice; // Refund_Amount column (T)
+      totalRefunds += refundAmount;
+    } else {
+      // Active orders
+      grossRevenue += orderTotal;
+      totalDiscounts += orderDiscount;
+      totalOrders++;
+      dailyRevenue[dayKey] += orderTotal;
       
-      // Skip cancelled items
-      if (itemStatus === 'cancelled') {
-        continue;
+      // Analyze discount codes
+      if (promoCode === 'STAFF2025') {
+        discountAnalysis.STAFF2025.count++;
+        discountAnalysis.STAFF2025.amount += orderDiscount;
+      } else if (promoCode === 'JOHN') {
+        discountAnalysis.JOHN.count++;
+        discountAnalysis.JOHN.amount += orderDiscount;
       }
       
-      const itemDate = new Date(itemDateStr);
-      
-      if (itemDate >= startDateObj && itemDate <= endDateObj) {
-        totalRevenue += parseFloat(row[15]) || 0; // Total column
-        totalDiscounts += parseFloat(row[14]) || 0; // Discount column
-        totalOrders++;
-        familyEmails.add(row[1]); // Email column
-        
-        // Count items
+      // Parse and categorize items
+      try {
         const items = JSON.parse(row[5] || '[]');
         items.forEach(item => {
-          if (!itemCounts[item.name]) {
-            itemCounts[item.name] = 0;
+          const itemName = item.name;
+          
+          // Count all items
+          if (!itemCounts[itemName]) itemCounts[itemName] = 0;
+          itemCounts[itemName]++;
+          
+          // Categorize items
+          if (itemName.toLowerCase().includes('chips') || itemName.toLowerCase().includes('drink')) {
+            // Artios items
+            if (!artiosItems[itemName]) artiosItems[itemName] = { count: 0, revenue: 0 };
+            artiosItems[itemName].count++;
+            artiosItems[itemName].revenue += itemPrice;
+          } else {
+            // Chick-fil-A items
+            if (!chickFilAItems[itemName]) chickFilAItems[itemName] = { count: 0, revenue: 0 };
+            chickFilAItems[itemName].count++;
+            chickFilAItems[itemName].revenue += itemPrice;
           }
-          itemCounts[item.name]++;
         });
+      } catch (parseError) {
+        console.error(`Error parsing items for row ${i}:`, parseError);
       }
     }
+  }
+}
     
-    // Send financial report email to admin recipients
+    // Calculate analytics
+    const netRevenue = grossRevenue - totalDiscounts;
+    const finalNetRevenue = netRevenue - totalRefunds;
+    const averageOrderValue = totalOrders > 0 ? grossRevenue / totalOrders : 0;
+    const totalItems = Object.values(itemCounts).reduce((sum, count) => sum + count, 0);
+    const averageItemsPerOrder = totalOrders > 0 ? totalItems / totalOrders : 0;
+    const chickFilATotal = Object.values(chickFilAItems).reduce((sum, item) => sum + item.revenue, 0);
+    const artiosTotal = Object.values(artiosItems).reduce((sum, item) => sum + item.revenue, 0);
+    const profitMargin = grossRevenue > 0 ? ((finalNetRevenue - chickFilATotal) / grossRevenue * 100) : 0;
+    const refundRate = grossRevenue > 0 ? (totalRefunds / grossRevenue * 100) : 0;
+    
+    // Find most active family
+    let mostActiveFamily = '';
+    let maxOrders = 0;
+    Object.entries(familyOrderCounts).forEach(([email, count]) => {
+      if (count > maxOrders) {
+        maxOrders = count;
+        mostActiveFamily = email;
+      }
+    });
+    
+    // Find peak day
+    let peakDay = '';
+    let peakRevenue = 0;
+    Object.entries(dailyRevenue).forEach(([day, revenue]) => {
+      if (revenue > peakRevenue) {
+        peakRevenue = revenue;
+        peakDay = day;
+      }
+    });
+    
+    // Send enhanced financial report email
     if (adminRecipients && adminRecipients.length > 0) {
-      sendFinancialReportEmail(startDate, endDate, {
-        totalRevenue,
-        totalOrders,
+      sendEnhancedFinancialReportEmail(startDate, endDate, {
+        grossRevenue,
         totalDiscounts,
+        netRevenue,
+        totalRefunds,
+        finalNetRevenue,
+        totalOrders,
+        totalItems,
         familiesServed: familyEmails.size,
-        itemCounts
+        averageOrderValue,
+        averageItemsPerOrder,
+        chickFilAItems,
+        chickFilATotal,
+        artiosItems,
+        artiosTotal,
+        itemCounts,
+        discountAnalysis,
+        dailyRevenue,
+        mostActiveFamily,
+        maxOrders,
+        peakDay,
+        peakRevenue,
+        profitMargin,
+        refundRate
       }, adminRecipients);
     }
     
     return {
       success: true,
-      message: 'Financial report generated',
-      totalRevenue: totalRevenue,
+      message: 'Enhanced financial report generated',
+      totalRevenue: grossRevenue,
       totalOrders: totalOrders,
       totalDiscounts: totalDiscounts,
-      familiesServed: familyEmails.size
+      totalRefunds: totalRefunds,
+      familiesServed: familyEmails.size,
+      profitMargin: profitMargin.toFixed(1)
     };
     
   } catch (error) {
-    console.error('Error generating financial report:', error);
+    console.error('Error generating enhanced financial report:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send enhanced financial report email with comprehensive analytics
+ */
+function sendEnhancedFinancialReportEmail(startDate, endDate, reportData, adminRecipients) {
+  try {
+    const isSignleDay = startDate === endDate;
+    const dateRange = isSignleDay ? startDate : `${startDate} to ${endDate}`;
+    const dayCount = isSignleDay ? 1 : Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+    
+    const subject = `Artios Cafe Enhanced Financial Report - ${dateRange}`;
+    
+    // Build Chick-fil-A items section
+    let chickFilASection = '';
+    const sortedChickFilA = Object.entries(reportData.chickFilAItems)
+      .sort((a, b) => b[1].count - a[1].count);
+    
+    sortedChickFilA.forEach(([itemName, data]) => {
+      chickFilASection += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${itemName}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${data.count}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${data.revenue.toFixed(2)}</td>
+        </tr>
+      `;
+    });
+    
+    // Build Artios items section
+    let artiosSection = '';
+    Object.entries(reportData.artiosItems).forEach(([itemName, data]) => {
+      artiosSection += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${itemName}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${data.count}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${data.revenue.toFixed(2)}</td>
+        </tr>
+      `;
+    });
+    
+    // Build daily breakdown if multiple days
+    let dailyBreakdown = '';
+    if (!isSignleDay) {
+      dailyBreakdown = `
+        <div style="background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4285f4;">
+          <h3 style="color: #1976d2; margin: 0 0 15px 0;">DAILY REVENUE BREAKDOWN</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #e3f2fd;">
+                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Date</th>
+                <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      Object.entries(reportData.dailyRevenue)
+        .sort()
+        .forEach(([date, revenue]) => {
+          const dateObj = new Date(date);
+          const formattedDate = dateObj.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+          });
+          dailyBreakdown += `
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;">${formattedDate}</td>
+              <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">$${revenue.toFixed(2)}</td>
+            </tr>
+          `;
+        });
+      
+      dailyBreakdown += `
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    
+    const emailBody = `
+      <html>
+      <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+          <h1 style="margin: 0;">Artios Cafe Enhanced Financial Report</h1>
+          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateRange} (${dayCount} day${dayCount > 1 ? 's' : ''})</p>
+        </div>
+        
+        <div style="padding: 25px; background: white;">
+          <!-- Revenue Summary -->
+          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">REVENUE SUMMARY</h3>
+            <table style="width: 100%; line-height: 1.8;">
+              <tr><td><strong>Gross Revenue:</strong></td><td style="text-align: right;">$${reportData.grossRevenue.toFixed(2)}</td></tr>
+              <tr><td><strong>Total Discounts Applied:</strong></td><td style="text-align: right; color: #f57c00;">-$${reportData.totalDiscounts.toFixed(2)}</td></tr>
+              <tr><td><strong>Net Revenue:</strong></td><td style="text-align: right;">$${reportData.netRevenue.toFixed(2)}</td></tr>
+              <tr><td><strong>Total Refunds Issued:</strong></td><td style="text-align: right; color: #f44336;">-$${reportData.totalRefunds.toFixed(2)}</td></tr>
+              <tr style="border-top: 2px solid #4caf50; font-weight: bold; font-size: 1.1em;">
+                <td><strong>Final Net Revenue:</strong></td><td style="text-align: right; color: #2e7d32;">$${reportData.finalNetRevenue.toFixed(2)}</td></tr>
+            </table>
+          </div>
+          
+          <!-- Order Analytics -->
+          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
+            <h3 style="color: #1976d2; margin: 0 0 15px 0;">ORDER ANALYTICS</h3>
+            <table style="width: 100%; line-height: 1.8;">
+              <tr><td><strong>Total Orders Placed:</strong></td><td style="text-align: right;">${reportData.totalOrders}</td></tr>
+              <tr><td><strong>Total Items Ordered:</strong></td><td style="text-align: right;">${reportData.totalItems}</td></tr>
+              <tr><td><strong>Average Order Value:</strong></td><td style="text-align: right;">$${reportData.averageOrderValue.toFixed(2)}</td></tr>
+              <tr><td><strong>Unique Families Served:</strong></td><td style="text-align: right;">${reportData.familiesServed}</td></tr>
+              <tr><td><strong>Average Items per Order:</strong></td><td style="text-align: right;">${reportData.averageItemsPerOrder.toFixed(1)}</td></tr>
+              <tr><td><strong>Profit Margin:</strong></td><td style="text-align: right;">${reportData.profitMargin.toFixed(1)}%</td></tr>
+              <tr><td><strong>Refund Rate:</strong></td><td style="text-align: right;">${reportData.refundRate.toFixed(1)}%</td></tr>
+            </table>
+          </div>
+          
+          <!-- Chick-fil-A Purchases -->
+          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+            <h3 style="color: #f57c00; margin: 0 0 15px 0;">CHICK-FIL-A PURCHASES</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #ffe0b2;">
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${chickFilASection}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f5f5f5; font-weight: bold;">
+                  <td style="padding: 10px; border: 1px solid #ddd;">CHICK-FIL-A TOTAL</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${Object.values(reportData.chickFilAItems).reduce((sum, item) => sum + item.count, 0)}</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${reportData.chickFilATotal.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          
+          <!-- Artios Provided Items -->
+          ${Object.keys(reportData.artiosItems).length > 0 ? `
+          <div style="background: #f3e5f5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9c27b0;">
+            <h3 style="color: #7b1fa2; margin: 0 0 15px 0;">ARTIOS PROVIDED ITEMS</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #e1bee7;">
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity</th>
+                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${artiosSection}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f5f5f5; font-weight: bold;">
+                  <td style="padding: 10px; border: 1px solid #ddd;">ARTIOS TOTAL</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${Object.values(reportData.artiosItems).reduce((sum, item) => sum + item.count, 0)}</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${reportData.artiosTotal.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          ` : ''}
+          
+          <!-- Discount Analysis -->
+          ${(reportData.discountAnalysis.STAFF2025.count > 0 || reportData.discountAnalysis.JOHN.count > 0) ? `
+          <div style="background: #fce4ec; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #e91e63;">
+            <h3 style="color: #c2185b; margin: 0 0 15px 0;">DISCOUNT ANALYSIS</h3>
+            ${reportData.discountAnalysis.STAFF2025.count > 0 ? `<p><strong>Staff Discounts (10%):</strong> ${reportData.discountAnalysis.STAFF2025.count} orders, $${reportData.discountAnalysis.STAFF2025.amount.toFixed(2)} saved</p>` : ''}
+            ${reportData.discountAnalysis.JOHN.count > 0 ? `<p><strong>Special Discounts (50%):</strong> ${reportData.discountAnalysis.JOHN.count} orders, $${reportData.discountAnalysis.JOHN.amount.toFixed(2)} saved</p>` : ''}
+          </div>
+          ` : ''}
+          
+          ${dailyBreakdown}
+          
+          <!-- Business Insights -->
+          <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+            <h3 style="color: #2e7d32; margin: 0 0 15px 0;">BUSINESS INSIGHTS</h3>
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+              ${reportData.mostActiveFamily ? `<li><strong>Most Active Family:</strong> ${reportData.mostActiveFamily} (${reportData.maxOrders} orders)</li>` : ''}
+              ${reportData.peakDay ? `<li><strong>Peak Revenue Day:</strong> ${new Date(reportData.peakDay).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} ($${reportData.peakRevenue.toFixed(2)})</li>` : ''}
+              <li><strong>Estimated Profit:</strong> $${(reportData.finalNetRevenue - reportData.chickFilATotal).toFixed(2)} (after Chick-fil-A costs)</li>
+              <li><strong>Average Revenue per Family:</strong> $${(reportData.grossRevenue / reportData.familiesServed).toFixed(2)}</li>
+            </ul>
+          </div>
+          
+          <!-- Footer -->
+          <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Report Generated:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Questions?</strong> Contact CRivers@artiosacademies.com</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    adminRecipients.forEach(email => {
+      GmailApp.sendEmail(
+        email,
+        subject,
+        `Enhanced financial report: $${reportData.grossRevenue.toFixed(2)} revenue, ${reportData.totalOrders} orders, ${reportData.familiesServed} families`,
+        {
+          htmlBody: emailBody,
+          name: 'Artios Cafe Enhanced Financial Reports'
+        }
+      );
+    });
+    
+    console.log(`Enhanced financial report sent to ${adminRecipients.length} recipients`);
+    
+  } catch (error) {
+    console.error('Error sending enhanced financial report email:', error);
     throw error;
   }
 }
@@ -2035,7 +2383,7 @@ function sendEnhancedReportNotificationEmail(result, reportDate, isOnDemand = fa
 }
 
 /**
-* Send worker daily orders email (for daily-orders.html functionality)
+* Send worker daily orders email (for daily-orders.html functionality) - IMPROVED FORMAT
 */
 function sendWorkerDailyOrdersEmail(workerEmail, reportData, reportDate) {
  try {
@@ -2074,131 +2422,185 @@ function sendWorkerDailyOrdersEmail(workerEmail, reportData, reportDate) {
      return;
    }
    
-   // Build detailed email for worker
-   let itemSummaryHtml = '';
-   const sortedItems = Object.entries(reportData.reportData.itemCounts)
-     .sort((a, b) => b[1].count - a[1].count);
-   
-   sortedItems.forEach(([itemName, data]) => {
-     itemSummaryHtml += `
-       <tr>
-         <td style="padding: 10px; border: 1px solid #ddd;">${itemName}</td>
-         <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${data.count}</td>
-       </tr>
-     `;
-   });
-   
-   // Build student checklist
-   let studentListHtml = '';
-   const itemStudentMap = {};
+   // Separate Chick-fil-A items from Artios items
+   const chickFilAItems = {};
+   const artiosItems = {};
+   const studentOrders = {};
    
    reportData.reportData.itemsForThisDate.forEach(order => {
      const itemName = order.item.name;
-     if (!itemStudentMap[itemName]) {
-       itemStudentMap[itemName] = [];
+     const studentKey = `${order.childLastName}, ${order.childFirstName}`;
+     
+     // Categorize items
+     if (itemName.toLowerCase().includes('chips')) {
+       // Artios item
+       if (!artiosItems[itemName]) artiosItems[itemName] = 0;
+       artiosItems[itemName]++;
+     } else if (itemName.toLowerCase().includes('drink')) {
+       // Artios item
+       if (!artiosItems[itemName]) artiosItems[itemName] = 0;
+       artiosItems[itemName]++;
+     } else {
+       // Chick-fil-A item
+       if (!chickFilAItems[itemName]) chickFilAItems[itemName] = 0;
+       chickFilAItems[itemName]++;
      }
-     itemStudentMap[itemName].push({
-       name: order.childName,
-       grade: order.grade
-     });
+     
+     // Build student order list
+     if (!studentOrders[studentKey]) {
+       studentOrders[studentKey] = {
+         name: studentKey,
+         grade: order.grade,
+         items: []
+       };
+     }
+     studentOrders[studentKey].items.push(itemName);
    });
    
-   Object.keys(itemStudentMap).sort().forEach(itemName => {
-     const students = itemStudentMap[itemName]
-       .sort((a, b) => {
-         const lastNameA = a.name.split(' ')[1] || a.name;
-         const lastNameB = b.name.split(' ')[1] || b.name;
-         return lastNameA.localeCompare(lastNameB);
-       });
+   // Build Chick-fil-A order section
+   let chickFilASection = '';
+   let chickFilATotal = 0;
+   
+   // Group by category
+   const entrees = [];
+   const salads = [];
+   const sides = [];
+   
+   Object.entries(chickFilAItems).forEach(([itemName, count]) => {
+     chickFilATotal += count;
+     const itemLine = `${itemName}: ${count}`;
      
-     studentListHtml += `
-       <div style="margin: 20px 0; break-inside: avoid;">
-         <h4 style="color: #4285f4; margin: 10px 0; background: #f0f8ff; padding: 10px; border-radius: 5px;">
-           ${itemName} (${students.length} orders)
-         </h4>
-         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-left: 15px;">
+     if (itemName.toLowerCase().includes('salad')) {
+       salads.push(itemLine);
+     } else if (itemName.toLowerCase().includes('fries') || 
+                itemName.toLowerCase().includes('mac') || 
+                itemName.toLowerCase().includes('fruit') ||
+                itemName.toLowerCase().includes('parfait')) {
+       sides.push(itemLine);
+     } else {
+       entrees.push(itemLine);
+     }
+   });
+   
+   chickFilASection = `
+     <h3 style="color: #1976d2; margin: 0 0 15px 0;">CHICK-FIL-A ORDER</h3>
+     <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+   `;
+   
+   if (entrees.length > 0) {
+     chickFilASection += `<p><strong>ENTREES:</strong></p><ul>`;
+     entrees.forEach(item => chickFilASection += `<li>${item}</li>`);
+     chickFilASection += `</ul>`;
+   }
+   
+   if (salads.length > 0) {
+     chickFilASection += `<p><strong>SALADS:</strong></p><ul>`;
+     salads.forEach(item => chickFilASection += `<li>${item}</li>`);
+     chickFilASection += `</ul>`;
+   }
+   
+   if (sides.length > 0) {
+     chickFilASection += `<p><strong>SIDES:</strong></p><ul>`;
+     sides.forEach(item => chickFilASection += `<li>${item}</li>`);
+     chickFilASection += `</ul>`;
+   }
+   
+   chickFilASection += `<p style="font-weight: bold; font-size: 1.1em; margin-top: 15px;">TOTAL CHICK-FIL-A ITEMS: ${chickFilATotal}</p></div>`;
+   
+   // Build Artios items section
+   let artiosSection = '';
+   if (Object.keys(artiosItems).length > 0) {
+     artiosSection = `
+       <h3 style="color: #f57c00; margin: 0 0 15px 0;">ARTIOS CAFE ITEMS TO PREPARE</h3>
+       <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+         <ul>
      `;
      
-     students.forEach(student => {
-       studentListHtml += `
-         <div style="display: flex; align-items: center; padding: 5px 0;">
-           <input type="checkbox" style="margin-right: 8px; transform: scale(1.2);">
-           <span>${student.name} (${student.grade})</span>
-         </div>
-       `;
+     Object.entries(artiosItems).forEach(([itemName, count]) => {
+       artiosSection += `<li>${itemName}: ${count}</li>`;
      });
      
-     studentListHtml += `
-         </div>
+     artiosSection += `</ul></div>`;
+   }
+   
+   // Build student checklist section
+   let checklistSection = `
+     <h3 style="color: #2e7d32; margin: 0 0 15px 0;">STUDENT DISTRIBUTION CHECKLIST</h3>
+     <p style="color: #666; margin-bottom: 15px; font-style: italic;">
+       Check off each student as you hand out their complete order. Sorted by last name.
+     </p>
+     <div style="background: white; padding: 15px; border-radius: 8px;">
+   `;
+   
+   // Sort students by last name
+   const sortedStudents = Object.values(studentOrders).sort((a, b) => 
+     a.name.localeCompare(b.name)
+   );
+   
+   sortedStudents.forEach(student => {
+     const allItems = student.items.join(' + ');
+     checklistSection += `
+       <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+         <input type="checkbox" style="margin-right: 10px; transform: scale(1.2);">
+         <strong>${student.name}</strong> (${student.grade}): ${allItems}
        </div>
      `;
    });
+   
+   checklistSection += `</div>`;
    
    const emailBody = `
      <html>
      <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
        <div style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-         <h1 style="margin: 0;">🍽️ Daily Food Orders</h1>
+         <h1 style="margin: 0;">Daily Food Orders</h1>
          <p style="margin: 10px 0 0 0; font-size: 1.2em;">${dateStr}</p>
        </div>
        
-       <div style="padding: 25px; background: white;">
+       <div style="padding: 25px; background: #f8f9fa;">
          <!-- Summary Box -->
          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-           <h3 style="color: #f57c00; margin: 0 0 15px 0;">📋 Order Summary</h3>
+           <h3 style="color: #f57c00; margin: 0 0 15px 0;">ORDER SUMMARY</h3>
            <div style="font-size: 1.1em; line-height: 1.6;">
              <strong>Total Items to Prepare:</strong> ${reportData.orderCount}<br>
              <strong>Students Served:</strong> ${reportData.reportData.familiesServed}<br>
-             <strong>Categories:</strong> ${Object.keys(reportData.reportData.itemCounts).length}
+             <strong>Chick-fil-A Items:</strong> ${chickFilATotal}<br>
+             <strong>Artios Items:</strong> ${Object.values(artiosItems).reduce((sum, count) => sum + count, 0)}
            </div>
          </div>
          
          <!-- Chick-fil-A Order List -->
          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
-           <h3 style="color: #1976d2; margin: 0 0 15px 0;">🐔 Chick-fil-A Order List</h3>
-           <table style="width: 100%; border-collapse: collapse;">
-             <thead>
-               <tr style="background: #bbdefb;">
-                 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; font-size: 1.1em;">Item</th>
-                 <th style="padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 1.1em;">Quantity</th>
-               </tr>
-             </thead>
-             <tbody>
-               ${itemSummaryHtml}
-             </tbody>
-             <tfoot>
-               <tr style="background: #f5f5f5; font-weight: bold; font-size: 1.1em;">
-                 <td style="padding: 12px; border: 1px solid #ddd;">TOTAL ITEMS</td>
-                 <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${reportData.orderCount}</td>
-               </tr>
-             </tfoot>
-           </table>
+           ${chickFilASection}
          </div>
+         
+         <!-- Artios Items -->
+         ${artiosItems && Object.keys(artiosItems).length > 0 ? `
+         <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+           ${artiosSection}
+         </div>
+         ` : ''}
          
          <!-- Student Checklist -->
          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
-           <h3 style="color: #2e7d32; margin: 0 0 15px 0;">✅ Student Checklist (Printable)</h3>
-           <p style="color: #666; margin-bottom: 20px; font-style: italic;">
-             Check off each student as you distribute their order. Sorted by last name for easy reference.
-           </p>
-           ${studentListHtml}
+           ${checklistSection}
          </div>
          
          <!-- Action Items -->
          <div style="background: #ffebee; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f44336;">
-           <h3 style="color: #d32f2f; margin: 0 0 15px 0;">🎯 Today's Tasks</h3>
+           <h3 style="color: #d32f2f; margin: 0 0 15px 0;">TODAY'S TASKS</h3>
            <ol style="margin: 0; padding-left: 25px; line-height: 2; font-size: 1.1em;">
-             <li><strong>Place Chick-fil-A order</strong> for ${reportData.orderCount} total items</li>
+             <li><strong>Place Chick-fil-A order</strong> for ${chickFilATotal} total items</li>
+             <li><strong>Prepare Artios items</strong> (chips and drinks)</li>
              <li><strong>Print this checklist</strong> or keep email open on tablet</li>
-             <li><strong>Prepare labels</strong> for each student's order</li>
              <li><strong>Set up distribution area</strong> before lunch period</li>
-             <li><strong>Check off students</strong> as orders are distributed</li>
+             <li><strong>Check off students</strong> as complete orders are distributed</li>
            </ol>
          </div>
          
          <!-- Footer -->
          <div style="text-align: center; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-           <p><strong>Questions?</strong> Contact ${NOTIFICATION_EMAIL}</p>
+           <p><strong>Questions?</strong> Contact CRivers@artiosacademies.com</p>
            <p style="font-size: 0.9em;">This report excludes cancelled items and shows only active orders.</p>
          </div>
        </div>
