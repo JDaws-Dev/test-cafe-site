@@ -43,19 +43,13 @@
       gap: 20px;
       margin-bottom: 20px;
     }
-
-    .artios-logo {
-      width: 60px;
-      height: 60px;
-      background: #4285f4;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 24px;
-    }
+    
+.artios-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;  /* Changed from other styles */
+  /* Remove the background, border-radius, display flex, etc. */
+}
 
     .auth-title {
       font-size: 2.2em;
@@ -266,12 +260,12 @@
   <div class="auth-container">
     <div class="auth-header">
       <div class="logo-section">
-        <div class="artios-logo">A</div>
-        <div>
-          <h1 class="auth-title">Artios Academies Cafe</h1>
-          <p class="auth-subtitle">Secure Family Lunch Ordering System</p>
-        </div>
-      </div>
+  <img src="artios-logo.png" alt="Artios Academies Logo" class="artios-logo">
+  <div>
+    <h1 class="auth-title">Artios Academies Cafe</h1>
+    <p class="auth-subtitle">Secure Family Lunch Ordering System</p>
+  </div>
+</div>
 
       <div class="privacy-notice">
         <h4>🔐 Secure Family Access</h4>
