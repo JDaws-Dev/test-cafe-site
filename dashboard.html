@@ -114,6 +114,19 @@
       margin-bottom: 20px;
     }
 
+    /* Week Indicator */
+    .week-indicator {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 30px;
+      text-align: center;
+      font-weight: 600;
+      color: #92400e;
+      font-size: 1.1em;
+    }
+
     /* Quick Actions Grid */
     .quick-actions-grid {
       display: grid;
@@ -221,12 +234,30 @@
       display: none;
     }
 
+    .order-day-group {
+      margin-bottom: 20px;
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .order-day-header {
+      font-weight: 600;
+      color: #4285f4;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     .order-item {
       background: white;
       border: 1px solid #e0e0e0;
       border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -236,21 +267,29 @@
       flex: 1;
     }
 
-    .order-id {
+    .order-child {
       font-weight: 600;
       color: #333;
       margin-bottom: 5px;
     }
 
-    .order-date {
+    .order-food {
       font-size: 0.9em;
       color: #666;
     }
 
-    .order-total {
+    .order-price {
       font-weight: 700;
       color: #4caf50;
-      font-size: 1.1em;
+      font-size: 1em;
+    }
+
+    .no-orders-message {
+      text-align: center;
+      color: #666;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
     }
 
     /* Responsive Design */
@@ -309,12 +348,17 @@
         </div>
       </div>
 
+      <!-- Week Indicator -->
+      <div class="week-indicator" id="week-indicator">
+        Loading week information...
+      </div>
+
       <!-- Quick Actions -->
       <div class="quick-actions-grid">
         <div class="action-card" onclick="goToOrdering()">
           <span class="action-icon">📝</span>
           <div class="action-title">Place New Order</div>
-          <div class="action-desc">Order lunch for your children for this week</div>
+          <div class="action-desc">Order lunch for your children for next week</div>
           <div class="action-btn">Start Ordering</div>
         </div>
 
@@ -335,9 +379,9 @@
 
       <!-- Recent Orders Summary -->
       <div class="recent-orders">
-        <h3>📈 Recent Orders</h3>
+        <h3>📅 Your Orders for Next Week</h3>
         <div class="orders-loading" id="orders-loading">
-          Loading your recent orders...
+          Loading your upcoming orders...
         </div>
         <div class="orders-summary" id="orders-summary">
           <!-- Will be populated by JavaScript -->
@@ -374,7 +418,8 @@
 
       // Initialize dashboard
       initializeDashboard();
-      loadRecentOrders();
+      updateWeekIndicator();
+      loadNextWeekOrders();
     });
 
     function checkAuthentication() {
@@ -411,7 +456,66 @@
       document.getElementById('family-avatar').textContent = familyInitial;
     }
 
-    function loadRecentOrders() {
+    function getOrderingWeekMonday() {
+      const now = new Date();
+      const day = now.getDay();
+      const hour = now.getHours();
+      
+      // Create a new date to avoid mutating
+      const monday = new Date(now);
+      
+      // Determine which Monday we're ordering for
+      if ((day === 5 && hour >= 9) || day === 6 || day === 0) {
+        // After Friday 9 AM or on weekend: get NEXT Monday
+        const daysUntilNextMonday = day === 0 ? 1 : (8 - day);
+        monday.setDate(monday.getDate() + daysUntilNextMonday);
+      } else {
+        // Monday-Thursday or Friday before 9 AM: get THIS Monday
+        const daysBackToMonday = day === 0 ? -6 : (1 - day);
+        monday.setDate(monday.getDate() + daysBackToMonday);
+      }
+      
+      monday.setHours(0, 0, 0, 0);
+      return monday;
+    }
+
+    function updateWeekIndicator() {
+      const monday = getOrderingWeekMonday();
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+      
+      const options = { month: 'short', day: 'numeric' };
+      const startStr = monday.toLocaleDateString('en-US', options);
+      const endStr = friday.toLocaleDateString('en-US', options);
+      
+      // Check if it's next week
+      const now = new Date();
+      const currentWeekMonday = getCurrentWeekMonday(now);
+      const isNextWeek = monday > currentWeekMonday;
+      
+      let message = '';
+      if (isNextWeek) {
+        message = `📅 Orders are now being taken for NEXT WEEK: ${startStr} - ${endStr}`;
+      } else {
+        message = `📅 Orders are being taken for THIS WEEK: ${startStr} - ${endStr}`;
+      }
+      
+      const indicator = document.getElementById('week-indicator');
+      if (indicator) {
+        indicator.textContent = message;
+      }
+    }
+
+    function getCurrentWeekMonday(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      d.setDate(diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function loadNextWeekOrders() {
       if (!GOOGLE_SHEETS_CONFIG.useGoogleSheets) {
         document.getElementById('orders-loading').style.display = 'none';
         document.getElementById('orders-summary').style.display = 'block';
@@ -423,6 +527,11 @@
         return;
       }
 
+      // Get the Monday we're ordering for
+      const orderingMonday = getOrderingWeekMonday();
+      const orderingFriday = new Date(orderingMonday);
+      orderingFriday.setDate(orderingMonday.getDate() + 4);
+
       fetch(`${GOOGLE_SHEETS_CONFIG.webAppUrl}?action=lookup_orders&email=${encodeURIComponent(authenticatedEmail)}`)
         .then(response => response.json())
         .then(data => {
@@ -430,27 +539,49 @@
           document.getElementById('orders-summary').style.display = 'block';
           
           if (data.success && data.orders && data.orders.length > 0) {
-            const recentOrders = data.orders.slice(0, 3);
-            let ordersHtml = '';
+            // Filter orders for the ordering week
+            const nextWeekOrders = [];
             
-            recentOrders.forEach(order => {
-              ordersHtml += `
-                <div class="order-item">
-                  <div class="order-details">
-                    <div class="order-id">Order #${order.orderId}</div>
-                    <div class="order-date">${new Date(order.timestamp).toLocaleDateString()}</div>
-                  </div>
-                  <div class="order-total">$${order.total}</div>
+            data.orders.forEach(order => {
+              order.items.forEach(item => {
+                // Parse the item date
+                const itemDateStr = item.date ? item.date.split('T')[0] : '';
+                if (!itemDateStr) return;
+                
+                const itemDate = new Date(itemDateStr + 'T12:00:00');
+                
+                // Check if this item is in the ordering week
+                if (itemDate >= orderingMonday && itemDate <= orderingFriday && item.status !== 'cancelled') {
+                  nextWeekOrders.push({
+                    ...item,
+                    orderId: order.orderId,
+                    date: itemDateStr,
+                    dayOfWeek: getDayName(itemDate)
+                  });
+                }
+              });
+            });
+
+            if (nextWeekOrders.length > 0) {
+              displayNextWeekOrders(nextWeekOrders, orderingMonday);
+            } else {
+              document.getElementById('orders-summary').innerHTML = `
+                <div class="no-orders-message">
+                  <p>No orders placed yet for next week.</p>
+                  <p style="margin-top: 10px;">
+                    <a href="#" onclick="goToOrdering()" style="color: #4285f4;">Click here to place an order →</a>
+                  </p>
                 </div>
               `;
-            });
-            
-            document.getElementById('orders-summary').innerHTML = ordersHtml;
+            }
           } else {
             document.getElementById('orders-summary').innerHTML = `
-              <p style="text-align: center; color: #666; padding: 20px;">
-                No recent orders found. Ready to place your first order?
-              </p>
+              <div class="no-orders-message">
+                <p>No orders found. Ready to place your first order?</p>
+                <p style="margin-top: 10px;">
+                  <a href="#" onclick="goToOrdering()" style="color: #4285f4;">Start ordering →</a>
+                </p>
+              </div>
             `;
           }
         })
@@ -464,6 +595,80 @@
             </p>
           `;
         });
+    }
+
+    function getDayName(date) {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      return days[date.getDay()];
+    }
+
+    function displayNextWeekOrders(orders, orderingMonday) {
+      // Group orders by day
+      const ordersByDay = {};
+      const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      
+      // Initialize all days
+      dayOrder.forEach(day => {
+        ordersByDay[day] = [];
+      });
+      
+      // Group the orders
+      orders.forEach(order => {
+        if (ordersByDay[order.dayOfWeek]) {
+          ordersByDay[order.dayOfWeek].push(order);
+        }
+      });
+      
+      let ordersHtml = '';
+      
+      dayOrder.forEach((day, index) => {
+        const dayDate = new Date(orderingMonday);
+        dayDate.setDate(orderingMonday.getDate() + index);
+        const dateStr = dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        const dayOrders = ordersByDay[day];
+        
+        if (dayOrders.length > 0) {
+          let dayTotal = 0;
+          let itemsHtml = '';
+          
+          dayOrders.forEach(order => {
+            dayTotal += order.price;
+            itemsHtml += `
+              <div class="order-item">
+                <div class="order-details">
+                  <div class="order-child">${order.childName}</div>
+                  <div class="order-food">${order.name}</div>
+                </div>
+                <div class="order-price">$${order.price.toFixed(2)}</div>
+              </div>
+            `;
+          });
+          
+          ordersHtml += `
+            <div class="order-day-group">
+              <div class="order-day-header">
+                <span>${day}, ${dateStr}</span>
+                <span style="color: #4caf50;">$${dayTotal.toFixed(2)}</span>
+              </div>
+              ${itemsHtml}
+            </div>
+          `;
+        }
+      });
+      
+      if (ordersHtml) {
+        document.getElementById('orders-summary').innerHTML = ordersHtml;
+      } else {
+        document.getElementById('orders-summary').innerHTML = `
+          <div class="no-orders-message">
+            <p>No orders placed yet for next week.</p>
+            <p style="margin-top: 10px;">
+              <a href="#" onclick="goToOrdering()" style="color: #4285f4;">Click here to place an order →</a>
+            </p>
+          </div>
+        `;
+      }
     }
 
     function goToOrdering() {
