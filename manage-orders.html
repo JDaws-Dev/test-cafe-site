@@ -112,7 +112,25 @@
             backdrop-filter: blur(10px);
             font-size: 0.875rem;
         }
+        
+.user-logo {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    margin-right: 10px;
+    /* Add shadow to make white logo visible on purple background */
+    filter: drop-shadow(0 0 8px rgba(0,0,0,0.8)) drop-shadow(0 0 3px rgba(0,0,0,1));
+}
 
+.user-info {
+    background: rgba(255,255,255,0.2);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    backdrop-filter: blur(10px);
+    font-size: 0.875rem;
+    display: flex;  /* Add this */
+    align-items: center;  /* Add this */
+}
         .logout-btn {
             background: rgba(255,255,255,0.2);
             color: white;
@@ -717,12 +735,13 @@
     <div class="container">
         <div class="header">
             <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
-            <div class="header-actions">
-                <div class="user-info">
-                    <span id="user-email"></span>
-                </div>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
+           <div class="header-actions">
+    <div class="user-info">
+        <img src="artios-logo.png" alt="Artios Logo" class="user-logo">
+        <span id="user-email"></span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
             
             <div class="header-brand">
                 <img class="artios-logo" src="artios-logo.png" alt="Artios Academies Logo">
