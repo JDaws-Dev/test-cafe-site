@@ -281,11 +281,11 @@
         <div class="date-range-inputs">
           <div>
             <label for="start-date">Start Date:</label>
-            <input type="date" id="start-date" name="start_date" class="date-input" required>
+            <input type="date" id="start-date" class="date-input" required>
           </div>
           <div>
             <label for="end-date">End Date:</label>
-            <input type="date" id="end-date" name="end_date" class="date-input" required>
+            <input type="date" id="end-date" class="date-input" required>
           </div>
         </div>
         <div class="date-range-preview" id="date-range-preview"></div>
@@ -296,14 +296,14 @@
         <h4>Report Recipients</h4>
         <div class="email-checkbox-group">
           <div class="email-checkbox checked" id="admin-checkbox">
-            <input type="checkbox" id="email-admin" name="admin_recipients" value="jedaws@gmail.com" checked>
+            <input type="checkbox" id="email-admin" checked>
             <label for="email-admin">
               <strong>Jeremiah Daws</strong>
               <div class="email-address">jedaws@gmail.com</div>
             </label>
           </div>
           <div class="email-checkbox checked" id="crivers-checkbox">
-            <input type="checkbox" id="email-crivers" name="admin_recipients" value="CRivers@artiosacademies.com" checked>
+            <input type="checkbox" id="email-crivers" checked>
             <label for="email-crivers">
               <strong>Chan Ta Rivers</strong>
               <div class="email-address">CRivers@artiosacademies.com</div>
@@ -312,11 +312,7 @@
         </div>
       </div>
 
-      <!-- Hidden fields for API -->
-      <input type="hidden" name="action" value="generate_financial_report">
-      <input type="hidden" name="secret" value="cafe2025">
-
-      <button type="submit" class="generate-btn" id="generate-btn">
+      <button type="button" class="generate-btn" id="generate-btn" onclick="generateAndSendReport()">
         📊 Generate & Send Financial Report
       </button>
 
@@ -344,16 +340,6 @@
     });
 
     function setupEventListeners() {
-      // Set form action
-      const form = document.getElementById('report-form');
-      form.action = GOOGLE_SHEETS_CONFIG.webAppUrl;
-
-      // Report form submission
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        handleFormSubmission();
-      });
-
       // Date change listeners
       const startDateInput = document.getElementById('start-date');
       const endDateInput = document.getElementById('end-date');
@@ -370,7 +356,7 @@
       });
     }
 
-    function handleFormSubmission() {
+    function generateAndSendReport() {
       const startDate = document.getElementById('start-date').value;
       const endDate = document.getElementById('end-date').value;
       const generateBtn = document.getElementById('generate-btn');
@@ -386,65 +372,80 @@
       }
       
       // Get checked recipients
-      const checkedBoxes = document.querySelectorAll('input[name="admin_recipients"]:checked');
-      if (checkedBoxes.length === 0) {
+      const adminChecked = document.getElementById('email-admin').checked;
+      const criversChecked = document.getElementById('email-crivers').checked;
+      
+      if (!adminChecked && !criversChecked) {
         showStatus('Please select at least one recipient', 'error');
         return;
       }
+
+      // Build recipients list
+      const recipients = [];
+      if (adminChecked) recipients.push('jedaws@gmail.com');
+      if (criversChecked) recipients.push('CRivers@artiosacademies.com');
 
       // Update button state
       generateBtn.disabled = true;
       generateBtn.textContent = '📧 Sending Report...';
       
-      // Create form data for POST submission
-      const form = document.getElementById('report-form');
-      
-      // Clear existing form content
-      form.innerHTML = '';
-      
-      // Add all required fields as hidden inputs
-      const fields = {
-        'action': 'generate_financial_report',
-        'secret': 'cafe2025',
-        'start_date': startDate,
-        'end_date': endDate,
-        'admin_recipients': Array.from(checkedBoxes).map(cb => cb.value).join(',')
-      };
-      
-      Object.keys(fields).forEach(key => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = fields[key];
-        form.appendChild(input);
+      // Build the URL
+      const params = new URLSearchParams({
+        action: 'generate_financial_report',
+        secret: 'cafe2025',
+        start_date: startDate,
+        end_date: endDate,
+        admin_recipients: recipients.join(',')
       });
-
+      
+      const reportUrl = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?${params.toString()}`;
+      
       // Show processing message
       showStatus('Generating and sending enhanced financial report...', 'info');
 
-      // Submit the form to iframe
-      form.submit();
+      // Open in new tab/window to trigger the report
+      const reportWindow = window.open(reportUrl, '_blank');
+      
+      // Check if popup was blocked
+      if (!reportWindow) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = '📊 Generate & Send Financial Report';
+        showStatus('Popup blocked! Please allow popups and try again, or click the link below.', 'error');
+        
+        // Show fallback link
+        const statusDiv = document.getElementById('status-message');
+        statusDiv.innerHTML += `<br><br><a href="${reportUrl}" target="_blank" style="color: #4285f4; text-decoration: underline;">Click here to generate the report manually</a>`;
+        return;
+      }
 
-      // Wait longer and check if we can detect completion
+      // Success feedback after short delay
       setTimeout(() => {
         generateBtn.disabled = false;
         generateBtn.textContent = '📊 Generate & Send Financial Report';
         
-        const recipientNames = Array.from(checkedBoxes).map(cb => {
-          const label = cb.closest('.email-checkbox').querySelector('strong').textContent;
-          return label;
-        }).join(' and ');
+        const recipientNames = [];
+        if (adminChecked) recipientNames.push('Jeremiah Daws');
+        if (criversChecked) recipientNames.push('Chan Ta Rivers');
         
         const daysDiff = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
         const reportDescription = daysDiff === 1 
           ? `single day report for ${startDate}`
           : `${daysDiff}-day report (${startDate} to ${endDate})`;
         
-        showStatus(`✅ Enhanced financial report sent successfully to ${recipientNames}!\n\nReport: ${reportDescription}\nIncludes: Revenue analysis, order analytics, Chick-fil-A breakdown, discount analysis, and business insights.`, 'success');
+        showStatus(`✅ Enhanced financial report sent successfully to ${recipientNames.join(' and ')}!\n\nReport: ${reportDescription}\nIncludes: Revenue analysis, order analytics, Chick-fil-A breakdown, discount analysis, and business insights.\n\nThe report window will close automatically once sent.`, 'success');
         
-        // Restore the form for next use
-        location.reload();
-      }, 5000);
+        // Close the popup window after a delay
+        setTimeout(() => {
+          if (reportWindow && !reportWindow.closed) {
+            reportWindow.close();
+          }
+        }, 5000);
+      }, 2000);
+    }
+
+    function handleFormSubmission() {
+      // This function is no longer needed but kept for compatibility
+      generateAndSendReport();
     }
 
     function updateDateRangePreview() {
