@@ -293,7 +293,6 @@
         </div>
       </div>
       <div class="auth-actions">
-        <span id="session-time" style="font-size: 0.9em; opacity: 0.8;"></span>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -359,7 +358,7 @@
   </div>
 
   <script>
-    // Configuration - FIXED: Using the correct URL from login.html
+    // Configuration
     const GOOGLE_SHEETS_CONFIG = {
       webAppUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
       useGoogleSheets: true
@@ -376,7 +375,6 @@
       // Initialize dashboard
       initializeDashboard();
       loadRecentOrders();
-      updateSessionTimer();
     });
 
     function checkAuthentication() {
@@ -400,7 +398,7 @@
     function redirectToLogin() {
       sessionStorage.removeItem('authenticatedEmail');
       sessionStorage.removeItem('authExpiry');
-      window.location.href = 'login.html'; // Your new login page
+      window.location.href = 'login.html';
     }
 
     function initializeDashboard() {
@@ -466,26 +464,6 @@
             </p>
           `;
         });
-    }
- 
-    function updateSessionTimer() {
-      const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
-      if (!authExpiry) return;
-      
-      function updateTimer() {
-        const timeLeft = Math.max(0, Math.floor((authExpiry - Date.now()) / (1000 * 60 * 60)));
-        const sessionTimeSpan = document.getElementById('session-time');
-        if (sessionTimeSpan) {
-          sessionTimeSpan.textContent = timeLeft > 0 ? `${timeLeft}h left` : 'Expired';
-        }
-        
-        if (timeLeft <= 0) {
-          logout();
-        }
-      }
-      
-      updateTimer();
-      setInterval(updateTimer, 60000); // Update every minute
     }
 
     function goToOrdering() {
