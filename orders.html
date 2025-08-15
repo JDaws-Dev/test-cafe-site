@@ -1299,7 +1299,7 @@
 
         this.state = {
           currentDay: 'monday',
-          isNextWeek: false,
+          orderingForFollowingWeek: false,
           storeIsOpen: true,
           currentWeekMonday: null,
           currentTotal: 0,
@@ -1361,9 +1361,13 @@
           this.setupAutoSave();
           this.validateForm();
           
-          // Show welcome message
+          // Check store hours before generating tabs
+          this.checkStoreHours();
+          
+          // Show welcome message with week info
           setTimeout(() => {
-            this.showNotification('Welcome! Select items for each day and child.', 'info');
+            const weekDesc = this.getOrderWeekDescription();
+            this.showNotification(`Welcome! ${weekDesc}`, 'info');
           }, 1000);
           
         } catch (error) {
@@ -1386,10 +1390,62 @@
       checkStoreHours() {
         const now = new Date();
         const dayOfWeek = now.getDay();
-        const isFridayAfterOne = (dayOfWeek === 5 && now.getHours() >= 9);
+        const hour = now.getHours();
         
-        this.state.isNextWeek = isFridayAfterOne;
+        // Simply track if we're ordering for next week
+        // After Friday 9 AM, we're taking orders for the following week
+        const isFridayAfter9 = (dayOfWeek === 5 && hour >= 9);
+        const isWeekend = (dayOfWeek === 6 || dayOfWeek === 0);
+        
+        // Store is always open for ordering
         this.state.storeIsOpen = true;
+        
+        // This is just for reference, not for logic
+        this.state.orderingForFollowingWeek = isFridayAfter9 || isWeekend;
+      }
+
+      getOrderingWeekMonday() {
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+        
+        // Create a new date to avoid mutating
+        const monday = new Date(now);
+        
+        // Determine which Monday we're ordering for
+        if ((day === 5 && hour >= 9) || day === 6 || day === 0) {
+          // After Friday 9 AM or on weekend: get NEXT Monday
+          const daysUntilNextMonday = day === 0 ? 1 : (8 - day);
+          monday.setDate(monday.getDate() + daysUntilNextMonday);
+        } else {
+          // Monday-Thursday or Friday before 9 AM: get THIS Monday
+          const daysBackToMonday = day === 0 ? -6 : (1 - day);
+          monday.setDate(monday.getDate() + daysBackToMonday);
+        }
+        
+        monday.setHours(0, 0, 0, 0);
+        return monday;
+      }
+
+      getOrderWeekDescription() {
+        const monday = this.getOrderingWeekMonday();
+        const friday = new Date(monday);
+        friday.setDate(monday.getDate() + 4);
+        
+        const options = { month: 'short', day: 'numeric' };
+        const startStr = monday.toLocaleDateString('en-US', options);
+        const endStr = friday.toLocaleDateString('en-US', options);
+        
+        // Check if it's next week
+        const now = new Date();
+        const currentWeekMonday = this.getCurrentWeekMonday(now);
+        const isNextWeek = monday > currentWeekMonday;
+        
+        if (isNextWeek) {
+          return `📅 Ordering for NEXT WEEK: ${startStr} - ${endStr}`;
+        } else {
+          return `📅 Ordering for THIS WEEK: ${startStr} - ${endStr}`;
+        }
       }
 
       getCurrentWeekMonday(date) {
@@ -1412,7 +1468,8 @@
 
       // FIXED: Added date calculation function
       calculateDateForDay(dayName) {
-        const monday = this.state.currentWeekMonday;
+        // Use the ordering week Monday, not the state one
+        const monday = this.getOrderingWeekMonday();
         const dayIndex = this.constants.dayNames.findIndex(d => d === dayName);
         
         if (dayIndex === -1) {
@@ -1438,13 +1495,12 @@
         const currentMinutes = now.getMinutes();
         let firstAvailableDay = null;
 
-        let monday;
-        if (this.state.isNextWeek) {
-          monday = this.getNextMonday(now);
-        } else {
-          monday = this.getCurrentWeekMonday(now);
-        }
+        // Get the Monday we're ordering for
+        const monday = this.getOrderingWeekMonday();
         this.state.currentWeekMonday = monday;
+        
+        // Add week indicator to UI
+        this.updateWeekIndicator();
 
         this.constants.days.forEach((day, index) => {
           const date = new Date(monday);
@@ -1455,7 +1511,14 @@
 
           const isToday = dateOnly.getTime() === todayOnly.getTime();
           const isBeforeToday = dateOnly.getTime() < todayOnly.getTime();
-          const isPast = !this.state.isNextWeek && (isBeforeToday || (isToday && ((currentHour > 8) || (currentHour === 8 && currentMinutes >= 15))));
+          
+          // For dates in the ordering week, only disable if it's today and past 8:15 AM
+          let isPast = false;
+          if (isToday && ((currentHour > 8) || (currentHour === 8 && currentMinutes >= 15))) {
+            isPast = true;
+          }
+          // Don't disable future days in the ordering week, even if they're "before today"
+          // because we might be ordering for next week
 
           const tab = document.createElement('div');
           tab.className = 'day-tab';
@@ -1496,6 +1559,41 @@
           tabToActivate.classList.add('active');
           tabToActivate.setAttribute('aria-selected', 'true');
         }
+      }
+
+      updateWeekIndicator() {
+        const weekDescription = this.getOrderWeekDescription();
+        
+        // Check if indicator already exists
+        let indicator = document.getElementById('week-indicator');
+        
+        if (!indicator) {
+          // Create indicator element
+          indicator = document.createElement('div');
+          indicator.id = 'week-indicator';
+          indicator.style.cssText = `
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+            color: #92400e;
+            font-size: 1.1em;
+          `;
+          
+          // Insert after day tabs
+          const dayTabs = document.getElementById('day-tabs');
+          if (dayTabs && dayTabs.parentNode) {
+            dayTabs.parentNode.insertBefore(indicator, dayTabs.nextSibling);
+          }
+        }
+        
+        indicator.textContent = weekDescription;
+        
+        // Add animation for visibility
+        indicator.style.animation = 'pulse 2s ease-in-out';
       }
 
       generateMenus() {
@@ -2497,7 +2595,10 @@
         };
         
         const colorScheme = colors[type] || colors.info;
-        Object.assign(notification.style, colorScheme);
+        Object.assign(notification.style, {
+          background: colorScheme.bg,
+          color: colorScheme.color
+        });
         
         document.body.appendChild(notification);
         
@@ -2562,10 +2663,11 @@
       }
     }
 
+    // FIX 1: Make orderSystem globally accessible for cart remove button
     let orderSystem;
     document.addEventListener('DOMContentLoaded', () => {
-      ordersystem = window.orderSystem = new OrderSystem();
-      orderSystem.loadUserEmail(); // Auto-populate email and user data
+      orderSystem = window.orderSystem = new OrderSystem(); // Set both references
+      orderSystem.loadUserEmail();
     });
   </script>
 </body>
