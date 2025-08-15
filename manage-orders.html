@@ -916,7 +916,8 @@
             });
 
             // Sort dates
-            const sortedDates = Object.keys(itemsByDate).sort();
+       const sortedDates = Object.keys(itemsByDate)
+  .sort((a, b) => new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00'));
             
             let html = '';
             
