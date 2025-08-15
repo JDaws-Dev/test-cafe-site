@@ -1311,16 +1311,16 @@ for (let i = 1; i < data.length; i++) {
     const dayKey = itemDateOnly; // Use the clean date string
     if (!dailyRevenue[dayKey]) dailyRevenue[dayKey] = 0;
     
-    if (itemStatus === 'cancelled') {
-      // Handle refunds
-      const refundAmount = parseFloat(row[19]) || itemPrice; // Refund_Amount column (T)
-      totalRefunds += refundAmount;
-    } else {
-      // Active orders
-      grossRevenue += orderTotal;
-      totalDiscounts += orderDiscount;
-      totalOrders++;
-      dailyRevenue[dayKey] += orderTotal;
+if (itemStatus === 'cancelled') {
+  // Handle refunds
+  const refundAmount = parseFloat(row[19]) || itemPrice;
+  totalRefunds += refundAmount;
+} else {
+  // Active orders - use itemPrice, not orderTotal
+  grossRevenue += itemPrice;  // ✅ Fixed!
+  totalDiscounts += orderDiscount;
+  totalOrders++;
+  dailyRevenue[dayKey] += itemPrice;  // ✅ Fixed!
       
       // Analyze discount codes
       if (promoCode === 'STAFF2025') {
