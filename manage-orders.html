@@ -950,7 +950,7 @@
             else if (isPast) headerClass = 'past';
 
             let html = `
-                <div class="date-group" data-date="${dateStr}">
+                <div class="date-group collapsed" data-date="${dateStr}">
                     <div class="date-header ${headerClass}" onclick="toggleDateGroup('${dateStr}')">
                         <div class="date-info">
                             <span class="date-title">${dateDisplay}</span>
