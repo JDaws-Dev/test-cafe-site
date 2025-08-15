@@ -396,21 +396,28 @@
       generateBtn.disabled = true;
       generateBtn.textContent = '📧 Sending Report...';
       
-      // Prepare form data for submission
+      // Create form data for POST submission
       const form = document.getElementById('report-form');
       
-      // Remove existing admin_recipients hidden inputs
-      form.querySelectorAll('input[name="admin_recipients"][type="hidden"]').forEach(input => {
-        input.remove();
-      });
+      // Clear existing form content
+      form.innerHTML = '';
       
-      // Add checked recipients as comma-separated value
-      const recipients = Array.from(checkedBoxes).map(cb => cb.value).join(',');
-      const recipientInput = document.createElement('input');
-      recipientInput.type = 'hidden';
-      recipientInput.name = 'admin_recipients';
-      recipientInput.value = recipients;
-      form.appendChild(recipientInput);
+      // Add all required fields as hidden inputs
+      const fields = {
+        'action': 'generate_financial_report',
+        'secret': 'cafe2025',
+        'start_date': startDate,
+        'end_date': endDate,
+        'admin_recipients': Array.from(checkedBoxes).map(cb => cb.value).join(',')
+      };
+      
+      Object.keys(fields).forEach(key => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+      });
 
       // Show processing message
       showStatus('Generating and sending enhanced financial report...', 'info');
@@ -418,7 +425,7 @@
       // Submit the form to iframe
       form.submit();
 
-      // Simulate successful submission (since we can't detect iframe completion reliably)
+      // Wait longer and check if we can detect completion
       setTimeout(() => {
         generateBtn.disabled = false;
         generateBtn.textContent = '📊 Generate & Send Financial Report';
@@ -434,7 +441,10 @@
           : `${daysDiff}-day report (${startDate} to ${endDate})`;
         
         showStatus(`✅ Enhanced financial report sent successfully to ${recipientNames}!\n\nReport: ${reportDescription}\nIncludes: Revenue analysis, order analytics, Chick-fil-A breakdown, discount analysis, and business insights.`, 'success');
-      }, 3000);
+        
+        // Restore the form for next use
+        location.reload();
+      }, 5000);
     }
 
     function updateDateRangePreview() {
