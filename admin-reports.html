@@ -438,40 +438,41 @@
       generateAndSendReport();
     }
 
-    function updateDateRangePreview() {
-      const startDate = document.getElementById('start-date').value;
-      const endDate = document.getElementById('end-date').value;
-      const preview = document.getElementById('date-range-preview');
+function updateDateRangePreview() {
+  const startDate = document.getElementById('start-date').value;
+  const endDate = document.getElementById('end-date').value;
+  const preview = document.getElementById('date-range-preview');
+  
+  if (startDate && endDate) {
+    // Parse dates more carefully to avoid timezone issues
+    const start = new Date(startDate + 'T12:00:00'); // Add noon time to avoid timezone shifts
+    const end = new Date(endDate + 'T12:00:00');
+    
+    if (start > end) {
+      preview.textContent = 'End date must be after or same as start date';
+      preview.style.background = '#ffebee';
+      preview.style.borderColor = '#f44336';
+      preview.style.color = '#d32f2f';
+    } else {
+      const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        if (start > end) {
-          preview.textContent = 'End date must be after or same as start date';
-          preview.style.background = '#ffebee';
-          preview.style.borderColor = '#f44336';
-          preview.style.color = '#d32f2f';
-        } else {
-          const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-          const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          
-          if (daysDiff === 1) {
-            preview.textContent = `Single day report: ${startStr}`;
-          } else {
-            preview.textContent = `${daysDiff} days: ${startStr} to ${endStr}`;
-          }
-          
-          preview.style.background = 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)';
-          preview.style.borderColor = '#4caf50';
-          preview.style.color = '#2e7d32';
-        }
-        preview.style.display = 'block';
+      if (daysDiff === 1) {
+        preview.textContent = `Single day report: ${startStr}`;
       } else {
-        preview.style.display = 'none';
+        preview.textContent = `${daysDiff} days: ${startStr} to ${endStr}`;
       }
+      
+      preview.style.background = 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)';
+      preview.style.borderColor = '#4caf50';
+      preview.style.color = '#2e7d32';
     }
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
 
     function updateEmailCheckboxStyles() {
       document.querySelectorAll('.email-checkbox').forEach(checkboxDiv => {
