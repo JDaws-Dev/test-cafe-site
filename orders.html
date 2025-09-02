@@ -1492,78 +1492,73 @@
         return `${year}-${month}-${day}`;
       }
 
-      generateDayTabs() {
-        const tabsContainer = document.getElementById('day-tabs');
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinutes = now.getMinutes();
-        let firstAvailableDay = null;
+ generateDayTabs() {
+  const tabsContainer = document.getElementById('day-tabs');
+  const now = new Date();
+  let firstAvailableDay = null;
 
-        // Get the Monday we're ordering for
-        const monday = this.getOrderingWeekMonday();
-        this.state.currentWeekMonday = monday;
-        
-        // Add week indicator to UI
-        this.updateWeekIndicator();
+  // Get the Monday we're ordering for
+  const monday = this.getOrderingWeekMonday();
+  this.state.currentWeekMonday = monday;
+  
+  // Add week indicator to UI
+  this.updateWeekIndicator();
 
-        this.constants.days.forEach((day, index) => {
-          const date = new Date(monday);
-          date.setDate(monday.getDate() + index);
+  this.constants.days.forEach((day, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
 
-          const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-          const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Create cutoff time for this specific date (8:15 AM)
+    const cutoffTime = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      8, 15, 0, 0
+    );
 
-          const isToday = dateOnly.getTime() === todayOnly.getTime();
-          const isBeforeToday = dateOnly.getTime() < todayOnly.getTime();
-          
-          // For dates in the ordering week, only disable if it's today and past 8:15 AM
-          let isPast = false;
-          if (isToday && ((currentHour > 8) || (currentHour === 8 && currentMinutes >= 15))) {
-            isPast = true;
-          }
-          // Don't disable future days in the ordering week, even if they're "before today"
-          // because we might be ordering for next week
+    // Check if the cutoff time for this date has passed
+    const isPast = now > cutoffTime;
 
-          const tab = document.createElement('div');
-          tab.className = 'day-tab';
-          tab.dataset.day = day;
-          tab.setAttribute('role', 'tab');
-          tab.setAttribute('tabindex', isPast ? '-1' : '0');
+    const tab = document.createElement('div');
+    tab.className = 'day-tab';
+    tab.dataset.day = day;
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('tabindex', isPast ? '-1' : '0');
 
-          tab.innerHTML = `
-            <div>${this.constants.dayNames[index]}</div>
-            <div style="font-size: 0.8em; opacity: 0.8;">${date.getMonth() + 1}/${date.getDate()}</div>
-          `;
+    tab.innerHTML = `
+      <div>${this.constants.dayNames[index]}</div>
+      <div style="font-size: 0.8em; opacity: 0.8;">${date.getMonth() + 1}/${date.getDate()}</div>
+    `;
 
-          if (isPast) {
-            tab.classList.add('disabled');
-            tab.setAttribute('aria-disabled', 'true');
-            tab.title = `Orders for ${this.constants.dayNames[index]} are closed (8:00 AM cutoff passed)`;
-          } else {
-            tab.addEventListener('click', () => this.switchDay(day));
-            tab.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                this.switchDay(day);
-              }
-            });
-            if (!firstAvailableDay) {
-              firstAvailableDay = day;
-            }
-          }
-
-          tabsContainer.appendChild(tab);
-        });
-
-        const dayToActivate = firstAvailableDay || 'monday';
-        this.state.currentDay = dayToActivate;
-        
-        const tabToActivate = document.querySelector(`[data-day="${dayToActivate}"]`);
-        if (tabToActivate) {
-          tabToActivate.classList.add('active');
-          tabToActivate.setAttribute('aria-selected', 'true');
+    if (isPast) {
+      tab.classList.add('disabled');
+      tab.setAttribute('aria-disabled', 'true');
+      tab.title = `Orders for ${this.constants.dayNames[index]} are closed (8:15 AM cutoff passed)`;
+    } else {
+      tab.addEventListener('click', () => this.switchDay(day));
+      tab.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.switchDay(day);
         }
+      });
+      if (!firstAvailableDay) {
+        firstAvailableDay = day;
       }
+    }
+
+    tabsContainer.appendChild(tab);
+  });
+
+  const dayToActivate = firstAvailableDay || 'monday';
+  this.state.currentDay = dayToActivate;
+  
+  const tabToActivate = document.querySelector(`[data-day="${dayToActivate}"]`);
+  if (tabToActivate) {
+    tabToActivate.classList.add('active');
+    tabToActivate.setAttribute('aria-selected', 'true');
+  }
+}
 
       updateWeekIndicator() {
         const weekDescription = this.getOrderWeekDescription();
