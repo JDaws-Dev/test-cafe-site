@@ -1787,20 +1787,44 @@
        });
      }
 
-     async handleOrderSubmission(button) {
-       const originalText = button.textContent;
-       button.disabled = true;
-       button.textContent = '⏳ Submitting Order...';
-       
-       try {
-         await this.submitOrder();
-       } catch (error) {
-         console.error('Error in submitOrder:', error);
-         button.disabled = false;
-         button.textContent = originalText;
-         this.showNotification('Error submitting order. Please try again.', 'error');
-       }
-     }
+  async handleOrderSubmission(button) {
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = '⏳ Confirming Payment...';
+  
+  try {
+    const pendingOrderId = sessionStorage.getItem('pendingOrderId');
+    const pendingOrderEmail = sessionStorage.getItem('pendingOrderEmail');
+    
+    if (pendingOrderId && pendingOrderEmail) {
+      // Update existing order to PAID
+      const updateUrl = `${this.config.webAppUrl}?action=update_order_status&order_id=${pendingOrderId}&email=${encodeURIComponent(pendingOrderEmail)}&status=PAID`;
+      
+      const response = await fetch(updateUrl);
+      const result = await response.json();
+      
+      if (result.success) {
+        sessionStorage.removeItem('pendingOrderId');
+        sessionStorage.removeItem('pendingOrderEmail');
+        
+        this.closePaymentModal();
+        this.openConfirmationModal();
+        this.resetForm();
+      } else {
+        throw new Error(result.error || 'Failed to update order');
+      }
+    } else {
+      // Fallback to original behavior
+      await this.submitOrder();
+    }
+    
+  } catch (error) {
+    console.error('Error:', error);
+    button.disabled = false;
+    button.textContent = originalText;
+    this.showNotification('Error confirming payment. Please try again.', 'error');
+  }
+}
 
 
      saveUserDataToCookies(showIndicator = true) {
@@ -2368,20 +2392,70 @@
          
          const paymentDetails = `Pay @${VENMO_HANDLE} $${this.state.currentTotal.toFixed(2)} for: ${orderSummary}`;
          
-         venmoLink.onclick = (e) => {
-           e.preventDefault();
-           window.open(venmoWebUrl, '_blank');
-           
-           // Try to copy to clipboard
-           if (navigator.clipboard) {
-             navigator.clipboard.writeText(paymentDetails)
-               .then(() => this.showNotification('Payment details copied to clipboard!', 'success'))
-               .catch(() => alert(`Please send payment to:\n\n${paymentDetails}`));
-           } else {
-             alert(`Please send payment to:\n\n${paymentDetails}`);
-           }
-         };
-       }
+  // Find this line (around line 2784):
+venmoLink.onclick = (e) => {
+
+// Replace the entire onclick function with:
+venmoLink.onclick = async (e) => {
+  e.preventDefault();
+  
+  // Disable button and show loading
+  venmoLink.style.pointerEvents = 'none';
+  venmoLink.textContent = '⏳ Saving order...';
+  
+  try {
+    // Prepare order with PENDING status
+    const orderData = this.prepareOrderData();
+    orderData.paymentStatus = 'PENDING_PAYMENT';
+    orderData.paymentTimestamp = new Date().toISOString();
+    
+    // Save to Google Sheets
+    const response = await fetch(this.config.webAppUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Store for later
+      sessionStorage.setItem('pendingOrderId', orderData.orderId);
+      sessionStorage.setItem('pendingOrderEmail', orderData.parentEmail);
+      
+      // Update button appearance
+      venmoLink.style.background = '#4caf50';
+      venmoLink.innerHTML = '✓ Order Saved - Opening Venmo...';
+      
+      // Enable the "I've Paid" button
+      const confirmBtn = document.getElementById('confirm-payment-btn');
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = '1';
+      
+      // Open Venmo
+      setTimeout(() => {
+        if (isMobile) {
+          window.location.href = venmoDeepLink;
+        } else {
+          window.open(venmoWebUrl, '_blank');
+        }
+      }, 1000);
+      
+    } else {
+      throw new Error(result.error || 'Failed to save order');
+    }
+    
+  } catch (error) {
+    console.error('Error saving order:', error);
+    this.showNotification('Error saving order. Please try again.', 'error');
+    
+    // Re-enable button
+    venmoLink.style.pointerEvents = 'auto';
+    venmoLink.textContent = `💳 Pay with Venmo ($${this.state.currentTotal.toFixed(2)})`;
+  }
+};
        
        modal.classList.add('show');
        
