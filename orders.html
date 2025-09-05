@@ -2377,79 +2377,75 @@
        // Desktop web URL (for browser)
        const venmoWebUrl = `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${this.state.currentTotal.toFixed(2)}&note=${encodeURIComponent(orderSummary)}`;
        
-       // Detect mobile device
-       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-       
-       if (isMobile) {
-         // Mobile: Use deep link
-         venmoLink.href = venmoDeepLink;
-         venmoLink.removeAttribute('target');
-         venmoLink.onclick = null;
-       } else {
-         // Desktop: Use web URL with clipboard feature
-         venmoLink.href = venmoWebUrl;
-         venmoLink.target = '_blank';
-         
-         const paymentDetails = `Pay @${VENMO_HANDLE} $${this.state.currentTotal.toFixed(2)} for: ${orderSummary}`;
-         
+   // Detect mobile device
+const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+if (isMobile) {
+  // Mobile: Use deep link
+  venmoLink.href = venmoDeepLink;
+  venmoLink.removeAttribute('target');
+  venmoLink.onclick = null;
+} else {
+  // Desktop: Use web URL with clipboard feature
+  venmoLink.href = venmoWebUrl;
+  venmoLink.target = '_blank';
 
+  const paymentDetails = `Pay @${VENMO_HANDLE} $${this.state.currentTotal.toFixed(2)} for: ${orderSummary}`;
 
-venmoLink.onclick = async (e) => {
-  e.preventDefault();
+  venmoLink.onclick = async (e) => {
+    e.preventDefault();
+    venmoLink.style.pointerEvents = 'none';
+    venmoLink.textContent = '⏳ Saving order...';
+    try {
+      const orderData = this.prepareOrderData();
+      orderData.paymentStatus = 'PENDING_PAYMENT';
+      orderData.paymentTimestamp = new Date().toISOString();
 
-  // Disable button and show loading
-  venmoLink.style.pointerEvents = 'none';
-  venmoLink.textContent = '⏳ Saving order...';
+      const response = await fetch(this.config.webAppUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
+      });
 
-  try {
-    const orderData = this.prepareOrderData();
-    orderData.paymentStatus = 'PENDING_PAYMENT';
-    orderData.paymentTimestamp = new Date().toISOString();
+      const result = await response.json();
 
-    const response = await fetch(this.config.webAppUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
-    });
+      if (result.success) {
+        sessionStorage.setItem('pendingOrderId', orderData.orderId);
+        sessionStorage.setItem('pendingOrderEmail', orderData.parentEmail);
 
-    const result = await response.json();
+        venmoLink.style.background = '#4caf50';
+        venmoLink.innerHTML = '✓ Order Saved - Opening Venmo...';
 
-    if (result.success) {
-      sessionStorage.setItem('pendingOrderId', orderData.orderId);
-      sessionStorage.setItem('pendingOrderEmail', orderData.parentEmail);
+        const confirmBtn = document.getElementById('confirm-payment-btn');
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = '1';
 
-      venmoLink.style.background = '#4caf50';
-      venmoLink.innerHTML = '✓ Order Saved - Opening Venmo...';
-
-      const confirmBtn = document.getElementById('confirm-payment-btn');
-      confirmBtn.disabled = false;
-      confirmBtn.style.opacity = '1';
-
-      setTimeout(() => {
-        if (isMobile) {
-          window.location.href = venmoDeepLink;
-        } else {
-          window.open(venmoWebUrl, '_blank');
-        }
-      }, 1000);
-    } else {
-      throw new Error(result.error || 'Failed to save order');
+        setTimeout(() => {
+          if (isMobile) {
+            window.location.href = venmoDeepLink;
+          } else {
+            window.open(venmoWebUrl, '_blank');
+          }
+        }, 1000);
+      } else {
+        throw new Error(result.error || 'Failed to save order');
+      }
+    } catch (err) {
+      console.error('Error saving order:', err);
+      this.showNotification('Error saving order. Please try again.', 'error');
+      venmoLink.style.pointerEvents = 'auto';
+      venmoLink.textContent = `💳 Pay with Venmo ($${this.state.currentTotal.toFixed(2)})`;
     }
-  } catch (err) {
-    console.error('Error saving order:', err);
-    this.showNotification('Error saving order. Please try again.', 'error');
-    venmoLink.style.pointerEvents = 'auto';
-    venmoLink.textContent = `💳 Pay with Venmo ($${this.state.currentTotal.toFixed(2)})`;
-  }
-};
-       
-       modal.classList.add('show');
-       
-       // Focus management
-       const focusable = modal.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
-       if (focusable.length) focusable[0].focus();
-     }
+  };
+} // <-- this closes the else block
+
+// Now run for both mobile and desktop
+modal.classList.add('show');
+
+// Focus management
+const focusable = modal.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+if (focusable.length) focusable[0].focus();
+} // <-- this closes openPaymentModal()
 
      closePaymentModal() {
        document.getElementById('payment-modal')?.classList.remove('show');
