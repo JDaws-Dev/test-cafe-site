@@ -9,18 +9,6 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      // Update task counts
-      const tasksDiv = document.getElementById('tasks-summary');
-      const chickfilaCountSpan = document.getElementById('chickfila-count');
-      const artiosCountSpan = document.getElementById('artios-count');
-      
-      if (chickFilATotal > 0 || Object.keys(artiosItems).length > 0) {
-        chickfilaCountSpan.textContent = chickFilATotal;
-        artiosCountSpan.textContent = Object.values(artiosItems).reduce((sum, count) => sum + count, 0);
-        tasksDiv.style.display = 'block';
-      } else {
-        tasksDiv.style.display = 'none';
-      }
     }
 
     body {
@@ -309,6 +297,11 @@
       opacity: 0.8;
     }
 
+    .student-item.updating {
+      background: #fff3e0;
+      pointer-events: none;
+    }
+
     .student-checkbox {
       width: 24px;
       height: 24px;
@@ -424,6 +417,29 @@
       font-size: 4em;
       margin-bottom: 20px;
       opacity: 0.3;
+    }
+
+    /* Notification Toast */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s ease;
+      z-index: 10000;
+      font-weight: 600;
+    }
+
+    .notification.error {
+      background: #f44336;
+    }
+
+    .notification.fadeout {
+      animation: fadeOut 0.3s ease forwards;
     }
 
     /* Mobile Responsive */
@@ -652,24 +668,34 @@
         if (data.success) {
           allOrders = data.orders || [];
           
-          // Load saved delivery status from localStorage
-          const savedStatus = localStorage.getItem(`delivered_${dateInput}`);
-          if (savedStatus) {
-            deliveredOrders = new Set(JSON.parse(savedStatus));
-          } else {
-            deliveredOrders = new Set();
-          }
+          // Load saved delivery status from the database
+          await loadDeliveryStatus();
           
           displayOrders();
           updateSummary();
           updateChickFilASummary();
         } else {
-          showError('Failed to load orders');
+          showError('Failed to load orders: ' + (data.error || 'Unknown error'));
         }
       } catch (error) {
         console.error('Error loading orders:', error);
         showError('Network error. Please check your connection.');
       }
+    }
+
+    async function loadDeliveryStatus() {
+      // Reset delivered orders
+      deliveredOrders = new Set();
+      
+      // Check which orders are already marked as distributed in the database
+      allOrders.forEach(order => {
+        if (order.distributed === true) {
+          const studentKey = `${order.orderId}_${order.childId}`;
+          deliveredOrders.add(studentKey);
+        }
+      });
+      
+      console.log('Loaded delivery status from database:', Array.from(deliveredOrders));
     }
 
     function displayOrders() {
@@ -730,12 +756,12 @@
             <input type="checkbox" 
                    class="student-checkbox" 
                    ${isDelivered ? 'checked' : ''}
-                   onchange="toggleDelivered('${studentKey}')">
+                   onchange="toggleDelivered('${studentKey}', '${student.orderId}', '${student.childId}')">
             <div class="student-info">
               <div class="student-name">${student.name}</div>
               <div class="student-grade">${student.grade}</div>
               <div class="student-items">${student.items.join(' + ')}</div>
-              <div class="student-total">${student.total.toFixed(2)}</div>
+              <div class="student-total">$${student.total.toFixed(2)}</div>
             </div>
           </div>
         `;
@@ -744,28 +770,60 @@
       container.innerHTML = html || '<div class="empty-state">No orders match the current filter.</div>';
     }
 
-    function toggleDelivered(studentKey) {
-      const dateInput = document.getElementById('date-input').value;
+    async function toggleDelivered(studentKey, orderId, childId) {
+      console.log('Toggling delivery status:', { studentKey, orderId, childId });
       
-      if (deliveredOrders.has(studentKey)) {
-        deliveredOrders.delete(studentKey);
-      } else {
-        deliveredOrders.add(studentKey);
-      }
-      
-      // Save to localStorage
-      localStorage.setItem(`delivered_${dateInput}`, JSON.stringify(Array.from(deliveredOrders)));
-      
-      // Update display
+      // Get the checkbox and student item
+      const checkbox = document.querySelector(`[data-student="${studentKey}"] .student-checkbox`);
       const studentItem = document.querySelector(`[data-student="${studentKey}"]`);
-      if (studentItem) {
-        studentItem.classList.toggle('delivered');
+      
+      if (!checkbox || !studentItem) {
+        console.error('Could not find checkbox or student item');
+        return;
       }
       
-      updateSummary();
+      const isNowDelivered = checkbox.checked;
       
-      // Also save to Google Sheets (optional - for persistence across devices)
-      // This would require adding the update_distribution endpoint to Code.gs
+      // Add visual feedback
+      studentItem.classList.add('updating');
+      
+      try {
+        // Update the database
+        const response = await fetch(`${API_URL}?action=update_distribution&order_id=${encodeURIComponent(orderId)}&child_id=${encodeURIComponent(childId)}&distributed=${isNowDelivered}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          // Update local state
+          if (isNowDelivered) {
+            deliveredOrders.add(studentKey);
+            studentItem.classList.add('delivered');
+          } else {
+            deliveredOrders.delete(studentKey);
+            studentItem.classList.remove('delivered');
+          }
+          
+          // Update summary
+          updateSummary();
+          
+          // Show success notification
+          showNotification(`${isNowDelivered ? 'Marked as delivered' : 'Marked as pending'}`, 'success');
+          
+          console.log('Successfully updated delivery status in database');
+        } else {
+          // Revert checkbox on error
+          checkbox.checked = !isNowDelivered;
+          showNotification('Failed to update delivery status: ' + (result.error || 'Unknown error'), 'error');
+          console.error('Database update failed:', result.error);
+        }
+      } catch (error) {
+        // Revert checkbox on error
+        checkbox.checked = !isNowDelivered;
+        showNotification('Network error updating delivery status', 'error');
+        console.error('Network error:', error);
+      } finally {
+        // Remove visual feedback
+        studentItem.classList.remove('updating');
+      }
     }
 
     function updateSummary() {
@@ -848,6 +906,27 @@
           <button class="refresh-btn" onclick="loadOrders()" style="margin-top: 20px;">Try Again</button>
         </div>
       `;
+    }
+
+    function showNotification(message, type = 'success') {
+      // Remove any existing notifications
+      const existing = document.querySelector('.notification');
+      if (existing) {
+        existing.remove();
+      }
+      
+      // Create new notification
+      const notification = document.createElement('div');
+      notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        notification.classList.add('fadeout');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
     }
   </script>
 </body>
