@@ -9,6 +9,18 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      // Update task counts
+      const tasksDiv = document.getElementById('tasks-summary');
+      const chickfilaCountSpan = document.getElementById('chickfila-count');
+      const artiosCountSpan = document.getElementById('artios-count');
+      
+      if (chickFilATotal > 0 || Object.keys(artiosItems).length > 0) {
+        chickfilaCountSpan.textContent = chickFilATotal;
+        artiosCountSpan.textContent = Object.values(artiosItems).reduce((sum, count) => sum + count, 0);
+        tasksDiv.style.display = 'block';
+      } else {
+        tasksDiv.style.display = 'none';
+      }
     }
 
     body {
