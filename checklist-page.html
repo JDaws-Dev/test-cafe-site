@@ -677,7 +677,7 @@
       // Group orders by student
       const studentOrders = {};
       allOrders.forEach(order => {
-        const key = `${order.childName}_${order.childId}`;
+        const key = `${order.childName}_${order.childId}_${order.orderId}`;
         if (!studentOrders[key]) {
           studentOrders[key] = {
             name: order.childName,
@@ -699,11 +699,15 @@
         a.lastName.localeCompare(b.lastName)
       );
       
+      console.log('Sorted students:', sortedStudents);
+      
       // Build HTML
       let html = '';
       sortedStudents.forEach(student => {
         const studentKey = `${student.orderId}_${student.childId}`;
         const isDelivered = deliveredOrders.has(studentKey);
+        
+        console.log('Student:', student.name, 'Key:', studentKey, 'Delivered:', isDelivered);
         
         // Apply filter
         if (currentFilter === 'delivered' && !isDelivered) return;
@@ -719,7 +723,7 @@
               <div class="student-name">${student.name}</div>
               <div class="student-grade">${student.grade}</div>
               <div class="student-items">${student.items.join(' + ')}</div>
-              <div class="student-total">$${student.total.toFixed(2)}</div>
+              <div class="student-total">${student.total.toFixed(2)}</div>
             </div>
           </div>
         `;
