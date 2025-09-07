@@ -17,28 +17,6 @@
       min-height: 100vh;
       color: #333;
     }
-    
-    /* Animation for temporary messages */
-    @keyframes slideIn {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-    
-    @keyframes fadeOut {
-      from {
-        opacity: 1;
-      }
-      to {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-    }
 
     /* Login Screen */
     .login-container {
@@ -112,10 +90,10 @@
       display: none;
     }
 
-    /* Main Checklist Interface */
+    /* Main Interface */
     .checklist-container {
       display: none;
-      max-width: 1400px;
+      max-width: 100%;
       margin: 0 auto;
       background: white;
       min-height: 100vh;
@@ -124,7 +102,7 @@
     .checklist-header {
       background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
       color: white;
-      padding: 20px 30px;
+      padding: 15px 20px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
@@ -132,86 +110,91 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     .header-title {
-      font-size: 1.8em;
+      font-size: 1.4em;
       font-weight: 700;
-    }
-
-    .header-date {
-      font-size: 1.2em;
-      opacity: 0.95;
     }
 
     .logout-btn {
       background: rgba(255,255,255,0.2);
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.3s ease;
+      font-size: 14px;
     }
 
-    .logout-btn:hover {
-      background: rgba(255,255,255,0.3);
+    .header-date {
+      font-size: 1em;
+      opacity: 0.95;
     }
 
-    /* Summary Section */
+    /* Summary Section - Mobile First */
     .summary-section {
       background: #fff3e0;
       border: 2px solid #ff9800;
       border-radius: 12px;
-      padding: 20px;
-      margin: 20px;
+      padding: 15px;
+      margin: 15px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
     }
 
     .summary-card {
       text-align: center;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
     }
 
     .summary-label {
       color: #f57c00;
-      font-size: 0.9em;
+      font-size: 0.75em;
       font-weight: 600;
       text-transform: uppercase;
       margin-bottom: 5px;
     }
 
     .summary-value {
-      font-size: 2em;
+      font-size: 1.8em;
       font-weight: 700;
       color: #333;
     }
 
-    /* Controls Section */
+    /* Controls - Mobile Optimized */
     .controls-section {
-      padding: 20px;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      align-items: center;
+      padding: 15px;
       background: #f8f9fa;
       border-bottom: 2px solid #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
 
-    .date-selector {
+    .date-row {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 10px;
     }
 
-    .date-input {
-      padding: 10px 15px;
+    .date-label {
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .date-input, .refresh-btn, .print-btn {
+      width: 100%;
+      padding: 12px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
       font-size: 16px;
+      font-weight: 600;
     }
 
     .date-input:focus {
@@ -222,11 +205,7 @@
     .refresh-btn, .print-btn {
       background: white;
       color: #333;
-      border: 2px solid #e0e0e0;
-      padding: 10px 20px;
-      border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
       transition: all 0.3s ease;
     }
 
@@ -237,18 +216,19 @@
 
     .filter-buttons {
       display: flex;
-      gap: 10px;
-      margin-left: auto;
+      gap: 8px;
     }
 
     .filter-btn {
+      flex: 1;
       background: white;
       color: #666;
       border: 2px solid #e0e0e0;
-      padding: 8px 16px;
+      padding: 12px 8px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
+      font-size: 14px;
       transition: all 0.3s ease;
     }
 
@@ -258,186 +238,87 @@
       border-color: #ff9800;
     }
 
-    /* Orders Section */
-    .orders-section {
-      padding: 20px;
-    }
-
-    .section-title {
-      font-size: 1.3em;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #ff9800;
-    }
-
-    /* Chick-fil-A Order Summary */
-    .chickfila-summary {
+    /* Order Summaries - Simplified for Mobile */
+    .order-summary {
       background: #e3f2fd;
       border: 2px solid #2196f3;
       border-radius: 12px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-
-    .chickfila-title {
-      color: #1976d2;
-      font-size: 1.3em;
-      font-weight: 700;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-
-    .chickfila-content {
-      background: white;
       padding: 15px;
+      margin: 15px;
+    }
+
+    .summary-title {
+      color: #1976d2;
+      font-size: 1.1em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .summary-content {
+      background: white;
+      padding: 12px;
       border-radius: 8px;
     }
 
-    .category-section {
-      margin-bottom: 20px;
-    }
-
-    .category-header {
-      font-weight: 700;
-      color: #1976d2;
-      margin-bottom: 10px;
-      font-size: 1.1em;
-    }
-
-    .category-items {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 8px;
-      margin-bottom: 15px;
-    }
-
     .category-item {
-      background: #f8f9fa;
-      padding: 8px 12px;
-      border-radius: 6px;
-      border-left: 4px solid #2196f3;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #2196f3;
     }
 
     .item-name {
       font-weight: 500;
+      font-size: 14px;
     }
 
     .item-count {
       font-weight: 700;
       color: #1976d2;
       background: white;
-      padding: 2px 8px;
+      padding: 4px 8px;
       border-radius: 12px;
       min-width: 30px;
       text-align: center;
+      font-size: 14px;
     }
 
-    .chickfila-total {
+    .summary-total {
       font-weight: 700;
-      font-size: 1.2em;
       text-align: center;
       margin-top: 15px;
-      padding: 15px;
+      padding: 12px;
       background: #1976d2;
       color: white;
       border-radius: 8px;
+      font-size: 1em;
     }
 
-    /* Artios Items Summary */
-    .artios-summary {
-      background: #fff3e0;
-      border: 2px solid #ff9800;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-
-    .artios-title {
-      color: #f57c00;
-      font-size: 1.3em;
+    /* Student Checklist - Completely Mobile Optimized */
+    .section-title {
+      font-size: 1.2em;
       font-weight: 700;
-      margin-bottom: 15px;
-      text-align: center;
+      color: #333;
+      margin: 20px 15px 15px 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ff9800;
     }
 
-    .artios-content {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-    }
-
-    .artios-item {
-      background: #fff8e1;
-      padding: 8px 12px;
-      border-radius: 6px;
-      border-left: 4px solid #ff9800;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    /* Tasks Summary */
-    .tasks-summary {
-      background: #ffebee;
-      border: 2px solid #f44336;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-
-    .tasks-title {
-      color: #d32f2f;
-      font-size: 1.3em;
-      font-weight: 700;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-
-    .tasks-content {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-    }
-
-    .task-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .task-item {
-      background: #fff5f5;
-      padding: 12px 15px;
-      border-radius: 6px;
-      border-left: 4px solid #f44336;
-      margin-bottom: 10px;
-      font-size: 1.1em;
-      line-height: 1.5;
-    }
-
-    .task-number {
-      font-weight: 700;
-      color: #d32f2f;
-    }
-
-    /* Student Checklist */
     .student-checklist {
       background: white;
+      margin: 0 15px 15px 15px;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .student-item {
-      display: flex;
-      align-items: center;
-      padding: 15px 20px;
+      padding: 20px;
       border-bottom: 1px solid #e0e0e0;
       transition: background 0.2s ease;
     }
@@ -456,59 +337,81 @@
       pointer-events: none;
     }
 
+    .student-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .student-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
     .student-checkbox {
       width: 24px;
       height: 24px;
-      margin-right: 20px;
       cursor: pointer;
       accent-color: #4caf50;
-    }
-
-    .student-info {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 200px 100px 1fr 100px;
-      gap: 20px;
-      align-items: center;
+      flex-shrink: 0;
     }
 
     .student-name {
-      font-weight: 600;
+      font-weight: 700;
       color: #333;
-      font-size: 1.05em;
+      font-size: 1.2em;
+      flex: 1;
+    }
+
+    .student-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-left: 39px; /* Align with checkbox */
     }
 
     .student-grade {
-      color: #666;
-      font-size: 0.9em;
       background: #f0f0f0;
+      color: #666;
       padding: 4px 12px;
       border-radius: 12px;
-      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      width: fit-content;
     }
 
     .student-items {
-      color: #495057;
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 4px solid #ff9800;
+      font-weight: 500;
+      color: #555;
     }
 
     .student-total {
-      font-weight: 700;
+      background: #e8f5e8;
       color: #28a745;
-      text-align: right;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 700;
       font-size: 1.1em;
+      text-align: center;
+      width: fit-content;
     }
 
-    /* Loading State */
-    .loading {
+    /* Loading and Empty States */
+    .loading, .empty-state {
       text-align: center;
-      padding: 40px;
+      padding: 40px 20px;
       color: #666;
     }
 
     .loading-spinner {
       display: inline-block;
-      width: 30px;
-      height: 30px;
+      width: 25px;
+      height: 25px;
       border: 3px solid #f3f3f3;
       border-top: 3px solid #ff9800;
       border-radius: 50%;
@@ -521,324 +424,123 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #666;
-    }
-
     .empty-icon {
-      font-size: 4em;
-      margin-bottom: 20px;
+      font-size: 3em;
+      margin-bottom: 15px;
       opacity: 0.3;
     }
 
-    /* Notification Toast */
+    /* Notifications */
     .notification {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      top: 10px;
+      left: 10px;
+      right: 10px;
       background: #4caf50;
       color: white;
-      padding: 15px 20px;
+      padding: 15px;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      animation: slideIn 0.3s ease;
       z-index: 10000;
       font-weight: 600;
+      text-align: center;
     }
 
     .notification.error {
       background: #f44336;
     }
 
-    .notification.fadeout {
-      animation: fadeOut 0.3s ease forwards;
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-      .login-box {
-        padding: 30px 20px;
-        margin: 10px;
-      }
-
+    /* Desktop Adjustments */
+    @media (min-width: 768px) {
       .checklist-header {
-        padding: 15px 20px;
-      }
-
-      .header-top {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
+        padding: 20px 30px;
       }
 
       .header-title {
-        font-size: 1.5rem;
-      }
-
-      .header-date {
-        font-size: 1rem;
-      }
-
-      .logout-btn {
-        align-self: center;
-        padding: 8px 16px;
-        font-size: 14px;
-      }
-
-      /* Summary cards - stack vertically on mobile */
-      .summary-section {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin: 15px;
-        padding: 15px;
-      }
-
-      .summary-value {
-        font-size: 1.5em;
-      }
-
-      .summary-label {
-        font-size: 0.8em;
-      }
-
-      /* Controls section - stack vertically */
-      .controls-section {
-        flex-direction: column;
-        gap: 15px;
-        padding: 15px;
-      }
-
-      .date-selector {
-        flex-direction: column;
-        gap: 10px;
-        align-items: stretch;
-      }
-
-      .date-selector label {
-        text-align: center;
-        font-weight: 600;
-      }
-
-      .date-input, .refresh-btn, .print-btn {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-      }
-
-      .filter-buttons {
-        margin-left: 0;
-        justify-content: space-between;
-        gap: 8px;
-      }
-
-      .filter-btn {
-        flex: 1;
-        padding: 10px 8px;
-        font-size: 14px;
-      }
-
-      /* Orders section */
-      .orders-section {
-        padding: 15px;
-      }
-
-      .section-title {
-        font-size: 1.2em;
-        margin-bottom: 15px;
-      }
-
-      /* Chick-fil-A and Artios summaries - mobile friendly */
-      .chickfila-summary, .artios-summary, .tasks-summary {
-        margin: 15px 0;
-        padding: 15px;
-      }
-
-      .chickfila-title, .artios-title, .tasks-title {
-        font-size: 1.1em;
-        margin-bottom: 12px;
-      }
-
-      .chickfila-content, .artios-content, .tasks-content {
-        padding: 12px;
-      }
-
-      .category-header {
-        font-size: 1em;
-        margin-bottom: 8px;
-      }
-
-      /* Stack category items vertically on mobile */
-      .category-items {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-
-      .category-item, .artios-item {
-        padding: 10px 12px;
-        font-size: 14px;
-      }
-
-      .item-count {
-        font-size: 14px;
-        padding: 3px 8px;
-      }
-
-      .chickfila-total {
-        font-size: 1em;
-        padding: 12px;
-      }
-
-      /* Task list mobile friendly */
-      .task-item {
-        padding: 10px 12px;
-        font-size: 14px;
-        line-height: 1.4;
-      }
-
-      /* Student checklist - completely redesigned for mobile */
-      .student-item {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 15px;
-        gap: 10px;
-      }
-
-      .student-checkbox {
-        width: 20px;
-        height: 20px;
-        margin: 0 auto 10px auto;
-        display: block;
-      }
-
-      .student-info {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        text-align: center;
-      }
-
-      .student-name {
-        font-size: 1.2em;
-        font-weight: 700;
-        color: #333;
-        border-bottom: 2px solid #f0f0f0;
-        padding-bottom: 8px;
-      }
-
-      .student-grade {
-        font-size: 16px;
-        font-weight: 600;
-        padding: 6px 12px;
-        margin: 0 auto;
-        width: fit-content;
-      }
-
-      .student-items {
-        font-size: 15px;
-        font-weight: 500;
-        color: #555;
-        background: #f8f9fa;
-        padding: 10px;
-        border-radius: 6px;
-        border-left: 4px solid #ff9800;
-      }
-
-      .student-total {
-        font-size: 1.3em;
-        font-weight: 700;
-        color: #28a745;
-        background: #e8f5e8;
-        padding: 8px;
-        border-radius: 6px;
-      }
-
-      /* Loading and empty states */
-      .loading, .empty-state {
-        padding: 30px 15px;
-      }
-
-      .loading-spinner {
-        width: 25px;
-        height: 25px;
-      }
-
-      .empty-icon {
-        font-size: 3em;
-      }
-
-      /* Notification positioning */
-      .notification {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-        font-size: 14px;
-      }
-    }
-
-    /* Very small screens */
-    @media (max-width: 480px) {
-      .summary-section {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .summary-value {
         font-size: 1.8em;
       }
 
+      .header-date {
+        font-size: 1.2em;
+      }
+
+      .summary-section {
+        grid-template-columns: repeat(3, 1fr);
+        margin: 20px;
+        padding: 20px;
+      }
+
+      .controls-section {
+        flex-direction: row;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .date-row {
+        flex-direction: row;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .date-input, .refresh-btn, .print-btn {
+        width: auto;
+        min-width: 120px;
+      }
+
       .filter-buttons {
-        flex-direction: column;
-        gap: 8px;
+        margin-left: auto;
       }
 
       .filter-btn {
-        padding: 12px;
+        flex: none;
+        padding: 8px 16px;
       }
 
-      .student-name {
-        font-size: 1.1em;
+      .student-item {
+        padding: 15px 20px;
+      }
+
+      .student-content {
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .student-header {
+        flex: none;
+        width: 300px;
+      }
+
+      .student-details {
+        flex: 1;
+        flex-direction: row;
+        align-items: center;
+        margin-left: 0;
+        gap: 20px;
       }
 
       .student-total {
-        font-size: 1.2em;
+        margin-left: auto;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .summary-section {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .checklist-container {
+        max-width: 1400px;
+        margin: 0 auto;
       }
     }
 
     /* Print Styles */
     @media print {
-      body {
-        background: white;
-      }
-
-      .checklist-header {
-        background: none;
-        color: black;
-        border-bottom: 2px solid black;
-      }
-
-      .controls-section,
-      .logout-btn {
-        display: none;
-      }
-
-      .student-item {
-        page-break-inside: avoid;
-      }
-
-      .student-checkbox {
-        border: 2px solid black;
-        width: 20px;
-        height: 20px;
-      }
-
-      .chickfila-summary,
-      .artios-summary,
-      .tasks-summary {
-        page-break-inside: avoid;
-      }
+      body { background: white; }
+      .checklist-header { background: none; color: black; }
+      .controls-section, .logout-btn { display: none; }
+      .student-checkbox { border: 2px solid black; }
     }
   </style>
 </head>
@@ -865,14 +567,14 @@
     </div>
   </div>
 
-  <!-- Main Checklist Interface -->
+  <!-- Main Interface -->
   <div class="checklist-container" id="checklist-screen">
     <div class="checklist-header">
       <div class="header-top">
         <h1 class="header-title">📋 Daily Food Orders</h1>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
-      <div class="header-date" id="header-date">Loading...</div>
+      <div class="header-date" id="header-date">Today</div>
     </div>
 
     <!-- Summary Cards -->
@@ -905,13 +607,12 @@
 
     <!-- Controls -->
     <div class="controls-section">
-      <div class="date-selector">
-        <label for="date-input">Date:</label>
+      <div class="date-row">
+        <div class="date-label">Date:</div>
         <input type="date" id="date-input" class="date-input">
         <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh</button>
+        <button class="print-btn" onclick="window.print()">🖨️ Print</button>
       </div>
-      
-      <button class="print-btn" onclick="window.print()">🖨️ Print</button>
       
       <div class="filter-buttons">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
@@ -920,47 +621,29 @@
       </div>
     </div>
 
-    <!-- Orders Section -->
-    <div class="orders-section">
-      <!-- Chick-fil-A Order Summary -->
-      <div class="chickfila-summary" id="chickfila-summary" style="display: none;">
-        <div class="chickfila-title">🐔 CHICK-FIL-A ORDER</div>
-        <div class="chickfila-content" id="chickfila-content">
-          <!-- Will be populated by JavaScript -->
-        </div>
-      </div>
+    <!-- Order Summaries -->
+    <div class="order-summary" id="chickfila-summary" style="display: none;">
+      <div class="summary-title">🐔 CHICK-FIL-A ORDER</div>
+      <div class="summary-content" id="chickfila-content"></div>
+    </div>
 
-      <!-- Artios Items Summary -->
-      <div class="artios-summary" id="artios-summary" style="display: none;">
-        <div class="artios-title">🏫 ARTIOS CAFE ITEMS TO PREPARE</div>
-        <div class="artios-content" id="artios-content">
-          <!-- Will be populated by JavaScript -->
-        </div>
-      </div>
+    <div class="order-summary" id="artios-summary" style="display: none;">
+      <div class="summary-title">🏫 ARTIOS ITEMS</div>
+      <div class="summary-content" id="artios-content"></div>
+    </div>
 
-      <!-- Today's Tasks -->
-      <div class="tasks-summary" id="tasks-summary" style="display: none;">
-        <div class="tasks-title">✅ TODAY'S TASKS</div>
-        <div class="tasks-content">
-          <ol class="task-list" id="task-list">
-            <!-- Will be populated by JavaScript -->
-          </ol>
-        </div>
-      </div>
-
-      <!-- Student Checklist -->
-      <div class="section-title">Student Distribution Checklist</div>
-      <div class="student-checklist" id="student-checklist">
-        <div class="loading">
-          <span class="loading-spinner"></span>
-          Loading orders...
-        </div>
+    <!-- Student Checklist -->
+    <div class="section-title">Student Distribution Checklist</div>
+    <div class="student-checklist" id="student-checklist">
+      <div class="loading">
+        <span class="loading-spinner"></span>
+        Loading orders...
       </div>
     </div>
   </div>
 
   <script>
-    // Configuration
+    // Configuration - USING CORRECT URL FROM login.html
     const CAFE_PASSWORD = 'cafe2025';
     const API_URL = 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec';
     
@@ -968,28 +651,23 @@
     let allOrders = [];
     let deliveredOrders = new Set();
 
-    // Check if already logged in
     document.addEventListener('DOMContentLoaded', function() {
-      const isLoggedIn = sessionStorage.getItem('cafe_logged_in');
-      if (isLoggedIn === 'true') {
-        showChecklist();
-      }
-      
       // Set today's date
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('date-input').value = today;
       
-      // Add date change listener
-      document.getElementById('date-input').addEventListener('change', function() {
-        if (sessionStorage.getItem('cafe_logged_in') === 'true') {
-          loadOrders();
-        }
-      });
+      // Auto-load when date changes
+      document.getElementById('date-input').addEventListener('change', loadOrders);
       
-      // Enter key on password field
+      // Enter key on password
       document.getElementById('password-input').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') login();
       });
+
+      // Check if already logged in
+      if (sessionStorage.getItem('cafe_logged_in') === 'true') {
+        showChecklist();
+      }
     });
 
     function login() {
@@ -1012,44 +690,36 @@
     function showChecklist() {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('checklist-screen').style.display = 'block';
-      
-      // Load orders immediately when checklist is shown
-      loadOrders();
+      loadOrders(); // Load immediately
     }
 
     async function loadOrders() {
       const dateInput = document.getElementById('date-input').value;
-      if (!dateInput) {
-        console.log('No date selected');
-        return;
-      }
+      if (!dateInput) return;
       
-      console.log('Loading orders for date:', dateInput);
+      console.log('Loading orders for:', dateInput);
       
-      // Update header date
+      // Update header
       const date = new Date(dateInput + 'T12:00:00');
       const dateStr = date.toLocaleDateString('en-US', { 
         weekday: 'long', 
-        year: 'numeric', 
         month: 'long', 
-        day: 'numeric' 
+        day: 'numeric',
+        year: 'numeric'
       });
       document.getElementById('header-date').textContent = dateStr;
       
-      // Show loading
-      document.getElementById('student-checklist').innerHTML = `
-        <div class="loading">
-          <span class="loading-spinner"></span>
-          Loading orders for ${dateStr}...
-        </div>
-      `;
+      // Show loading immediately
+      showLoading();
       
       try {
-        // Fetch orders from Google Sheets
-        const response = await fetch(`${API_URL}?action=get_daily_orders&date=${dateInput}`);
+        const response = await fetch(`${API_URL}?action=get_daily_orders&date=${dateInput}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(`HTTP ${response.status}`);
         }
         
         const data = await response.json();
@@ -1059,37 +729,39 @@
           allOrders = data.orders || [];
           console.log('Loaded orders:', allOrders.length);
           
-          // Load saved delivery status from the database
-          await loadDeliveryStatus();
-          
-          displayOrders();
-          updateSummary();
-          updateChickFilASummary();
-          updateArtiosSummary();
-          updateTasksSummary();
+          loadDeliveryStatus();
+          displayAll();
         } else {
-          console.error('API returned error:', data.error);
-          showError('Failed to load orders: ' + (data.error || 'Unknown error'));
+          showError('No orders found for this date');
         }
       } catch (error) {
-        console.error('Error loading orders:', error);
-        showError('Network error. Please check your connection and try again.');
+        console.error('Error:', error);
+        showError('Unable to load orders. Check connection and try again.');
       }
     }
 
-    async function loadDeliveryStatus() {
-      // Reset delivered orders
+    function showLoading() {
+      document.getElementById('student-checklist').innerHTML = `
+        <div class="loading">
+          <span class="loading-spinner"></span>
+          Loading orders...
+        </div>
+      `;
+    }
+
+    function loadDeliveryStatus() {
       deliveredOrders = new Set();
-      
-      // Check which orders are already marked as distributed in the database
       allOrders.forEach(order => {
         if (order.distributed === true) {
-          const studentKey = `${order.orderId}_${order.childId}`;
-          deliveredOrders.add(studentKey);
+          deliveredOrders.add(`${order.orderId}_${order.childId}`);
         }
       });
-      
-      console.log('Loaded delivery status from database:', Array.from(deliveredOrders));
+    }
+
+    function displayAll() {
+      displayOrders();
+      updateSummary();
+      updateOrderSummaries();
     }
 
     function displayOrders() {
@@ -1099,22 +771,21 @@
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">📭</div>
-            <h3>No Orders for This Date</h3>
-            <p>There are no lunch orders scheduled for this day.</p>
+            <h3>No Orders</h3>
+            <p>No lunch orders for this date.</p>
           </div>
         `;
         return;
       }
       
-      // Group orders by student
+      // Group by student
       const studentOrders = {};
       allOrders.forEach(order => {
         const key = `${order.childName}_${order.childId}_${order.orderId}`;
         if (!studentOrders[key]) {
           studentOrders[key] = {
             name: order.childName,
-            firstName: order.childFirstName,
-            lastName: order.childLastName,
+            lastName: order.childLastName || order.childName.split(' ')[1] || '',
             grade: order.grade,
             items: [],
             total: 0,
@@ -1131,7 +802,6 @@
         a.lastName.localeCompare(b.lastName)
       );
       
-      // Build HTML
       let html = '';
       sortedStudents.forEach(student => {
         const studentKey = `${student.orderId}_${student.childId}`;
@@ -1143,47 +813,49 @@
         
         html += `
           <div class="student-item ${isDelivered ? 'delivered' : ''}" data-student="${studentKey}">
-            <input type="checkbox" 
-                   class="student-checkbox" 
-                   ${isDelivered ? 'checked' : ''}
-                   onchange="toggleDelivered('${studentKey}', '${student.orderId}', '${student.childId}')">
-            <div class="student-info">
-              <div class="student-name">${student.name}</div>
-              <div class="student-grade">${student.grade}</div>
-              <div class="student-items">${student.items.join(' + ')}</div>
-              <div class="student-total">$${student.total.toFixed(2)}</div>
+            <div class="student-content">
+              <div class="student-header">
+                <input type="checkbox" 
+                       class="student-checkbox" 
+                       ${isDelivered ? 'checked' : ''}
+                       onchange="toggleDelivered('${studentKey}', '${student.orderId}', '${student.childId}')">
+                <div class="student-name">${student.name}</div>
+              </div>
+              <div class="student-details">
+                <div class="student-grade">${student.grade}</div>
+                <div class="student-items">${student.items.join(' + ')}</div>
+                <div class="student-total">$${student.total.toFixed(2)}</div>
+              </div>
             </div>
           </div>
         `;
       });
       
-      container.innerHTML = html || '<div class="empty-state">No orders match the current filter.</div>';
+      container.innerHTML = html || `
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>No Results</h3>
+          <p>No orders match the current filter.</p>
+        </div>
+      `;
     }
 
     async function toggleDelivered(studentKey, orderId, childId) {
-      console.log('Toggling delivery status:', { studentKey, orderId, childId });
-      
-      // Get the checkbox and student item
       const checkbox = document.querySelector(`[data-student="${studentKey}"] .student-checkbox`);
       const studentItem = document.querySelector(`[data-student="${studentKey}"]`);
       
-      if (!checkbox || !studentItem) {
-        console.error('Could not find checkbox or student item');
-        return;
-      }
+      if (!checkbox || !studentItem) return;
       
       const isNowDelivered = checkbox.checked;
-      
-      // Add visual feedback
       studentItem.classList.add('updating');
       
       try {
-        // Update the database
-        const response = await fetch(`${API_URL}?action=update_distribution&order_id=${encodeURIComponent(orderId)}&child_id=${encodeURIComponent(childId)}&distributed=${isNowDelivered}`);
+        const response = await fetch(
+          `${API_URL}?action=update_distribution&order_id=${encodeURIComponent(orderId)}&child_id=${encodeURIComponent(childId)}&distributed=${isNowDelivered}`
+        );
         const result = await response.json();
         
         if (result.success) {
-          // Update local state
           if (isNowDelivered) {
             deliveredOrders.add(studentKey);
             studentItem.classList.add('delivered');
@@ -1192,47 +864,29 @@
             studentItem.classList.remove('delivered');
           }
           
-          // Update summary
           updateSummary();
-          
-          // Show success notification
-          showNotification(`${isNowDelivered ? 'Marked as delivered' : 'Marked as pending'}`, 'success');
-          
-          console.log('Successfully updated delivery status in database');
+          showNotification(isNowDelivered ? 'Marked as delivered' : 'Marked as pending');
         } else {
-          // Revert checkbox on error
           checkbox.checked = !isNowDelivered;
-          showNotification('Failed to update delivery status: ' + (result.error || 'Unknown error'), 'error');
-          console.error('Database update failed:', result.error);
+          showNotification('Update failed: ' + (result.error || 'Unknown error'), 'error');
         }
       } catch (error) {
-        // Revert checkbox on error
         checkbox.checked = !isNowDelivered;
-        showNotification('Network error updating delivery status', 'error');
-        console.error('Network error:', error);
+        showNotification('Network error', 'error');
       } finally {
-        // Remove visual feedback
         studentItem.classList.remove('updating');
       }
     }
 
     function updateSummary() {
-      // Count unique students  
       const studentMap = {};
       allOrders.forEach(order => {
         const key = `${order.orderId}|${order.childId}`;
-        if (!studentMap[key]) {
-          studentMap[key] = {
-            orderId: order.orderId,
-            childId: order.childId
-          };
-        }
+        studentMap[key] = true;
       });
       
       const totalStudents = Object.keys(studentMap).length;
-      const totalDelivered = Array.from(deliveredOrders).filter(key => {
-        return studentMap[key];
-      }).length;
+      const totalDelivered = Array.from(deliveredOrders).filter(key => studentMap[key]).length;
       
       document.getElementById('total-orders').textContent = allOrders.length;
       document.getElementById('total-students').textContent = totalStudents;
@@ -1240,211 +894,68 @@
       document.getElementById('total-remaining').textContent = totalStudents - totalDelivered;
     }
 
-    function updateChickFilASummary() {
-      const chickFilAItems = {};
-      let chickFilATotal = 0;
-      
-      // Categorize items like the email system
-      allOrders.forEach(order => {
-        const itemName = order.itemName;
-        
-        // Skip Artios items (chips and drinks)
-        if (!itemName.toLowerCase().includes('chips') && !itemName.toLowerCase().includes('drink')) {
-          if (!chickFilAItems[itemName]) {
-            chickFilAItems[itemName] = 0;
-          }
-          chickFilAItems[itemName]++;
-          chickFilATotal++;
-        }
-      });
-      
-      if (chickFilATotal === 0) {
-        document.getElementById('chickfila-summary').style.display = 'none';
-        document.getElementById('chickfila-count').textContent = '0';
-        return;
-      }
-      
-      // Categorize items like in the email
-      const entrees = [];
-      const salads = [];
-      const sides = [];
-      
-      Object.entries(chickFilAItems).forEach(([itemName, count]) => {
-        const itemLine = { name: itemName, count: count };
-        
-        if (itemName.toLowerCase().includes('salad')) {
-          salads.push(itemLine);
-        } else if (itemName.toLowerCase().includes('fries') || 
-                   itemName.toLowerCase().includes('mac') || 
-                   itemName.toLowerCase().includes('fruit') ||
-                   itemName.toLowerCase().includes('parfait')) {
-          sides.push(itemLine);
-        } else {
-          entrees.push(itemLine);
-        }
-      });
-      
-      let html = '';
-      
-      if (entrees.length > 0) {
-        html += `
-          <div class="category-section">
-            <div class="category-header">ENTREES:</div>
-            <div class="category-items">
-        `;
-        entrees.forEach(item => {
-          html += `
-            <div class="category-item">
-              <span class="item-name">${item.name}</span>
-              <span class="item-count">${item.count}</span>
-            </div>
-          `;
-        });
-        html += `</div></div>`;
-      }
-      
-      if (salads.length > 0) {
-        html += `
-          <div class="category-section">
-            <div class="category-header">SALADS:</div>
-            <div class="category-items">
-        `;
-        salads.forEach(item => {
-          html += `
-            <div class="category-item">
-              <span class="item-name">${item.name}</span>
-              <span class="item-count">${item.count}</span>
-            </div>
-          `;
-        });
-        html += `</div></div>`;
-      }
-      
-      if (sides.length > 0) {
-        html += `
-          <div class="category-section">
-            <div class="category-header">SIDES:</div>
-            <div class="category-items">
-        `;
-        sides.forEach(item => {
-          html += `
-            <div class="category-item">
-              <span class="item-name">${item.name}</span>
-              <span class="item-count">${item.count}</span>
-            </div>
-          `;
-        });
-        html += `</div></div>`;
-      }
-      
-      html += `<div class="chickfila-total">TOTAL CHICK-FIL-A ITEMS: ${chickFilATotal}</div>`;
-      
-      document.getElementById('chickfila-content').innerHTML = html;
-      document.getElementById('chickfila-summary').style.display = 'block';
-      document.getElementById('chickfila-count').textContent = chickFilATotal;
-    }
-
-    function updateArtiosSummary() {
+    function updateOrderSummaries() {
+      const chickfilaItems = {};
       const artiosItems = {};
-      let artiosTotal = 0;
       
-      // Count Artios items (chips and drinks)
       allOrders.forEach(order => {
         const itemName = order.itemName;
+        const lowerName = itemName.toLowerCase();
         
-        if (itemName.toLowerCase().includes('chips') || itemName.toLowerCase().includes('drink')) {
-          if (!artiosItems[itemName]) {
-            artiosItems[itemName] = 0;
-          }
-          artiosItems[itemName]++;
-          artiosTotal++;
+        if (lowerName.includes('drink') || lowerName.includes('chips')) {
+          artiosItems[itemName] = (artiosItems[itemName] || 0) + 1;
+        } else {
+          chickfilaItems[itemName] = (chickfilaItems[itemName] || 0) + 1;
         }
       });
       
-      if (artiosTotal === 0) {
-        document.getElementById('artios-summary').style.display = 'none';
-        document.getElementById('artios-count').textContent = '0';
-        return;
-      }
-      
-      let html = '';
-      Object.entries(artiosItems).forEach(([itemName, count]) => {
-        html += `
-          <div class="artios-item">
-            <span class="item-name">${itemName}</span>
-            <span class="item-count">${count}</span>
-          </div>
-        `;
-      });
-      
-      document.getElementById('artios-content').innerHTML = html;
-      document.getElementById('artios-summary').style.display = 'block';
-      document.getElementById('artios-count').textContent = artiosTotal;
-    }
-
-    function updateTasksSummary() {
-      // Count unique students  
-      const studentMap = {};
-      allOrders.forEach(order => {
-        const key = `${order.orderId}|${order.childId}`;
-        if (!studentMap[key]) {
-          studentMap[key] = {
-            orderId: order.orderId,
-            childId: order.childId
-          };
-        }
-      });
-      
-      const chickFilATotal = parseInt(document.getElementById('chickfila-count').textContent) || 0;
-      const artiosTotal = parseInt(document.getElementById('artios-count').textContent) || 0;
-      
-      // Update task counts
-      const tasksDiv = document.getElementById('tasks-summary');
-      const taskList = document.getElementById('task-list');
-      
-      if (chickFilATotal > 0 || artiosTotal > 0) {
-        let html = `
-          <li class="task-item">
-            <span class="task-number">1.</span> <strong>Place Chick-fil-A order</strong> for ${chickFilATotal} total items
-          </li>
-        `;
-        
-        if (artiosTotal > 0) {
+      // Update Chick-fil-A
+      const chickFilATotal = Object.values(chickfilaItems).reduce((sum, count) => sum + count, 0);
+      if (chickFilATotal > 0) {
+        let html = '';
+        Object.entries(chickfilaItems).forEach(([name, count]) => {
           html += `
-            <li class="task-item">
-              <span class="task-number">2.</span> <strong>Prepare Artios items</strong> (${artiosTotal} chips and drinks)
-            </li>
+            <div class="category-item">
+              <span class="item-name">${name}</span>
+              <span class="item-count">${count}</span>
+            </div>
           `;
-        }
-        
-        html += `
-          <li class="task-item">
-            <span class="task-number">3.</span> <strong>Print this checklist</strong> or keep page open on tablet
-          </li>
-          <li class="task-item">
-            <span class="task-number">4.</span> <strong>Set up distribution area</strong> before lunch period
-          </li>
-          <li class="task-item">
-            <span class="task-number">5.</span> <strong>Check off students</strong> as complete orders are distributed
-          </li>
-        `;
-        
-        taskList.innerHTML = html;
-        tasksDiv.style.display = 'block';
+        });
+        html += `<div class="summary-total">TOTAL: ${chickFilATotal} items</div>`;
+        document.getElementById('chickfila-content').innerHTML = html;
+        document.getElementById('chickfila-summary').style.display = 'block';
       } else {
-        tasksDiv.style.display = 'none';
+        document.getElementById('chickfila-summary').style.display = 'none';
       }
+      
+      // Update Artios
+      const artiosTotal = Object.values(artiosItems).reduce((sum, count) => sum + count, 0);
+      if (artiosTotal > 0) {
+        let html = '';
+        Object.entries(artiosItems).forEach(([name, count]) => {
+          html += `
+            <div class="category-item">
+              <span class="item-name">${name}</span>
+              <span class="item-count">${count}</span>
+            </div>
+          `;
+        });
+        html += `<div class="summary-total">TOTAL: ${artiosTotal} items</div>`;
+        document.getElementById('artios-content').innerHTML = html;
+        document.getElementById('artios-summary').style.display = 'block';
+      } else {
+        document.getElementById('artios-summary').style.display = 'none';
+      }
+      
+      document.getElementById('chickfila-count').textContent = chickFilATotal;
+      document.getElementById('artios-count').textContent = artiosTotal;
     }
 
     function setFilter(filter) {
       currentFilter = filter;
-      
-      // Update button states
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.filter === filter);
       });
-      
-      // Refresh display
       displayOrders();
     }
 
@@ -1454,30 +965,23 @@
           <div class="empty-icon">⚠️</div>
           <h3>Error</h3>
           <p>${message}</p>
-          <button class="refresh-btn" onclick="loadOrders()" style="margin-top: 20px;">Try Again</button>
+          <button class="refresh-btn" onclick="loadOrders()" style="margin-top: 15px; width: auto; padding: 10px 20px;">Try Again</button>
         </div>
       `;
     }
 
     function showNotification(message, type = 'success') {
-      // Remove any existing notifications
+      // Remove existing
       const existing = document.querySelector('.notification');
-      if (existing) {
-        existing.remove();
-      }
+      if (existing) existing.remove();
       
-      // Create new notification
       const notification = document.createElement('div');
       notification.className = `notification ${type === 'error' ? 'error' : ''}`;
       notification.textContent = message;
       
       document.body.appendChild(notification);
       
-      // Auto-remove after 3 seconds
-      setTimeout(() => {
-        notification.classList.add('fadeout');
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
+      setTimeout(() => notification.remove(), 3000);
     }
   </script>
 </body>
