@@ -115,7 +115,7 @@
     /* Main Checklist Interface */
     .checklist-container {
       display: none;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       background: white;
       min-height: 100vh;
@@ -272,6 +272,160 @@
       border-bottom: 2px solid #ff9800;
     }
 
+    /* Chick-fil-A Order Summary */
+    .chickfila-summary {
+      background: #e3f2fd;
+      border: 2px solid #2196f3;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .chickfila-title {
+      color: #1976d2;
+      font-size: 1.3em;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .chickfila-content {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .category-section {
+      margin-bottom: 20px;
+    }
+
+    .category-header {
+      font-weight: 700;
+      color: #1976d2;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .category-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .category-item {
+      background: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 4px solid #2196f3;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .item-name {
+      font-weight: 500;
+    }
+
+    .item-count {
+      font-weight: 700;
+      color: #1976d2;
+      background: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .chickfila-total {
+      font-weight: 700;
+      font-size: 1.2em;
+      text-align: center;
+      margin-top: 15px;
+      padding: 15px;
+      background: #1976d2;
+      color: white;
+      border-radius: 8px;
+    }
+
+    /* Artios Items Summary */
+    .artios-summary {
+      background: #fff3e0;
+      border: 2px solid #ff9800;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .artios-title {
+      color: #f57c00;
+      font-size: 1.3em;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .artios-content {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .artios-item {
+      background: #fff8e1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 4px solid #ff9800;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    /* Tasks Summary */
+    .tasks-summary {
+      background: #ffebee;
+      border: 2px solid #f44336;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .tasks-title {
+      color: #d32f2f;
+      font-size: 1.3em;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .tasks-content {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .task-item {
+      background: #fff5f5;
+      padding: 12px 15px;
+      border-radius: 6px;
+      border-left: 4px solid #f44336;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+      line-height: 1.5;
+    }
+
+    .task-number {
+      font-weight: 700;
+      color: #d32f2f;
+    }
+
     /* Student Checklist */
     .student-checklist {
       background: white;
@@ -342,45 +496,6 @@
       color: #28a745;
       text-align: right;
       font-size: 1.1em;
-    }
-
-    /* Category Summary for Chick-fil-A Orders */
-    .category-summary {
-      background: #e3f2fd;
-      border: 2px solid #2196f3;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-
-    .category-title {
-      color: #1976d2;
-      font-size: 1.2em;
-      font-weight: 700;
-      margin-bottom: 15px;
-    }
-
-    .category-items {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 10px;
-    }
-
-    .category-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: white;
-      border-radius: 6px;
-    }
-
-    .category-item-name {
-      font-weight: 500;
-    }
-
-    .category-item-count {
-      font-weight: 700;
-      color: #1976d2;
     }
 
     /* Loading State */
@@ -467,6 +582,10 @@
       .summary-section {
         grid-template-columns: 1fr;
       }
+
+      .category-items {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* Print Styles */
@@ -494,6 +613,12 @@
         border: 2px solid black;
         width: 20px;
         height: 20px;
+      }
+
+      .chickfila-summary,
+      .artios-summary,
+      .tasks-summary {
+        page-break-inside: avoid;
       }
     }
   </style>
@@ -534,12 +659,20 @@
     <!-- Summary Cards -->
     <div class="summary-section">
       <div class="summary-card">
-        <div class="summary-label">Total Orders</div>
+        <div class="summary-label">Total Items</div>
         <div class="summary-value" id="total-orders">0</div>
       </div>
       <div class="summary-card">
         <div class="summary-label">Students</div>
         <div class="summary-value" id="total-students">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Chick-fil-A</div>
+        <div class="summary-value" id="chickfila-count">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Artios Items</div>
+        <div class="summary-value" id="artios-count">0</div>
       </div>
       <div class="summary-card">
         <div class="summary-label">Delivered</div>
@@ -571,10 +704,28 @@
     <!-- Orders Section -->
     <div class="orders-section">
       <!-- Chick-fil-A Order Summary -->
-      <div class="category-summary" id="chickfila-summary" style="display: none;">
-        <div class="category-title">🐔 Chick-fil-A Order Summary</div>
-        <div class="category-items" id="chickfila-items">
+      <div class="chickfila-summary" id="chickfila-summary" style="display: none;">
+        <div class="chickfila-title">🐔 CHICK-FIL-A ORDER</div>
+        <div class="chickfila-content" id="chickfila-content">
           <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Artios Items Summary -->
+      <div class="artios-summary" id="artios-summary" style="display: none;">
+        <div class="artios-title">🏫 ARTIOS CAFE ITEMS TO PREPARE</div>
+        <div class="artios-content" id="artios-content">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Today's Tasks -->
+      <div class="tasks-summary" id="tasks-summary" style="display: none;">
+        <div class="tasks-title">✅ TODAY'S TASKS</div>
+        <div class="tasks-content">
+          <ol class="task-list" id="task-list">
+            <!-- Will be populated by JavaScript -->
+          </ol>
         </div>
       </div>
 
@@ -674,6 +825,8 @@
           displayOrders();
           updateSummary();
           updateChickFilASummary();
+          updateArtiosSummary();
+          updateTasksSummary();
         } else {
           showError('Failed to load orders: ' + (data.error || 'Unknown error'));
         }
@@ -737,15 +890,11 @@
         a.lastName.localeCompare(b.lastName)
       );
       
-      console.log('Sorted students:', sortedStudents);
-      
       // Build HTML
       let html = '';
       sortedStudents.forEach(student => {
         const studentKey = `${student.orderId}_${student.childId}`;
         const isDelivered = deliveredOrders.has(studentKey);
-        
-        console.log('Student:', student.name, 'Key:', studentKey, 'Delivered:', isDelivered);
         
         // Apply filter
         if (currentFilter === 'delivered' && !isDelivered) return;
@@ -851,38 +1000,199 @@
     }
 
     function updateChickFilASummary() {
-      const itemCounts = {};
+      const chickFilAItems = {};
+      let chickFilATotal = 0;
       
-      // Count all items (excluding chips which are Artios-provided)
+      // Categorize items like the email system
       allOrders.forEach(order => {
-        if (!order.itemName.toLowerCase().includes('chips')) {
-          itemCounts[order.itemName] = (itemCounts[order.itemName] || 0) + 1;
+        const itemName = order.itemName;
+        
+        // Skip Artios items (chips and drinks)
+        if (!itemName.toLowerCase().includes('chips') && !itemName.toLowerCase().includes('drink')) {
+          if (!chickFilAItems[itemName]) {
+            chickFilAItems[itemName] = 0;
+          }
+          chickFilAItems[itemName]++;
+          chickFilATotal++;
         }
       });
       
-      if (Object.keys(itemCounts).length === 0) {
+      if (chickFilATotal === 0) {
         document.getElementById('chickfila-summary').style.display = 'none';
+        document.getElementById('chickfila-count').textContent = '0';
         return;
       }
       
-      // Display summary
-      const container = document.getElementById('chickfila-items');
+      // Categorize items like in the email
+      const entrees = [];
+      const salads = [];
+      const sides = [];
+      
+      Object.entries(chickFilAItems).forEach(([itemName, count]) => {
+        const itemLine = { name: itemName, count: count };
+        
+        if (itemName.toLowerCase().includes('salad')) {
+          salads.push(itemLine);
+        } else if (itemName.toLowerCase().includes('fries') || 
+                   itemName.toLowerCase().includes('mac') || 
+                   itemName.toLowerCase().includes('fruit') ||
+                   itemName.toLowerCase().includes('parfait')) {
+          sides.push(itemLine);
+        } else {
+          entrees.push(itemLine);
+        }
+      });
+      
       let html = '';
       
-      // Sort by count (highest first)
-      Object.entries(itemCounts)
-        .sort((a, b) => b[1] - a[1])
-        .forEach(([item, count]) => {
+      if (entrees.length > 0) {
+        html += `
+          <div class="category-section">
+            <div class="category-header">ENTREES:</div>
+            <div class="category-items">
+        `;
+        entrees.forEach(item => {
           html += `
             <div class="category-item">
-              <span class="category-item-name">${item}</span>
-              <span class="category-item-count">${count}</span>
+              <span class="item-name">${item.name}</span>
+              <span class="item-count">${item.count}</span>
             </div>
           `;
         });
+        html += `</div></div>`;
+      }
       
-      container.innerHTML = html;
+      if (salads.length > 0) {
+        html += `
+          <div class="category-section">
+            <div class="category-header">SALADS:</div>
+            <div class="category-items">
+        `;
+        salads.forEach(item => {
+          html += `
+            <div class="category-item">
+              <span class="item-name">${item.name}</span>
+              <span class="item-count">${item.count}</span>
+            </div>
+          `;
+        });
+        html += `</div></div>`;
+      }
+      
+      if (sides.length > 0) {
+        html += `
+          <div class="category-section">
+            <div class="category-header">SIDES:</div>
+            <div class="category-items">
+        `;
+        sides.forEach(item => {
+          html += `
+            <div class="category-item">
+              <span class="item-name">${item.name}</span>
+              <span class="item-count">${item.count}</span>
+            </div>
+          `;
+        });
+        html += `</div></div>`;
+      }
+      
+      html += `<div class="chickfila-total">TOTAL CHICK-FIL-A ITEMS: ${chickFilATotal}</div>`;
+      
+      document.getElementById('chickfila-content').innerHTML = html;
       document.getElementById('chickfila-summary').style.display = 'block';
+      document.getElementById('chickfila-count').textContent = chickFilATotal;
+    }
+
+    function updateArtiosSummary() {
+      const artiosItems = {};
+      let artiosTotal = 0;
+      
+      // Count Artios items (chips and drinks)
+      allOrders.forEach(order => {
+        const itemName = order.itemName;
+        
+        if (itemName.toLowerCase().includes('chips') || itemName.toLowerCase().includes('drink')) {
+          if (!artiosItems[itemName]) {
+            artiosItems[itemName] = 0;
+          }
+          artiosItems[itemName]++;
+          artiosTotal++;
+        }
+      });
+      
+      if (artiosTotal === 0) {
+        document.getElementById('artios-summary').style.display = 'none';
+        document.getElementById('artios-count').textContent = '0';
+        return;
+      }
+      
+      let html = '';
+      Object.entries(artiosItems).forEach(([itemName, count]) => {
+        html += `
+          <div class="artios-item">
+            <span class="item-name">${itemName}</span>
+            <span class="item-count">${count}</span>
+          </div>
+        `;
+      });
+      
+      document.getElementById('artios-content').innerHTML = html;
+      document.getElementById('artios-summary').style.display = 'block';
+      document.getElementById('artios-count').textContent = artiosTotal;
+    }
+
+    function updateTasksSummary() {
+      // Count unique students  
+      const studentMap = {};
+      allOrders.forEach(order => {
+        const key = `${order.orderId}|${order.childId}`;
+        if (!studentMap[key]) {
+          studentMap[key] = {
+            orderId: order.orderId,
+            childId: order.childId
+          };
+        }
+      });
+      
+      const chickFilATotal = parseInt(document.getElementById('chickfila-count').textContent) || 0;
+      const artiosTotal = parseInt(document.getElementById('artios-count').textContent) || 0;
+      
+      // Update task counts
+      const tasksDiv = document.getElementById('tasks-summary');
+      const taskList = document.getElementById('task-list');
+      
+      if (chickFilATotal > 0 || artiosTotal > 0) {
+        let html = `
+          <li class="task-item">
+            <span class="task-number">1.</span> <strong>Place Chick-fil-A order</strong> for ${chickFilATotal} total items
+          </li>
+        `;
+        
+        if (artiosTotal > 0) {
+          html += `
+            <li class="task-item">
+              <span class="task-number">2.</span> <strong>Prepare Artios items</strong> (${artiosTotal} chips and drinks)
+            </li>
+          `;
+        }
+        
+        html += `
+          <li class="task-item">
+            <span class="task-number">3.</span> <strong>Print this checklist</strong> or keep page open on tablet
+          </li>
+          <li class="task-item">
+            <span class="task-number">4.</span> <strong>Set up distribution area</strong> before lunch period
+          </li>
+          <li class="task-item">
+            <span class="task-number">5.</span> <strong>Check off students</strong> as complete orders are distributed
+          </li>
+        `;
+        
+        taskList.innerHTML = html;
+        tasksDiv.style.display = 'block';
+      } else {
+        tasksDiv.style.display = 'none';
+      }
     }
 
     function setFilter(filter) {
