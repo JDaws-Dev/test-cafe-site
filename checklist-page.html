@@ -729,6 +729,11 @@
           allOrders = data.orders || [];
           console.log('Loaded orders:', allOrders.length);
           
+          // Debug: Log sample orders to check lastName field
+          if (allOrders.length > 0) {
+            console.log('Sample order data:', allOrders.slice(0, 3));
+          }
+          
           loadDeliveryStatus();
           displayAll();
         } else {
@@ -785,7 +790,9 @@
         if (!studentOrders[key]) {
           studentOrders[key] = {
             name: order.childName,
-            lastName: order.childLastName || order.childName.split(' ')[1] || '',
+            // FIXED: Use the correct property name from the API
+            lastName: order.childLastName || order.childName.split(' ').pop() || '',
+            firstName: order.childFirstName || order.childName.split(' ')[0] || '',
             grade: order.grade,
             items: [],
             total: 0,
@@ -797,10 +804,17 @@
         studentOrders[key].total += order.itemPrice;
       });
       
-      // Sort by last name
-      const sortedStudents = Object.values(studentOrders).sort((a, b) => 
-        a.lastName.localeCompare(b.lastName)
-      );
+      // Sort by first name (cafe workers know students by first name)
+      const sortedStudents = Object.values(studentOrders).sort((a, b) => {
+        // Compare by first names
+        const firstNameCompare = a.firstName.localeCompare(b.firstName);
+        if (firstNameCompare !== 0) return firstNameCompare;
+        // If first names are the same, compare last names
+        return a.lastName.localeCompare(b.lastName);
+      });
+      
+      // Debug: Log sorting results
+      console.log('Sorted students:', sortedStudents.map(s => `${s.firstName} ${s.lastName}`));
       
       let html = '';
       sortedStudents.forEach(student => {
@@ -881,7 +895,7 @@
     function updateSummary() {
       const studentMap = {};
       allOrders.forEach(order => {
-        const key = `${order.orderId}|${order.childId}`;
+        const key = `${order.orderId}_${order.childId}`;
         studentMap[key] = true;
       });
       
