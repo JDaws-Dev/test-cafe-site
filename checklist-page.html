@@ -757,10 +757,10 @@
     }
 
     function updateSummary() {
-      // Count unique students
+      // Count unique students  
       const studentMap = {};
       allOrders.forEach(order => {
-        const key = `${order.childName}_${order.childId}`;
+        const key = `${order.orderId}|${order.childId}`;
         if (!studentMap[key]) {
           studentMap[key] = {
             orderId: order.orderId,
@@ -771,7 +771,7 @@
       
       const totalStudents = Object.keys(studentMap).length;
       const totalDelivered = Array.from(deliveredOrders).filter(key => {
-        return Object.values(studentMap).some(s => `${s.orderId}_${s.childId}` === key);
+        return studentMap[key];
       }).length;
       
       document.getElementById('total-orders').textContent = allOrders.length;
