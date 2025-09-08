@@ -1959,7 +1959,7 @@ if (venmoBtn) venmoBtn.addEventListener('click', () => {
         const orderId = document.getElementById('conf-order-id').textContent;
         
         // Build order summary for Venmo note
-        const orderSummary = `Artios Cafe Order #${orderId} - ${total.toFixed(2)}`;
+   const orderSummary = this.buildVenmoNote(orderId, total, this.state.orderItems || []);
         
         // CENTRALIZED VENMO HANDLE
         const VENMO_HANDLE = 'ChanTa-Rivers';
