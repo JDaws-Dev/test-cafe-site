@@ -1416,7 +1416,7 @@
           
           if (data.success) {
             this.state.blackoutDates = data.blackoutDates || [];
-            console.log(`Loaded ${this.state.blackoutDates.length} blackout dates`);
+            console.log(`Loaded ${this.state.blackoutDates.length} blackout dates:`, this.state.blackoutDates);
           } else {
             console.warn('Failed to load blackout dates:', data.error);
             this.state.blackoutDates = [];
