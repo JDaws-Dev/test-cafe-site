@@ -1954,41 +1954,32 @@ if (venmoBtn) venmoBtn.addEventListener('click', () => {
       }
 
       openVenmoPayment() {
+        // Use the amount shown in the confirmation (fallback to state)
         const totalText = document.getElementById('payment-amount')?.textContent || '0';
         const total = Number(totalText) || Number(this.state.currentTotal) || 0;
         const orderId = (document.getElementById('conf-order-id')?.textContent || '').trim();
+
+        // Build compact Venmo note with abbreviations and day breakdown
         const note = this.buildVenmoNote(orderId, total, this.state.orderItems || []);
+
+        // Your Venmo handle (no @ in URLs)
         const VENMO_HANDLE = 'ChanTa-Rivers';
+
+        // Detect mobile vs desktop
         const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMobile) {
+          // Deep link for the Venmo app
           const venmoDeepLink =
             `venmo://paycharge?txn=pay&recipients=${VENMO_HANDLE}&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
           window.location.href = venmoDeepLink;
         } else {
+          // Desktop: open venmo.com payment page
           const venmoWebUrl =
             `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
           window.open(venmoWebUrl, '_blank');
         }
-      } - ${total.toFixed(2)}`;
-        
-        // CENTRALIZED VENMO HANDLE
-        const VENMO_HANDLE = 'ChanTa-Rivers';
-        
-        // Detect mobile device
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-          // Mobile: Use deep link
-          const venmoDeepLink = `venmo://paycharge?txn=pay&recipients=${VENMO_HANDLE}&amount=${total.toFixed(2)}&note=${encodeURIComponent(orderSummary)}`;
-          window.location.href = venmoDeepLink;
-        } else {
-          // Desktop: Open web URL
-          const venmoWebUrl = `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${total.toFixed(2)}&note=${encodeURIComponent(orderSummary)}`;
-          window.open(venmoWebUrl, '_blank');
-        }
-      }
-
+      
       openConfirmationModal() {
         const modal = document.getElementById('confirmation-modal');
         modal.classList.add('show');
