@@ -1959,27 +1959,33 @@ if (venmoBtn) venmoBtn.addEventListener('click', () => {
         const total = Number(totalText) || Number(this.state.currentTotal) || 0;
         const orderId = (document.getElementById('conf-order-id')?.textContent || '').trim();
 
-        // Build compact Venmo note with abbreviations and day breakdown
+        // Build compact Venmo note
         const note = this.buildVenmoNote(orderId, total, this.state.orderItems || []);
 
-        // Your Venmo handle (no @ in URLs)
-        const VENMO_HANDLE = 'ChanTa-Rivers';
+        const HANDLE = 'ChanTa-Rivers';
+        const webUrl = `https://venmo.com/${HANDLE}?txn=pay&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
+        const appUrl = `venmo://paycharge?txn=pay&recipients=${HANDLE}&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
 
-        // Detect mobile vs desktop
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const ua = navigator.userAgent || '';
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
 
         if (isMobile) {
-          // Deep link for the Venmo app
-          const venmoDeepLink =
-            `venmo://paycharge?txn=pay&recipients=${VENMO_HANDLE}&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
-          window.location.href = venmoDeepLink;
+          // Try the app; if it fails, fall back to web
+          let navigated = false;
+          const t = setTimeout(() => {
+            if (!navigated) window.location.href = webUrl;
+          }, 800);
+          try {
+            window.location.href = appUrl;
+            navigated = true;
+          } catch (e) {
+            clearTimeout(t);
+            window.location.href = webUrl;
+          }
         } else {
-          // Desktop: open venmo.com payment page
-          const venmoWebUrl =
-            `https://venmo.com/${VENMO_HANDLE}?txn=pay&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
-          window.open(venmoWebUrl, '_blank');
+          // Desktop browsers don't have a venmo:// handler; open web instead
+          window.open(webUrl, '_blank');
         }
-      
       }
 
       openConfirmationModal() {
