@@ -1616,10 +1616,18 @@
             tab.setAttribute('aria-disabled', 'true');
             tab.title = `Orders for ${this.constants.dayNames[index]} are closed (10:00 AM cutoff passed)`;
           } else if (isBlackout) {
-            // NEW: Handle blackout dates
+            // NEW: Handle blackout dates with visual blocking
             tab.classList.add('blackout');
             tab.setAttribute('aria-disabled', 'true');
             tab.title = `${this.constants.dayNames[index]} is not available: ${blackoutReason}`;
+            
+            // Prevent any click events on blackout tabs
+            tab.style.pointerEvents = 'none';
+            tab.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              this.showNotification(`${this.constants.dayNames[index]} is not available: ${blackoutReason}`, 'warning');
+            });
           } else {
             tab.addEventListener('click', () => this.switchDay(day));
             tab.addEventListener('keydown', (e) => {
