@@ -1954,12 +1954,9 @@ if (venmoBtn) venmoBtn.addEventListener('click', () => {
       }
 
       openVenmoPayment() {
-        // Use the amount shown in the confirmation (fallback to state)
         const totalText = document.getElementById('payment-amount')?.textContent || '0';
         const total = Number(totalText) || Number(this.state.currentTotal) || 0;
         const orderId = (document.getElementById('conf-order-id')?.textContent || '').trim();
-
-        // Build compact Venmo note
         const note = this.buildVenmoNote(orderId, total, this.state.orderItems || []);
 
         const HANDLE = 'ChanTa-Rivers';
@@ -1970,20 +1967,11 @@ if (venmoBtn) venmoBtn.addEventListener('click', () => {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
 
         if (isMobile) {
-          // Try the app; if it fails, fall back to web
-          let navigated = false;
-          const t = setTimeout(() => {
-            if (!navigated) window.location.href = webUrl;
-          }, 800);
-          try {
-            window.location.href = appUrl;
-            navigated = true;
-          } catch (e) {
-            clearTimeout(t);
-            window.location.href = webUrl;
-          }
+          // Try the Venmo app; quick fallback to web if not installed
+          const fallback = setTimeout(() => { window.location.href = webUrl; }, 1200);
+          try { window.location.href = appUrl; } catch (e) { clearTimeout(fallback); window.location.href = webUrl; }
         } else {
-          // Desktop browsers don't have a venmo:// handler; open web instead
+          // Desktop: never use venmo://
           window.open(webUrl, '_blank');
         }
       }
