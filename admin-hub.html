@@ -313,12 +313,6 @@
             border: 1px solid #bee5eb;
         }
 
-        .status-message.warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
         /* Loading State */
         .loading {
             text-align: center;
@@ -342,56 +336,255 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Placeholder Content */
-        .placeholder {
-            background: var(--bg-secondary);
-            border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            padding: 60px 30px;
-            text-align: center;
-            color: var(--text-secondary);
+        /* Blackout Dates Specific Styles */
+        .date-input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
         }
 
-        .placeholder-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            opacity: 0.5;
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .placeholder-text {
+        .input-section h4 {
+            color: #667eea;
+            margin-bottom: 5px;
             font-size: 1.1em;
-            margin-bottom: 10px;
         }
 
-        .placeholder-subtext {
-            font-size: 0.95em;
-            opacity: 0.8;
+        .form-input {
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Blackout Date List */
+        .blackout-date-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .blackout-date-item:hover {
+            background: var(--bg-secondary);
+            border-color: #667eea;
+        }
+
+        .blackout-date-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .blackout-date {
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 180px;
+        }
+
+        .blackout-reason {
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .remove-blackout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .remove-blackout-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        /* Calendar Styles */
+        .calendar-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .month-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .month-navigation button {
+            background: white;
+            border: 2px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .month-navigation button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .current-month {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-header {
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: var(--bg-secondary);
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.weekend {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .calendar-day.past {
+            color: #d1d5db;
+            cursor: default;
+        }
+
+        .calendar-day.today {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .calendar-day.blackout {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .calendar-day.blackout::after {
+            content: '×';
+            position: absolute;
+            top: 2px;
+            right: 6px;
+            font-size: 14px;
+            color: #ef4444;
+        }
+
+        .empty-day {
+            border: none;
+            cursor: default;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .header-content {
+            .date-input-group {
+                grid-template-columns: 1fr;
+            }
+
+            .calendar-day {
+                font-size: 0.85em;
+            }
+
+            .blackout-date-info {
                 flex-direction: column;
-                text-align: center;
+                align-items: flex-start;
+                gap: 5px;
             }
 
-            .tab-container {
-                flex-direction: column;
-            }
-
-            .tab-btn {
-                width: 100%;
-                border-bottom: none;
-                border-left: 3px solid transparent;
-            }
-
-            .tab-btn.active {
-                border-left-color: #667eea;
-                border-bottom-color: transparent;
-            }
-
-            .content-area {
-                padding: 20px;
+            .blackout-date {
+                min-width: auto;
             }
         }
     </style>
@@ -471,65 +664,75 @@
 
             <!-- Tab 1: Blackout Dates -->
             <div class="tab-content active" id="blackout-dates">
-                <!-- Add Single Date Card -->
+                <!-- Add Blackout Dates Card -->
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">📅 Add Blackout Dates</h2>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div class="date-input-group">
                         <!-- Single Date -->
-                        <div>
-                            <h4 style="color: #667eea; margin-bottom: 15px;">Single Date</h4>
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <input type="date" 
-                                       id="single-blackout-date" 
-                                       class="date-input"
-                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                                <input type="text" 
-                                       id="single-blackout-reason" 
-                                       placeholder="Reason (e.g., Teacher Workday)"
-                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                                <button onclick="addSingleBlackoutDate()" 
-                                        style="background: #667eea; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                    Add Single Date
-                                </button>
-                            </div>
+                        <div class="input-section">
+                            <h4>Single Date</h4>
+                            <input type="date" 
+                                   id="single-blackout-date" 
+                                   class="form-input">
+                            <input type="text" 
+                                   id="single-blackout-reason" 
+                                   class="form-input"
+                                   placeholder="Reason (e.g., Teacher Workday)">
+                            <button onclick="addSingleBlackoutDate()" 
+                                    class="action-btn btn-primary">
+                                Add Single Date
+                            </button>
                         </div>
 
                         <!-- Date Range -->
-                        <div>
-                            <h4 style="color: #667eea; margin-bottom: 15px;">Date Range (Vacation Periods)</h4>
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <input type="date" 
-                                       id="range-start-date" 
-                                       class="date-input"
-                                       placeholder="Start Date"
-                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                                <input type="date" 
-                                       id="range-end-date" 
-                                       class="date-input"
-                                       placeholder="End Date"
-                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                                <input type="text" 
-                                       id="range-blackout-reason" 
-                                       placeholder="Reason (e.g., Spring Break)"
-                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
-                                <button onclick="addRangeBlackoutDates()" 
-                                        style="background: #f59e0b; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                    Add Date Range
-                                </button>
-                            </div>
+                        <div class="input-section">
+                            <h4>Date Range (Vacation Periods)</h4>
+                            <input type="date" 
+                                   id="range-start-date" 
+                                   class="form-input"
+                                   placeholder="Start Date">
+                            <input type="date" 
+                                   id="range-end-date" 
+                                   class="form-input"
+                                   placeholder="End Date">
+                            <input type="text" 
+                                   id="range-blackout-reason" 
+                                   class="form-input"
+                                   placeholder="Reason (e.g., Spring Break)">
+                            <button onclick="addRangeBlackoutDates()" 
+                                    class="action-btn btn-warning">
+                                Add Date Range
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Current Blackout Dates Card -->
+                <!-- Calendar View Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📆 Calendar View</h2>
+                    </div>
+                    <div class="calendar-container">
+                        <div class="month-navigation">
+                            <button onclick="changeMonth(-1)">← Previous</button>
+                            <span class="current-month" id="current-month-display"></span>
+                            <button onclick="changeMonth(1)">Next →</button>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid">
+                            <!-- Calendar will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Blackout Dates List -->
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">📋 Current Blackout Dates</h2>
                         <button onclick="loadBlackoutDates()" 
-                                style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                                class="action-btn btn-success">
                             🔄 Refresh
                         </button>
                     </div>
@@ -541,72 +744,20 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Calendar View Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📆 Calendar View</h2>
-                    </div>
-                    <div id="calendar-view" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 20px;">
-                        <!-- Calendar will be generated here -->
-                    </div>
-                </div>
             </div>
 
-            <!-- Tab 2: Order Management -->
+            <!-- Other tabs remain unchanged but hidden -->
             <div class="tab-content" id="order-management">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">💳 Order Management & Venmo Reconciliation</h2>
-                    </div>
-                    <div class="placeholder">
-                        <div class="placeholder-icon">💰</div>
-                        <div class="placeholder-text">Payment Reconciliation</div>
-                        <div class="placeholder-subtext">Track and confirm Venmo payments</div>
-                    </div>
-                </div>
+                <!-- Content placeholder -->
             </div>
-
-            <!-- Tab 3: Financial Reports -->
             <div class="tab-content" id="financial-reports">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📊 Financial Reports & Analytics</h2>
-                    </div>
-                    <div class="placeholder">
-                        <div class="placeholder-icon">📈</div>
-                        <div class="placeholder-text">Business Analytics</div>
-                        <div class="placeholder-subtext">Revenue, customer analytics, and student breakdowns</div>
-                    </div>
-                </div>
+                <!-- Content placeholder -->
             </div>
-
-            <!-- Tab 4: Communications -->
             <div class="tab-content" id="communications">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📧 Communications Center</h2>
-                    </div>
-                    <div class="placeholder">
-                        <div class="placeholder-icon">✉️</div>
-                        <div class="placeholder-text">Family Communications</div>
-                        <div class="placeholder-subtext">Contact lists, announcements, and email management</div>
-                    </div>
-                </div>
+                <!-- Content placeholder -->
             </div>
-
-            <!-- Tab 5: Reports & Exports -->
             <div class="tab-content" id="exports">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📥 Reports & Data Exports</h2>
-                    </div>
-                    <div class="placeholder">
-                        <div class="placeholder-icon">💾</div>
-                        <div class="placeholder-text">Export Center</div>
-                        <div class="placeholder-subtext">Download orders, financial summaries, and customer data</div>
-                    </div>
-                </div>
+                <!-- Content placeholder -->
             </div>
         </div>
     </div>
@@ -696,23 +847,9 @@
         function loadTabData(tabName) {
             console.log(`Loading data for tab: ${tabName}`);
             
-            switch(tabName) {
-                case 'blackout-dates':
-                    loadBlackoutDates();
-                    generateCalendar();
-                    break;
-                case 'order-management':
-                    // loadOrders();
-                    break;
-                case 'financial-reports':
-                    // loadFinancialReports();
-                    break;
-                case 'communications':
-                    // loadCommunications();
-                    break;
-                case 'exports':
-                    // setupExports();
-                    break;
+            if (tabName === 'blackout-dates') {
+                loadBlackoutDates();
+                generateCalendar();
             }
         }
 
@@ -731,11 +868,8 @@
             try {
                 const response = await apiCall('get_blackout_dates');
                 
-                console.log('Blackout dates response:', response); // Debug log
-                
                 if (response.success) {
                     blackoutDates = response.blackoutDates || [];
-                    console.log('Loaded blackout dates:', blackoutDates); // Debug log
                     displayBlackoutDates();
                     generateCalendar(); // Refresh calendar
                 } else {
@@ -763,30 +897,46 @@
                 return;
             }
 
-            // Sort dates
+            // Sort dates chronologically
             blackoutDates.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            let html = '';
+            // Group by month for better organization
+            const groupedDates = {};
             blackoutDates.forEach(item => {
                 const date = new Date(item.date + 'T12:00:00');
-                const dateStr = date.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                });
+                const monthKey = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                if (!groupedDates[monthKey]) {
+                    groupedDates[monthKey] = [];
+                }
+                groupedDates[monthKey].push(item);
+            });
 
-                html += `
-                    <div class="blackout-date-item">
-                        <div class="blackout-date-info">
-                            <span class="blackout-date">${dateStr}</span>
-                            <span class="blackout-reason">${item.reason || 'No reason specified'}</span>
+            let html = '';
+            Object.keys(groupedDates).forEach(month => {
+                html += `<div style="margin-bottom: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 10px; font-size: 1.1em;">${month}</h4>`;
+                
+                groupedDates[month].forEach(item => {
+                    const date = new Date(item.date + 'T12:00:00');
+                    const dateStr = date.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+
+                    html += `
+                        <div class="blackout-date-item">
+                            <div class="blackout-date-info">
+                                <span class="blackout-date">${dateStr}</span>
+                                <span class="blackout-reason">${item.reason || 'No reason specified'}</span>
+                            </div>
+                            <button class="remove-blackout-btn" onclick="removeBlackoutDate('${item.date}')">
+                                Remove
+                            </button>
                         </div>
-                        <button class="remove-blackout-btn" onclick="removeBlackoutDate('${item.date}')">
-                            Remove
-                        </button>
-                    </div>
-                `;
+                    `;
+                });
+                html += '</div>';
             });
 
             container.innerHTML = html;
@@ -817,7 +967,7 @@
                 }
             } catch (error) {
                 console.error('Error adding blackout date:', error);
-                showMessage('Failed to add blackout date', 'error');
+                showMessage(error.message || 'Failed to add blackout date', 'error');
             }
         }
 
@@ -854,7 +1004,7 @@
                 }
             } catch (error) {
                 console.error('Error adding date range:', error);
-                showMessage('Failed to add date range', 'error');
+                showMessage(error.message || 'Failed to add date range', 'error');
             }
         }
 
@@ -876,32 +1026,35 @@
                 }
             } catch (error) {
                 console.error('Error removing blackout date:', error);
-                showMessage('Failed to remove blackout date', 'error');
+                showMessage(error.message || 'Failed to remove blackout date', 'error');
             }
         }
 
         function generateCalendar() {
-            const container = document.getElementById('calendar-view');
+            const container = document.getElementById('calendar-grid');
+            const monthDisplay = document.getElementById('current-month-display');
+            
             if (!container) return;
 
             const year = currentCalendarMonth.getFullYear();
             const month = currentCalendarMonth.getMonth();
             
-            // Create month navigation
-            const navHtml = `
-                <div class="month-navigation" style="grid-column: 1 / -1;">
-                    <button onclick="changeMonth(-1)">← Previous</button>
-                    <span class="current-month">${currentCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                    <button onclick="changeMonth(1)">Next →</button>
-                </div>
-            `;
+            // Update month display
+            monthDisplay.textContent = currentCalendarMonth.toLocaleDateString('en-US', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
 
-            // Create day headers
+            // Clear calendar
+            container.innerHTML = '';
+
+            // Add day headers
             const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            let calendarHtml = navHtml;
-            
             dayHeaders.forEach(day => {
-                calendarHtml += `<div class="calendar-header">${day}</div>`;
+                const header = document.createElement('div');
+                header.className = 'calendar-header';
+                header.textContent = day;
+                container.appendChild(header);
             });
 
             // Get first day of month and number of days
@@ -912,7 +1065,9 @@
 
             // Add empty cells for days before month starts
             for (let i = 0; i < firstDay; i++) {
-                calendarHtml += '<div></div>';
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'empty-day';
+                container.appendChild(emptyDay);
             }
 
             // Add days of month
@@ -924,23 +1079,28 @@
                 const isPast = currentDate < today;
                 const isToday = currentDate.getTime() === today.getTime();
 
-                let classes = 'calendar-day';
-                if (isBlackout) classes += ' blackout';
-                if (isWeekend) classes += ' weekend';
-                if (isPast) classes += ' past';
-                if (isToday) classes += ' today';
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                if (isBlackout) dayElement.classList.add('blackout');
+                if (isWeekend) dayElement.classList.add('weekend');
+                if (isPast) dayElement.classList.add('past');
+                if (isToday) dayElement.classList.add('today');
 
-                const blackoutInfo = isBlackout ? blackoutDates.find(bd => bd.date === dateStr) : null;
-                const title = blackoutInfo ? blackoutInfo.reason : '';
+                dayElement.textContent = day;
+                
+                if (isBlackout) {
+                    const blackoutInfo = blackoutDates.find(bd => bd.date === dateStr);
+                    dayElement.title = blackoutInfo ? blackoutInfo.reason : 'Blackout Date';
+                }
 
-                calendarHtml += `
-                    <div class="${classes}" title="${title}" onclick="toggleCalendarDate('${dateStr}')">
-                        ${day}
-                    </div>
-                `;
+                // Only allow toggling for future dates
+                if (!isPast) {
+                    dayElement.onclick = () => toggleCalendarDate(dateStr, isBlackout);
+                }
+
+                container.appendChild(dayElement);
             }
-
-            container.innerHTML = calendarHtml;
         }
 
         function changeMonth(direction) {
@@ -948,10 +1108,8 @@
             generateCalendar();
         }
 
-        async function toggleCalendarDate(dateStr) {
-            const isBlackout = blackoutDates.some(bd => bd.date === dateStr);
-            
-            if (isBlackout) {
+        async function toggleCalendarDate(dateStr, isCurrentlyBlackout) {
+            if (isCurrentlyBlackout) {
                 // Remove the blackout date
                 await removeBlackoutDate(dateStr);
             } else {
@@ -963,13 +1121,13 @@
                     day: 'numeric'
                 });
                 
-                const reason = prompt(`Add blackout date for ${formattedDate}?\n\nEnter reason (optional):`) || 'School Closed';
+                const reason = prompt(`Add blackout date for ${formattedDate}?\n\nEnter reason (optional):`, 'School Closed');
                 
                 if (reason !== null) {  // User didn't cancel
                     try {
                         const response = await apiCall('add_blackout_date', {
                             date: dateStr,
-                            reason: reason
+                            reason: reason || 'School Closed'
                         });
 
                         if (response.success) {
@@ -1009,13 +1167,6 @@
             });
         }
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(amount);
-        }
-
         // API call wrapper
         async function apiCall(action, params = {}) {
             try {
@@ -1034,8 +1185,7 @@
                 return await response.json();
             } catch (error) {
                 console.error('API Error:', error);
-                showMessage('Network error. Please try again.', 'error');
-                return { success: false, error: error.message };
+                throw error;
             }
         }
     </script>
