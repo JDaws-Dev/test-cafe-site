@@ -1325,8 +1325,17 @@
       async init() {
         try {
           await this.loadMenuData();
-          this.loadUserEmail(); // Load login email
-          this.
+          this.loadUserEmail && this.loadUserEmail();
+          this.setupEventListeners && this.setupEventListeners();
+          this.setupAutoSave && this.setupAutoSave();
+          this.validateForm && this.validateForm();
+          this.checkStoreHours && this.checkStoreHours();
+        } catch (err) {
+          console.error(err);
+        }
+        this.enforceDesktopVenmoBehavior && this.enforceDesktopVenmoBehavior();
+      }
+
       enforceDesktopVenmoBehavior() {
         const ua = navigator.userAgent || '';
         const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
