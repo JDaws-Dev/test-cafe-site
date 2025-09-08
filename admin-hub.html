@@ -949,10 +949,20 @@
             const isBlackout = blackoutDates.some(bd => bd.date === dateStr);
             
             if (isBlackout) {
+                // Remove the blackout date
                 await removeBlackoutDate(dateStr);
             } else {
-                const reason = prompt('Enter reason for blackout date (optional):') || 'School Closed';
-                if (reason !== null) {
+                // Add as blackout date
+                const dateObj = new Date(dateStr + 'T12:00:00');
+                const formattedDate = dateObj.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                const reason = prompt(`Add blackout date for ${formattedDate}?\n\nEnter reason (optional):`) || 'School Closed';
+                
+                if (reason !== null) {  // User didn't cancel
                     try {
                         const response = await apiCall('add_blackout_date', {
                             date: dateStr,
@@ -962,6 +972,8 @@
                         if (response.success) {
                             showMessage('Blackout date added', 'success');
                             loadBlackoutDates();
+                        } else {
+                            showMessage(response.error || 'Failed to add blackout date', 'error');
                         }
                     } catch (error) {
                         showMessage('Failed to add blackout date', 'error');
