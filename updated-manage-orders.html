@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders - Artios Academies Lunch Program</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem 2.5rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 1.25rem;
+            left: 1.25rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 250ms ease;
+            font-size: 0.875rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .artios-logo {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+
+        .header-text {
+            text-align: left;
+        }
+
+        .header-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            backdrop-filter: blur(10px);
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 250ms ease;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Main Layout Grid */
+        .refund-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 2rem;
+        }
+
+        .orders-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Date Group Styles */
+        .date-group {
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .date-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .date-header:hover {
+            background: #e9ecef;
+        }
+
+        .date-header.today {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .date-header.past {
+            background: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .date-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .date-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .item-count {
+            background: #667eea;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .refundable-count {
+            background: #10b981;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .cancelled-count {
+            background: #ef4444;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .discounted-count {
+            background: #f59e0b;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+            color: #6c757d;
+        }
+
+        .date-group.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .date-items {
+            padding: 0;
+            max-height: none;
+            overflow: auto;
+            transition: max-height 0.3s ease;
+        }
+
+        .date-group.collapsed .date-items {
+            max-height: 0;
+        }
+
+        /* Refund Item Styles */
+        .refund-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.2s ease;
+        }
+
+        .refund-item:hover:not(.cancelled) {
+            background: #f8f9fa;
+        }
+
+        .refund-item.disabled {
+            opacity: 0.5;
+            background: #f8f9fa;
+        }
+
+        .refund-item.cancelled {
+            background: #ffebee;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .refund-item.cancelled .item-details {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .refund-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .refund-item input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+        }
+
+        .refund-item label {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .item-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .child-name {
+            font-weight: 600;
+            color: #333;
+            min-width: 120px;
+        }
+
+        .item-name {
+            color: #495057;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 1.1em;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-right: 8px;
+            font-size: 0.9em;
+        }
+
+        .discount-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .status-refundable {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-deadline-passed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-refunded {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-cancelled {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        /* Refund Cart Styles */
+        .refund-cart {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .cart-header h3 {
+            margin: 0;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cart-items {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .empty-cart {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .cart-item.discounted {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .cart-item-child {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .cart-item-price {
+            font-weight: 700;
+            color: #28a745;
+        }
+
+        .cart-item-original {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 0.85em;
+            margin-right: 5px;
+        }
+
+        .remove-from-cart {
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+        }
+
+        .remove-from-cart:hover {
+            background: #c82333;
+        }
+
+        .cart-summary {
+            border-top: 2px solid #e9ecef;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .cart-total strong {
+            color: #333;
+        }
+
+        .total-amount {
+            color: #28a745;
+            font-weight: 700;
+            font-size: 1.3em;
+        }
+
+        .discount-notice {
+            background: #fff3e0;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.85em;
+            color: #92400e;
+            text-align: center;
+        }
+
+        .process-refunds-btn {
+            width: 100%;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 0.75rem;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 250ms ease;
+        }
+
+        .process-refunds-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .process-refunds-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clear-cart-btn {
+            width: 100%;
+            background: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-cart-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 250ms ease;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .refund-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .refund-cart {
+                position: static;
+                margin-top: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .back-btn {
+                position: static;
+                margin-bottom: 1rem;
+                width: fit-content;
+            }
+            
+            .header-actions {
+                position: static;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .header-brand {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-text {
+                text-align: center;
+            }
+            
+            .header-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .item-main {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .refund-item label {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+            <div class="header-actions">
+                <div class="user-info">
+                    <span id="user-email"></span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <div class="header-brand">
+                <img class="artios-logo" src="artios-logo.png" alt="Artios Academies Logo">
+                <div class="header-text">
+                    <h1>Artios Academies of Sugar Hill</h1>
+                    <div class="subtitle">Manage Your Lunch Orders</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="status-message" class="status-message"></div>
+
+        <div id="refund-interface" style="display: none;">
+            <div class="refund-container">
+                <div class="orders-section" id="orders-section">
+                    <div class="loading">
+                        <span class="loading-spinner"></span>
+                        Loading your orders...
+                    </div>
+                </div>
+
+                <div class="refund-cart" id="refund-cart">
+                    <div class="cart-header">
+                        <h3>🛒 Refund Cart</h3>
+                    </div>
+                    <div class="cart-items" id="cart-items">
+                        <div class="empty-cart">
+                            Select items to refund
+                        </div>
+                    </div>
+                    <div class="cart-summary">
+                        <div id="discount-notice" class="discount-notice" style="display: none;">
+                            ⚠️ Refund amounts reflect discounted prices paid
+                        </div>
+                        <div class="cart-total">
+                            <strong>Total Refund:</strong>
+                            <span class="total-amount">$<span id="refund-total">0.00</span></span>
+                        </div>
+                        <button class="process-refunds-btn" id="process-refunds-btn" onclick="showBatchConfirmation()" disabled>
+                            Process Refunds
+                        </button>
+                        <button class="clear-cart-btn" onclick="clearRefundCart()">
+                            Clear Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 0.9em; padding: 20px; border-top: 1px solid #e0e0e0;">
+            <p><strong>Artios Academies of Sugar Hill</strong></p>
+            <p>Questions? Contact <strong>CRivers@artiosacademies.com</strong></p>
+        </div>
+    </div>
+
+    <!-- Batch Confirmation Modal -->
+    <div id="batchConfirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBatchModal()">&times;</span>
+            <h2>Confirm Refunds</h2>
+            <p>You are about to process the following refunds:</p>
+            <div id="batchRefundDetails" style="max-height: 300px; overflow-y: auto; margin: 20px 0;">
+                <!-- Refund items will be listed here -->
+            </div>
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <strong>Total Refund Amount: $<span id="batchTotalAmount">0.00</span></strong>
+            </div>
+            <div id="discount-warning" style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0; display: none;">
+                <strong>⚠️ Note:</strong> Some items had discounts applied. Refund amounts reflect what was actually paid.
+            </div>
+            <p style="color: #666;">
+                These refunds will be processed and you will receive a confirmation email. 
+                Refunds will be issued via Venmo within 24 hours.
+            </p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeBatchModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmBatchBtn" onclick="confirmBatchRefunds()">
+                    Confirm & Process Refunds
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fixed API URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec';
+        
+        let allOrders = [];
+        let refundCart = [];
+
+        // Helper function to generate session ID
+        function generateSessionId() {
+            const now = new Date();
+            const datePart = now.toISOString().slice(2, 10).replace(/-/g, '');
+            const timePart = now.toTimeString().slice(0, 8).replace(/:/g, '');
+            const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `S${datePart}${timePart}${randomPart}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get authenticated email from session
+            const authenticatedEmail = sessionStorage.getItem('authenticatedEmail');
+            const authExpiry = parseInt(sessionStorage.getItem('authExpiry'));
+            
+            // Check if authenticated
+            if (!authenticatedEmail || !authExpiry || Date.now() >= authExpiry) {
+                // Not authenticated, redirect to login
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Set user email in header
+            document.getElementById('user-email').textContent = authenticatedEmail;
+            
+            // Automatically load orders for authenticated user
+            loadOrdersForAuthenticatedUser(authenticatedEmail);
+            
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Close modals when clicking outside
+            window.onclick = function(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.target.classList.remove('show');
+                }
+            };
+        }
+
+        function logout() {
+            sessionStorage.removeItem('authenticatedEmail');
+            sessionStorage.removeItem('authExpiry');
+            window.location.href = 'login.html';
+        }
+
+        async function loadOrdersForAuthenticatedUser(email) {
+            showMessage('Loading your orders...', 'info');
+            document.getElementById('refund-interface').style.display = 'block';
+            document.getElementById('orders-section').innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading your orders...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}?action=lookup_orders&email=${encodeURIComponent(email)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+
+                if (data.success && data.orders && data.orders.length > 0) {
+                    allOrders = data.orders;
+                    displayOrdersByDate(data.orders);
+                    showMessage(`Found ${data.orders.length} order${data.orders.length !== 1 ? 's' : ''}`, 'success');
+                } else {
+                    showMessage('No orders found for this email address', 'info');
+                    document.getElementById('orders-section').innerHTML = '<div class="empty-cart">No orders found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showMessage('Unable to load orders. Please try again.', 'error');
+            }
+        }
+
+        function displayOrdersByDate(orders) {
+            const ordersSection = document.getElementById('orders-section');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Group items by date
+            const itemsByDate = {};
+            
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    // Clean the date - remove timezone info
+                    const itemDate = item.date ? item.date.split('T')[0] : '';
+                    
+                    if (!itemDate) return;
+                    
+                    if (!itemsByDate[itemDate]) {
+                        itemsByDate[itemDate] = [];
+                    }
+                    
+                    // Fix grade field - use multiple fallbacks
+                    const grade = item.grade || item.childGrade || order.grade || 'Unknown';
+                    
+                    itemsByDate[itemDate].push({
+                        ...item,
+                        date: itemDate,
+                        orderId: order.orderId,
+                        email: order.email,
+                        grade: grade,
+                        childFirstName: item.childFirstName || item.childName?.split(' ')[0] || '',
+                        childLastName: item.childLastName || item.childName?.split(' ')[1] || '',
+                        status: item.status || 'active',
+                        promoCode: order.promoCode || '',
+                        discountPercent: order.discountPercent || 0
+                    });
+                });
+            });
+
+            // Sort dates
+            const sortedDates = Object.keys(itemsByDate)
+                .sort((a, b) => new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00'));
+            
+            let html = '';
+            
+            sortedDates.forEach(dateStr => {
+                const date = new Date(dateStr + 'T12:00:00');
+                const items = itemsByDate[dateStr];
+                const refundableItems = items.filter(item => item.status !== 'cancelled' && canRefundItem(dateStr));
+                const cancelledItems = items.filter(item => item.status === 'cancelled');
+                const discountedItems = items.filter(item => item.hasDiscount);
+                
+                const isToday = date.toDateString() === today.toDateString();
+                const isPast = date < today;
+                
+                html += createDateGroup(date, items, refundableItems, cancelledItems, discountedItems, isToday, isPast, dateStr);
+            });
+
+            ordersSection.innerHTML = html || '<div class="empty-cart">No orders found</div>';
+        }
+
+        function createDateGroup(date, items, refundableItems, cancelledItems, discountedItems, isToday, isPast, dateStr) {
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            const dayName = dayNames[date.getDay()];
+            const monthName = monthNames[date.getMonth()];
+            const dateDisplay = `${dayName}, ${monthName} ${date.getDate()}, ${date.getFullYear()}`;
+            
+            let headerClass = '';
+            if (isToday) headerClass = 'today';
+            else if (isPast) headerClass = 'past';
+
+            let html = `
+                <div class="date-group collapsed" data-date="${dateStr}">
+                    <div class="date-header ${headerClass}" onclick="toggleDateGroup('${dateStr}')">
+                        <div class="date-info">
+                            <span class="date-title">${dateDisplay}</span>
+                            <span class="item-count">${items.length} item${items.length !== 1 ? 's' : ''}</span>
+                            ${refundableItems.length > 0 ? `<span class="refundable-count">${refundableItems.length} refundable</span>` : ''}
+                            ${cancelledItems.length > 0 ? `<span class="cancelled-count">${cancelledItems.length} cancelled</span>` : ''}
+                            ${discountedItems.length > 0 ? `<span class="discounted-count">${discountedItems.length} discounted</span>` : ''}
+                        </div>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="date-items">
+            `;
+
+            items.forEach(item => {
+                const isCancelled = item.status === 'cancelled';
+                const canRefund = !isCancelled && canRefundItem(dateStr);
+                const itemId = `${item.orderId}-${item.id || Math.random().toString(36).substr(2, 9)}`;
+                const hasDiscount = item.hasDiscount || false;
+                const originalPrice = item.price || 0;
+                const paidPrice = item.paidPrice || originalPrice;
+                
+                html += `
+                    <div class="refund-item ${!canRefund && !isCancelled ? 'disabled' : ''} ${isCancelled ? 'cancelled' : ''}">
+                `;
+                
+                if (!isCancelled) {
+                    html += `
+                        <input type="checkbox" 
+                               id="item-${itemId}" 
+                               data-item-id="${itemId}"
+                               data-order-id="${item.orderId}"
+                               data-amount="${paidPrice}"
+                               data-original-amount="${originalPrice}"
+                               data-has-discount="${hasDiscount}"
+                               data-item-name="${item.name}"
+                               data-child-name="${item.childName}"
+                               data-date="${dateStr}"
+                               data-day="${item.day}"
+                               onchange="updateRefundCart('${itemId}')"
+                               ${!canRefund ? 'disabled' : ''}>
+                    `;
+                } else {
+                    html += `<div style="width: 35px;"></div>`;
+                }
+                
+                html += `
+                        <label for="item-${itemId}" style="${isCancelled ? 'cursor: default;' : ''}">
+                            <div class="item-details">
+                                <div class="item-main">
+                                    <span class="child-name">${item.childName}</span>
+                                    <span class="item-name">${item.name}</span>
+                                </div>
+                                <div class="item-meta">
+                                    <span>${item.day}</span>
+                                    <span>Grade: ${item.grade}</span>
+                                    ${hasDiscount && !isCancelled ? 
+                                        `<span style="color: #f59e0b; font-weight: 600;">
+                                            ${item.discountPercent}% discount applied
+                                        </span>` : ''}
+                                    ${isCancelled && item.cancellationDate ? 
+                                        `<span style="color: #ef4444;">Cancelled: ${new Date(item.cancellationDate).toLocaleDateString()}</span>` : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                ${hasDiscount && !isCancelled ? 
+                                    `<span class="original-price">$${originalPrice.toFixed(2)}</span>` 
+                                    : ''}
+                                <span class="item-price">$${paidPrice.toFixed(2)}</span>
+                                ${hasDiscount && !isCancelled ? 
+                                    `<span class="discount-badge">DISCOUNTED</span>` 
+                                    : ''}
+                `;
+                
+                if (isCancelled) {
+                    html += '<span class="status-badge status-cancelled">REFUNDED</span>';
+                } else if (canRefund) {
+                    html += '<span class="status-badge status-refundable">Refundable</span>';
+                } else {
+                    html += '<span class="status-badge status-deadline-passed">Past Deadline</span>';
+                }
+                
+                html += `
+                            </div>
+                        </label>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        function canRefundItem(itemDateStr) {
+            const now = new Date();
+            const cleanDateStr = itemDateStr.split('T')[0];
+            const itemDate = new Date(cleanDateStr + 'T12:00:00');
+            
+            const cutoffTime = new Date(
+                itemDate.getFullYear(),
+                itemDate.getMonth(),
+                itemDate.getDate(),
+                10, 5, 0  // 10:05 AM cutoff
+            );
+            
+            return now < cutoffTime;
+        }
+
+        function toggleDateGroup(dateStr) {
+            const group = document.querySelector(`.date-group[data-date="${dateStr}"]`);
+            if (group) {
+                group.classList.toggle('collapsed');
+            }
+        }
+
+        function updateRefundCart(itemId) {
+            const checkbox = document.getElementById(`item-${itemId}`);
+            
+            if (checkbox.checked) {
+                // Add to cart
+                const item = {
+                    id: itemId,
+                    orderId: checkbox.dataset.orderId,
+                    name: checkbox.dataset.itemName,
+                    childName: checkbox.dataset.childName,
+                    date: checkbox.dataset.date,
+                    day: checkbox.dataset.day,
+                    amount: parseFloat(checkbox.dataset.amount),
+                    originalAmount: parseFloat(checkbox.dataset.originalAmount),
+                    hasDiscount: checkbox.dataset.hasDiscount === 'true'
+                };
+                refundCart.push(item);
+            } else {
+                // Remove from cart
+                refundCart = refundCart.filter(item => item.id !== itemId);
+            }
+            
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartItemsDiv = document.getElementById('cart-items');
+            const refundTotalSpan = document.getElementById('refund-total');
+            const processBtn = document.getElementById('process-refunds-btn');
+            const discountNotice = document.getElementById('discount-notice');
+            
+            if (refundCart.length === 0) {
+                cartItemsDiv.innerHTML = '<div class="empty-cart">Select items to refund</div>';
+                refundTotalSpan.textContent = '0.00';
+                processBtn.disabled = true;
+                discountNotice.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            let total = 0;
+            let hasDiscountedItems = false;
+            
+            refundCart.forEach(item => {
+                const isDiscounted = item.hasDiscount;
+                if (isDiscounted) hasDiscountedItems = true;
+                
+                html += `
+                    <div class="cart-item ${isDiscounted ? 'discounted' : ''}">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-child">${item.childName} - ${item.day}</div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            ${isDiscounted ? 
+                                `<span class="cart-item-original">$${item.originalAmount.toFixed(2)}</span>` 
+                                : ''}
+                            <span class="cart-item-price">$${item.amount.toFixed(2)}</span>
+                            <button class="remove-from-cart" onclick="removeFromCart('${item.id}')">✕</button>
+                        </div>
+                    </div>
+                `;
+                total += item.amount;
+            });
+            
+            cartItemsDiv.innerHTML = html;
+            refundTotalSpan.textContent = total.toFixed(2);
+            processBtn.disabled = false;
+            
+            // Show discount notice if there are discounted items
+            discountNotice.style.display = hasDiscountedItems ? 'block' : 'none';
+        }
+
+        function removeFromCart(itemId) {
+            // Uncheck the checkbox
+            const checkbox = document.getElementById(`item-${itemId}`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+            
+            // Remove from cart
+            refundCart = refundCart.filter(item => item.id !== itemId);
+            updateCartDisplay();
+        }
+
+        function clearRefundCart() {
+            // Uncheck all checkboxes
+            refundCart.forEach(item => {
+                const checkbox = document.getElementById(`item-${item.id}`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            });
+            
+            refundCart = [];
+            updateCartDisplay();
+        }
+
+        function showBatchConfirmation() {
+            if (refundCart.length === 0) {
+                showMessage('No items selected for refund', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('batchConfirmModal');
+            const detailsDiv = document.getElementById('batchRefundDetails');
+            const totalSpan = document.getElementById('batchTotalAmount');
+            const discountWarning = document.getElementById('discount-warning');
+            
+            let html = '<ul style="list-style: none; padding: 0;">';
+            let total = 0;
+            let hasDiscountedItems = false;
+            
+            // Group by child for better display
+            const itemsByChild = {};
+            refundCart.forEach(item => {
+                if (!itemsByChild[item.childName]) {
+                    itemsByChild[item.childName] = [];
+                }
+                itemsByChild[item.childName].push(item);
+                total += item.amount;
+                if (item.hasDiscount) hasDiscountedItems = true;
+            });
+            
+            Object.keys(itemsByChild).forEach(childName => {
+                html += `<li style="margin-bottom: 15px;"><strong>${childName}:</strong><ul>`;
+                itemsByChild[childName].forEach(item => {
+                    html += `<li style="margin-left: 20px;">• ${item.name} (${item.day}) - `;
+                    if (item.hasDiscount) {
+                        html += `<strike style="color: #999;">$${item.originalAmount.toFixed(2)}</strike> `;
+                    }
+                    html += `$${item.amount.toFixed(2)}`;
+                    if (item.hasDiscount) {
+                        html += ' <span style="color: #f59e0b; font-size: 0.9em;">(discounted)</span>';
+                    }
+                    html += '</li>';
+                });
+                html += '</ul></li>';
+            });
+            html += '</ul>';
+            
+            detailsDiv.innerHTML = html;
+            totalSpan.textContent = total.toFixed(2);
+            
+            // Show discount warning if applicable
+            discountWarning.style.display = hasDiscountedItems ? 'block' : 'none';
+            
+            modal.classList.add('show');
+        }
+
+        function closeBatchModal() {
+            document.getElementById('batchConfirmModal').classList.remove('show');
+        }
+
+        async function confirmBatchRefunds() {
+            const confirmBtn = document.getElementById('confirmBatchBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Processing...';
+            
+            // Generate ONE session ID for ALL items
+            const sessionId = generateSessionId();
+            
+            // Prepare ALL items for batch processing
+            const itemsToCancel = refundCart.map(item => ({
+                itemId: item.id
+            }));
+            
+            try {
+                // Send ALL items in ONE API call
+                const url = `${API_URL}?action=cancel_multiple_items&session_id=${sessionId}&items=${encodeURIComponent(JSON.stringify(itemsToCancel))}`;
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeBatchModal();
+                    showMessage(`Successfully cancelled ${result.cancelledCount} items. Total refund: $${result.totalRefund.toFixed(2)}. You will receive ONE confirmation email.`, 'success');
+                    
+                    // Clear the cart
+                    refundCart = [];
+                    updateCartDisplay();
+                    
+                    // Reload orders to show updated status
+                    const email = sessionStorage.getItem('authenticatedEmail');
+                    if (email) {
+                        setTimeout(() => loadOrdersForAuthenticatedUser(email), 2000);
+                    }
+                } else {
+                    closeBatchModal();
+                    showMessage(`Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error processing refunds:', error);
+                closeBatchModal();
+                showMessage('Failed to process refunds. Please try again.', 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirm & Process Refunds';
+            }
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('status-message');
+            messageDiv.textContent = message;
+            messageDiv.className = `status-message ${type} show`;
+            
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
