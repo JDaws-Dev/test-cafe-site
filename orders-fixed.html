@@ -1092,7 +1092,7 @@
       <div class="notice">
         <strong>Order Cutoff: Daily at 10:00 AM</strong><br>
         <strong>ONE FORM PER FAMILY</strong> • Order for multiple children with one email<br>
-        Questions? Contact <a href="mailto:CRivers@artiosacademies.com">CRivers@artiosacademies.com</a>
+        Questions? Contact <a href="mailto:CRivers@artiosacademies.com">CRivers@artiosacademies.com</button>
       </div>
     </div>
 
@@ -1326,7 +1326,32 @@
         try {
           await this.loadMenuData();
           this.loadUserEmail(); // Load login email
-          this.setupEventListeners();
+          this.
+      enforceDesktopVenmoBehavior() {
+        const ua = navigator.userAgent || '';
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+        if (!isMobile) {
+          document.querySelectorAll('a[href^="venmo://"]').forEach(a => {
+            a.dataset.venmoHref = a.getAttribute('href');
+            a.removeAttribute('href');
+            a.style.cursor = 'pointer';
+            a.addEventListener('click', (ev) => {
+              ev.preventDefault();
+              this.openVenmoPayment();
+        this.enforceDesktopVenmoBehavior();
+      }, { once: false });
+          });
+        }
+        document.addEventListener('click', (ev) => {
+          const target = ev.target && ev.target.closest ? ev.target.closest('a[href^="venmo://"]') : null;
+          if (target && !isMobile) {
+            ev.preventDefault();
+            this.openVenmoPayment();
+          }
+        });
+      }
+    
+    setupEventListeners();
           this.setupAutoSave();
           this.validateForm();
           
