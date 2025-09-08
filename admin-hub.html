@@ -471,14 +471,84 @@
 
             <!-- Tab 1: Blackout Dates -->
             <div class="tab-content active" id="blackout-dates">
+                <!-- Add Single Date Card -->
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">📅 Manage Blackout Dates & Vacation Periods</h2>
+                        <h2 class="card-title">📅 Add Blackout Dates</h2>
                     </div>
-                    <div class="placeholder">
-                        <div class="placeholder-icon">🚧</div>
-                        <div class="placeholder-text">Blackout Dates Management</div>
-                        <div class="placeholder-subtext">Add/remove blackout dates and set vacation periods</div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <!-- Single Date -->
+                        <div>
+                            <h4 style="color: #667eea; margin-bottom: 15px;">Single Date</h4>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <input type="date" 
+                                       id="single-blackout-date" 
+                                       class="date-input"
+                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
+                                <input type="text" 
+                                       id="single-blackout-reason" 
+                                       placeholder="Reason (e.g., Teacher Workday)"
+                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
+                                <button onclick="addSingleBlackoutDate()" 
+                                        style="background: #667eea; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                    Add Single Date
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div>
+                            <h4 style="color: #667eea; margin-bottom: 15px;">Date Range (Vacation Periods)</h4>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <input type="date" 
+                                       id="range-start-date" 
+                                       class="date-input"
+                                       placeholder="Start Date"
+                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
+                                <input type="date" 
+                                       id="range-end-date" 
+                                       class="date-input"
+                                       placeholder="End Date"
+                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
+                                <input type="text" 
+                                       id="range-blackout-reason" 
+                                       placeholder="Reason (e.g., Spring Break)"
+                                       style="padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;">
+                                <button onclick="addRangeBlackoutDates()" 
+                                        style="background: #f59e0b; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                    Add Date Range
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Blackout Dates Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📋 Current Blackout Dates</h2>
+                        <button onclick="loadBlackoutDates()" 
+                                style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                    
+                    <div id="blackout-dates-list">
+                        <div class="loading">
+                            <span class="loading-spinner"></span>
+                            Loading blackout dates...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar View Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📆 Calendar View</h2>
+                    </div>
+                    <div id="calendar-view" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 20px;">
+                        <!-- Calendar will be generated here -->
                     </div>
                 </div>
             </div>
