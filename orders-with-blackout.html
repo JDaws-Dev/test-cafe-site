@@ -376,14 +376,25 @@
       background: #f3f4f6;
     }
 
-    /* NEW: Blackout date styles */
-    .day-tab.blackout {
-      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-      border: 2px solid #ef4444;
-      color: #dc2626;
-      cursor: not-allowed;
-      opacity: 0.8;
-    }
+/* FIXED: Enhanced blackout date styles */
+.day-tab.blackout {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  border: 2px solid #ef4444 !important;
+  color: #dc2626 !important;
+  cursor: not-allowed !important;
+  opacity: 0.9 !important;
+}
+
+/* Force blackout styling to override active/hover states */
+.day-tab.blackout:hover,
+.day-tab.blackout.active {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  border: 2px solid #ef4444 !important;
+  color: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+}
+
+    
 
     .day-tab.blackout::before {
       content: '🚫';
@@ -393,13 +404,16 @@
       font-size: 14px;
     }
 
-    .blackout-reason {
-      font-size: 0.75em;
-      font-weight: 400;
-      margin-top: 0.25rem;
-      opacity: 0.9;
-      line-height: 1.2;
-    }
+  .blackout-reason {
+  font-size: 0.7em !important;
+  font-weight: 500 !important;
+  margin-top: 0.25rem;
+  opacity: 0.95 !important;
+  line-height: 1.2;
+  color: #7f1d1d !important;
+}
+
+    
 
     .day-name {
       font-size: 0.95rem;
@@ -1628,19 +1642,29 @@
             tab.classList.add('disabled');
             tab.setAttribute('aria-disabled', 'true');
             tab.title = `Orders for ${this.constants.dayNames[index]} are closed (10:00 AM cutoff passed)`;
-          } else if (isBlackout) {
-            // NEW: Handle blackout dates with visual blocking
-            tab.classList.add('blackout');
-            tab.setAttribute('aria-disabled', 'true');
-            tab.title = `${this.constants.dayNames[index]} is not available: ${blackoutReason}`;
+ 
+          
+} else if (isBlackout) {
+  // FIXED: Enhanced blackout handling
+  tab.classList.add('blackout');
+  tab.setAttribute('aria-disabled', 'true');
+  tab.title = `${this.constants.dayNames[index]} is not available: ${blackoutReason}`;
+  
+  // Multiple ways to prevent interaction
+  tab.style.pointerEvents = 'none';
+  tab.style.cursor = 'not-allowed';
+  
+  // Override any click events completely
+  tab.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.showNotification(`${this.constants.dayNames[index]} is not available: ${blackoutReason}`, 'warning');
+    return false;
+  };
+
+
+
             
-            // Prevent any click events on blackout tabs
-            tab.style.pointerEvents = 'none';
-            tab.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              this.showNotification(`${this.constants.dayNames[index]} is not available: ${blackoutReason}`, 'warning');
-            });
           } else {
             tab.addEventListener('click', () => this.switchDay(day));
             tab.addEventListener('keydown', (e) => {
