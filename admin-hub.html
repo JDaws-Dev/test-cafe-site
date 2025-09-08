@@ -731,8 +731,11 @@
             try {
                 const response = await apiCall('get_blackout_dates');
                 
+                console.log('Blackout dates response:', response); // Debug log
+                
                 if (response.success) {
                     blackoutDates = response.blackoutDates || [];
+                    console.log('Loaded blackout dates:', blackoutDates); // Debug log
                     displayBlackoutDates();
                     generateCalendar(); // Refresh calendar
                 } else {
