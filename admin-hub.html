@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Hub - Artios Academies Cafe</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --danger-gradient: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            --success-gradient: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            --warning-gradient: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            --info-gradient: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Login Screen */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-gradient);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: var(--danger-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .login-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-error {
+            color: #ef4444;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* Admin Dashboard */
+        .admin-container {
+            display: none;
+            min-height: 100vh;
+            background: var(--bg-secondary);
+        }
+
+        .admin-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-title h1 {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .tab-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 18px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: var(--bg-secondary);
+        }
+
+        .tab-icon {
+            font-size: 1.2em;
+        }
+
+        /* Tab Content */
+        .content-area {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Common Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-message.show {
+            display: flex;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status-message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Placeholder Content */
+        .placeholder {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 60px 30px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .placeholder-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .placeholder-text {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .placeholder-subtext {
+            font-size: 0.95em;
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .tab-container {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+
+            .tab-btn.active {
+                border-left-color: #667eea;
+                border-bottom-color: transparent;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="login-screen">
+        <div class="login-box">
+            <div class="login-logo">🔐</div>
+            <h1 class="login-title">Admin Portal</h1>
+            <p class="login-subtitle">Artios Academies Cafe Management</p>
+            
+            <input type="password" 
+                   class="password-input" 
+                   id="password-input" 
+                   placeholder="Enter admin password"
+                   autocomplete="off">
+            
+            <button class="login-btn" onclick="attemptLogin()">
+                Access Admin Portal
+            </button>
+            
+            <div class="login-error" id="login-error">
+                Incorrect password. Please try again.
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-container" id="admin-dashboard">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <div>
+                        <h1>🍽️ Artios Cafe Admin Hub</h1>
+                        <div class="header-subtitle">Comprehensive Management Portal</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="user-badge">👤 Administrator</div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('blackout-dates')" data-tab="blackout-dates">
+                    <span class="tab-icon">📅</span>
+                    <span>Blackout Dates</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('order-management')" data-tab="order-management">
+                    <span class="tab-icon">💳</span>
+                    <span>Orders & Payments</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('financial-reports')" data-tab="financial-reports">
+                    <span class="tab-icon">📊</span>
+                    <span>Financial Reports</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('communications')" data-tab="communications">
+                    <span class="tab-icon">📧</span>
+                    <span>Communications</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('exports')" data-tab="exports">
+                    <span class="tab-icon">📥</span>
+                    <span>Reports & Exports</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Status Messages -->
+            <div id="status-message" class="status-message"></div>
+
+            <!-- Tab 1: Blackout Dates -->
+            <div class="tab-content active" id="blackout-dates">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📅 Manage Blackout Dates & Vacation Periods</h2>
+                    </div>
+                    <div class="placeholder">
+                        <div class="placeholder-icon">🚧</div>
+                        <div class="placeholder-text">Blackout Dates Management</div>
+                        <div class="placeholder-subtext">Add/remove blackout dates and set vacation periods</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Order Management -->
+            <div class="tab-content" id="order-management">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">💳 Order Management & Venmo Reconciliation</h2>
+                    </div>
+                    <div class="placeholder">
+                        <div class="placeholder-icon">💰</div>
+                        <div class="placeholder-text">Payment Reconciliation</div>
+                        <div class="placeholder-subtext">Track and confirm Venmo payments</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Financial Reports -->
+            <div class="tab-content" id="financial-reports">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 Financial Reports & Analytics</h2>
+                    </div>
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📈</div>
+                        <div class="placeholder-text">Business Analytics</div>
+                        <div class="placeholder-subtext">Revenue, customer analytics, and student breakdowns</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Communications -->
+            <div class="tab-content" id="communications">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📧 Communications Center</h2>
+                    </div>
+                    <div class="placeholder">
+                        <div class="placeholder-icon">✉️</div>
+                        <div class="placeholder-text">Family Communications</div>
+                        <div class="placeholder-subtext">Contact lists, announcements, and email management</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: Reports & Exports -->
+            <div class="tab-content" id="exports">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📥 Reports & Data Exports</h2>
+                    </div>
+                    <div class="placeholder">
+                        <div class="placeholder-icon">💾</div>
+                        <div class="placeholder-text">Export Center</div>
+                        <div class="placeholder-subtext">Download orders, financial summaries, and customer data</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const ADMIN_PASSWORD = 'admin2025';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec';
+
+        // State
+        let isAuthenticated = false;
+        let currentTab = 'blackout-dates';
+        let blackoutDates = [];
+        let currentCalendarMonth = new Date();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already authenticated (session storage)
+            const authStatus = sessionStorage.getItem('admin_authenticated');
+            if (authStatus === 'true') {
+                showAdminDashboard();
+            }
+
+            // Setup enter key for password field
+            document.getElementById('password-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    attemptLogin();
+                }
+            });
+        });
+
+        // Authentication
+        function attemptLogin() {
+            const password = document.getElementById('password-input').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                isAuthenticated = true;
+                sessionStorage.setItem('admin_authenticated', 'true');
+                showAdminDashboard();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+                document.getElementById('password-input').value = '';
+                
+                // Hide error after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('login-error').style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'block';
+            
+            // Load initial tab data
+            loadTabData(currentTab);
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                isAuthenticated = false;
+                sessionStorage.removeItem('admin_authenticated');
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('admin-dashboard').style.display = 'none';
+                document.getElementById('password-input').value = '';
+            }
+        }
+
+        // Tab Management
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === tabName);
+            });
+
+            currentTab = tabName;
+            
+            // Load data for the selected tab
+            loadTabData(tabName);
+        }
+
+        function loadTabData(tabName) {
+            console.log(`Loading data for tab: ${tabName}`);
+            
+            switch(tabName) {
+                case 'blackout-dates':
+                    loadBlackoutDates();
+                    generateCalendar();
+                    break;
+                case 'order-management':
+                    // loadOrders();
+                    break;
+                case 'financial-reports':
+                    // loadFinancialReports();
+                    break;
+                case 'communications':
+                    // loadCommunications();
+                    break;
+                case 'exports':
+                    // setupExports();
+                    break;
+            }
+        }
+
+        // ==========================================
+        // BLACKOUT DATES FUNCTIONALITY
+        // ==========================================
+
+        async function loadBlackoutDates() {
+            document.getElementById('blackout-dates-list').innerHTML = `
+                <div class="loading">
+                    <span class="loading-spinner"></span>
+                    Loading blackout dates...
+                </div>
+            `;
+
+            try {
+                const response = await apiCall('get_blackout_dates');
+                
+                if (response.success) {
+                    blackoutDates = response.blackoutDates || [];
+                    displayBlackoutDates();
+                    generateCalendar(); // Refresh calendar
+                } else {
+                    throw new Error(response.error || 'Failed to load blackout dates');
+                }
+            } catch (error) {
+                console.error('Error loading blackout dates:', error);
+                document.getElementById('blackout-dates-list').innerHTML = `
+                    <div style="color: #ef4444; text-align: center; padding: 20px;">
+                        Failed to load blackout dates. Please try again.
+                    </div>
+                `;
+            }
+        }
+
+        function displayBlackoutDates() {
+            const container = document.getElementById('blackout-dates-list');
+            
+            if (blackoutDates.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #6b7280; padding: 40px;">
+                        No blackout dates configured
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort dates
+            blackoutDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let html = '';
+            blackoutDates.forEach(item => {
+                const date = new Date(item.date + 'T12:00:00');
+                const dateStr = date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+
+                html += `
+                    <div class="blackout-date-item">
+                        <div class="blackout-date-info">
+                            <span class="blackout-date">${dateStr}</span>
+                            <span class="blackout-reason">${item.reason || 'No reason specified'}</span>
+                        </div>
+                        <button class="remove-blackout-btn" onclick="removeBlackoutDate('${item.date}')">
+                            Remove
+                        </button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        async function addSingleBlackoutDate() {
+            const date = document.getElementById('single-blackout-date').value;
+            const reason = document.getElementById('single-blackout-reason').value || 'School Closed';
+
+            if (!date) {
+                showMessage('Please select a date', 'error');
+                return;
+            }
+
+            try {
+                const response = await apiCall('add_blackout_date', {
+                    date: date,
+                    reason: reason
+                });
+
+                if (response.success) {
+                    showMessage('Blackout date added successfully', 'success');
+                    document.getElementById('single-blackout-date').value = '';
+                    document.getElementById('single-blackout-reason').value = '';
+                    loadBlackoutDates();
+                } else {
+                    throw new Error(response.error || 'Failed to add blackout date');
+                }
+            } catch (error) {
+                console.error('Error adding blackout date:', error);
+                showMessage('Failed to add blackout date', 'error');
+            }
+        }
+
+        async function addRangeBlackoutDates() {
+            const startDate = document.getElementById('range-start-date').value;
+            const endDate = document.getElementById('range-end-date').value;
+            const reason = document.getElementById('range-blackout-reason').value || 'Vacation Period';
+
+            if (!startDate || !endDate) {
+                showMessage('Please select both start and end dates', 'error');
+                return;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                showMessage('End date must be after start date', 'error');
+                return;
+            }
+
+            try {
+                const response = await apiCall('add_blackout_range', {
+                    start_date: startDate,
+                    end_date: endDate,
+                    reason: reason
+                });
+
+                if (response.success) {
+                    showMessage(`Added ${response.datesAdded} blackout dates`, 'success');
+                    document.getElementById('range-start-date').value = '';
+                    document.getElementById('range-end-date').value = '';
+                    document.getElementById('range-blackout-reason').value = '';
+                    loadBlackoutDates();
+                } else {
+                    throw new Error(response.error || 'Failed to add date range');
+                }
+            } catch (error) {
+                console.error('Error adding date range:', error);
+                showMessage('Failed to add date range', 'error');
+            }
+        }
+
+        async function removeBlackoutDate(date) {
+            if (!confirm(`Remove blackout date for ${formatDate(date)}?`)) {
+                return;
+            }
+
+            try {
+                const response = await apiCall('remove_blackout_date', {
+                    date: date
+                });
+
+                if (response.success) {
+                    showMessage('Blackout date removed', 'success');
+                    loadBlackoutDates();
+                } else {
+                    throw new Error(response.error || 'Failed to remove date');
+                }
+            } catch (error) {
+                console.error('Error removing blackout date:', error);
+                showMessage('Failed to remove blackout date', 'error');
+            }
+        }
+
+        function generateCalendar() {
+            const container = document.getElementById('calendar-view');
+            if (!container) return;
+
+            const year = currentCalendarMonth.getFullYear();
+            const month = currentCalendarMonth.getMonth();
+            
+            // Create month navigation
+            const navHtml = `
+                <div class="month-navigation" style="grid-column: 1 / -1;">
+                    <button onclick="changeMonth(-1)">← Previous</button>
+                    <span class="current-month">${currentCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                    <button onclick="changeMonth(1)">Next →</button>
+                </div>
+            `;
+
+            // Create day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let calendarHtml = navHtml;
+            
+            dayHeaders.forEach(day => {
+                calendarHtml += `<div class="calendar-header">${day}</div>`;
+            });
+
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Add empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                calendarHtml += '<div></div>';
+            }
+
+            // Add days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = new Date(year, month, day);
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isBlackout = blackoutDates.some(bd => bd.date === dateStr);
+                const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+                const isPast = currentDate < today;
+                const isToday = currentDate.getTime() === today.getTime();
+
+                let classes = 'calendar-day';
+                if (isBlackout) classes += ' blackout';
+                if (isWeekend) classes += ' weekend';
+                if (isPast) classes += ' past';
+                if (isToday) classes += ' today';
+
+                const blackoutInfo = isBlackout ? blackoutDates.find(bd => bd.date === dateStr) : null;
+                const title = blackoutInfo ? blackoutInfo.reason : '';
+
+                calendarHtml += `
+                    <div class="${classes}" title="${title}" onclick="toggleCalendarDate('${dateStr}')">
+                        ${day}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = calendarHtml;
+        }
+
+        function changeMonth(direction) {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + direction);
+            generateCalendar();
+        }
+
+        async function toggleCalendarDate(dateStr) {
+            const isBlackout = blackoutDates.some(bd => bd.date === dateStr);
+            
+            if (isBlackout) {
+                await removeBlackoutDate(dateStr);
+            } else {
+                const reason = prompt('Enter reason for blackout date (optional):') || 'School Closed';
+                if (reason !== null) {
+                    try {
+                        const response = await apiCall('add_blackout_date', {
+                            date: dateStr,
+                            reason: reason
+                        });
+
+                        if (response.success) {
+                            showMessage('Blackout date added', 'success');
+                            loadBlackoutDates();
+                        }
+                    } catch (error) {
+                        showMessage('Failed to add blackout date', 'error');
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.getElementById('status-message');
+            messageDiv.textContent = message;
+            messageDiv.className = `status-message ${type} show`;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T12:00:00');
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        // API call wrapper
+        async function apiCall(action, params = {}) {
+            try {
+                const url = new URL(API_URL);
+                url.searchParams.append('action', action);
+                Object.keys(params).forEach(key => {
+                    url.searchParams.append(key, params[key]);
+                });
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                showMessage('Network error. Please try again.', 'error');
+                return { success: false, error: error.message };
+            }
+        }
+    </script>
+</body>
+</html>
