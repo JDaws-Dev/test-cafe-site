@@ -1,9 +1,9 @@
 /**
  * Artios Academies Cafe System - Google Apps Script
- * Version: 5.0 - WITH DISCOUNT-AWARE REFUNDS
+ * Version: 5.1 - WITH BLACKOUT DATES MANAGEMENT
  * 
  * Complete system with family authentication, order management,
- * and proper refund calculations based on actual paid amounts
+ * refund calculations, and blackout dates management
  */
 
 // ============================================
@@ -107,7 +107,7 @@ function doGet(e) {
         success: true,
         message: 'Google Apps Script is working correctly!',
         timestamp: new Date().toISOString(),
-        version: '5.0'
+        version: '5.1'
       });
     }
     
@@ -311,7 +311,7 @@ function doGet(e) {
     }
     
     // ============================================
-    // BLACKOUT DATES ENDPOINT
+    // BLACKOUT DATES ENDPOINTS (NEW)
     // ============================================
     
     if (action === 'get_blackout_dates') {
@@ -323,6 +323,75 @@ function doGet(e) {
         return createResponse({
           success: false,
           error: `Failed to get blackout dates: ${error.toString()}`
+        });
+      }
+    }
+    
+    if (action === 'add_blackout_date') {
+      const date = e.parameter.date;
+      const reason = e.parameter.reason || 'School Closed';
+      
+      if (!date) {
+        return createResponse({
+          success: false,
+          error: 'Date parameter required'
+        });
+      }
+      
+      try {
+        const result = addBlackoutDate(date, reason);
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error adding blackout date:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to add blackout date: ${error.toString()}`
+        });
+      }
+    }
+    
+    if (action === 'add_blackout_range') {
+      const startDate = e.parameter.start_date;
+      const endDate = e.parameter.end_date;
+      const reason = e.parameter.reason || 'Vacation Period';
+      
+      if (!startDate || !endDate) {
+        return createResponse({
+          success: false,
+          error: 'Start and end date parameters required'
+        });
+      }
+      
+      try {
+        const result = addBlackoutDateRange(startDate, endDate, reason);
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error adding blackout range:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to add blackout range: ${error.toString()}`
+        });
+      }
+    }
+    
+    if (action === 'remove_blackout_date') {
+      const date = e.parameter.date;
+      
+      if (!date) {
+        return createResponse({
+          success: false,
+          error: 'Date parameter required'
+        });
+      }
+      
+      try {
+        const result = removeBlackoutDate(date);
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error removing blackout date:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to remove blackout date: ${error.toString()}`
         });
       }
     }
@@ -625,11 +694,21 @@ function generateSessionId() {
   return `S${datePart}${timePart}${randomPart}`;
 }
 
+
+
+
+
 /**
  * Normalize any date-ish input to "YYYY-MM-DD"
  */
 function normalizeDateToString(dateInput) {
   if (!dateInput) return '';
+  
+  // If it's already a string in YYYY-MM-DD format, return it
+  if (typeof dateInput === 'string' && dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateInput;
+  }
+  
   let d;
 
   if (dateInput instanceof Date) {
@@ -641,7 +720,17 @@ function normalizeDateToString(dateInput) {
       d = new Date(NaN);
     }
   } else if (typeof dateInput === 'string') {
-    d = new Date(dateInput);
+    // Handle various string formats
+    if (dateInput.includes('T')) {
+      // Already has time component
+      d = new Date(dateInput);
+    } else if (dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      // YYYY-MM-DD format - add noon time to avoid timezone issues
+      d = new Date(dateInput + 'T12:00:00');
+    } else {
+      // Try to parse as-is
+      d = new Date(dateInput);
+    }
   } else {
     return '';
   }
@@ -653,6 +742,11 @@ function normalizeDateToString(dateInput) {
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
 }
+
+
+
+
+
 
 /**
  * Enhanced lookupOrders function with paid price handling
@@ -1221,33 +1315,41 @@ function updateDistributionStatus(orderId, childId, distributed) {
 }
 
 // ============================================
-// BLACKOUT DATES FUNCTIONS
+// BLACKOUT DATES FUNCTIONS (NEW)
 // ============================================
 
 /**
- * Get blackout dates from sheet
+ * Get or create the Blackout Dates sheet
+ */
+function getBlackoutDatesSheet() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let blackoutSheet;
+  
+  try {
+    blackoutSheet = spreadsheet.getSheetByName(BLACKOUT_DATES_SHEET);
+  } catch (e) {
+    // Create sheet if it doesn't exist
+    blackoutSheet = spreadsheet.insertSheet(BLACKOUT_DATES_SHEET);
+    blackoutSheet.getRange(1, 1, 1, 3).setValues([['Date', 'Reason', 'Added_By']]);
+    
+    // Format headers
+    const headerRange = blackoutSheet.getRange(1, 1, 1, 3);
+    headerRange.setBackground('#4285f4');
+    headerRange.setFontColor('#ffffff');
+    headerRange.setFontWeight('bold');
+    
+    console.log('Created Blackout Dates sheet');
+  }
+  
+  return blackoutSheet;
+}
+
+/**
+ * Get all blackout dates
  */
 function getBlackoutDates() {
   try {
-    const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
-    let blackoutSheet;
-    
-    try {
-      blackoutSheet = spreadsheet.getSheetByName(BLACKOUT_DATES_SHEET);
-    } catch (e) {
-      // Create sheet if it doesn't exist
-      blackoutSheet = spreadsheet.insertSheet(BLACKOUT_DATES_SHEET);
-      blackoutSheet.getRange(1, 1, 1, 2).setValues([['Date', 'Reason']]);
-      
-      // Format headers
-      const headerRange = blackoutSheet.getRange(1, 1, 1, 2);
-      headerRange.setBackground('#4285f4');
-      headerRange.setFontColor('#ffffff');
-      headerRange.setFontWeight('bold');
-      
-      console.log('Created Blackout Dates sheet');
-    }
-    
+    const blackoutSheet = getBlackoutDatesSheet();
     const data = blackoutSheet.getDataRange().getValues();
     const blackoutDates = [];
     
@@ -1255,7 +1357,8 @@ function getBlackoutDates() {
       if (data[i][0]) {
         blackoutDates.push({
           date: normalizeDateToString(data[i][0]),
-          reason: data[i][1] || 'School Closed'
+          reason: data[i][1] || 'School Closed',
+          addedBy: data[i][2] || 'Admin'
         });
       }
     }
@@ -1270,6 +1373,165 @@ function getBlackoutDates() {
     throw error;
   }
 }
+
+/**
+ * Add a single blackout date
+ */
+function addBlackoutDate(dateStr, reason) {
+  try {
+    const blackoutSheet = getBlackoutDatesSheet();
+    
+    // Check if date already exists
+    const existingDates = getBlackoutDates().blackoutDates;
+    const normalizedDate = normalizeDateToString(dateStr);
+    
+    if (existingDates.some(bd => bd.date === normalizedDate)) {
+      return {
+        success: false,
+        error: 'This date is already marked as a blackout date'
+      };
+    }
+    
+    // Add the new blackout date
+    blackoutSheet.appendRow([
+      normalizedDate,
+      reason || 'School Closed',
+      'Admin'
+    ]);
+    
+    console.log(`Added blackout date: ${normalizedDate} - ${reason}`);
+    
+    return {
+      success: true,
+      message: 'Blackout date added successfully',
+      date: normalizedDate,
+      reason: reason
+    };
+    
+  } catch (error) {
+    console.error('Error adding blackout date:', error);
+    throw error;
+  }
+}
+
+/**
+ * Add a range of blackout dates
+ */
+function addBlackoutDateRange(startDateStr, endDateStr, reason) {
+  try {
+    const blackoutSheet = getBlackoutDatesSheet();
+    const startDate = new Date(startDateStr + 'T12:00:00');
+    const endDate = new Date(endDateStr + 'T12:00:00');
+    
+    if (startDate > endDate) {
+      return {
+        success: false,
+        error: 'End date must be after start date'
+      };
+    }
+    
+    // Get existing dates to check for duplicates
+    const existingDates = getBlackoutDates().blackoutDates;
+    const existingDateSet = new Set(existingDates.map(bd => bd.date));
+    
+    const newRows = [];
+    let datesAdded = 0;
+    
+    // Loop through each day in the range
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateStr = normalizeDateToString(currentDate);
+      
+      // Only add if not already a blackout date
+      if (!existingDateSet.has(dateStr)) {
+        newRows.push([
+          dateStr,
+          reason || 'Vacation Period',
+          'Admin'
+        ]);
+        datesAdded++;
+      }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Add all new rows at once if any
+    if (newRows.length > 0) {
+      const lastRow = blackoutSheet.getLastRow();
+      blackoutSheet.getRange(lastRow + 1, 1, newRows.length, 3).setValues(newRows);
+    }
+    
+    console.log(`Added ${datesAdded} blackout dates from ${startDateStr} to ${endDateStr}`);
+    
+    return {
+      success: true,
+      message: `Added ${datesAdded} blackout dates`,
+      datesAdded: datesAdded,
+      startDate: startDateStr,
+      endDate: endDateStr
+    };
+    
+  } catch (error) {
+    console.error('Error adding blackout date range:', error);
+    throw error;
+  }
+}
+
+
+
+/**
+ * Remove a blackout date
+ */
+function removeBlackoutDate(dateStr) {
+  try {
+    const blackoutSheet = getBlackoutDatesSheet();
+    const data = blackoutSheet.getDataRange().getValues();
+    const normalizedDate = normalizeDateToString(dateStr);
+    
+    console.log(`Attempting to remove blackout date: ${normalizedDate}`);
+    
+    let rowToDelete = -1;
+    
+    // Find the row with this date (be more careful with comparison)
+    for (let i = 1; i < data.length; i++) {
+      const rowDate = normalizeDateToString(data[i][0]);
+      console.log(`Comparing row ${i}: ${rowDate} with ${normalizedDate}`);
+      
+      if (rowDate === normalizedDate) {
+        rowToDelete = i + 1; // Sheet rows are 1-indexed
+        console.log(`Found match at row ${rowToDelete}`);
+        break;
+      }
+    }
+    
+    if (rowToDelete === -1) {
+      console.log(`Date not found: ${normalizedDate}`);
+      console.log('Available dates:', data.slice(1).map(row => normalizeDateToString(row[0])));
+      return {
+        success: false,
+        error: 'Date not found in blackout dates'
+      };
+    }
+    
+    // Delete the row
+    blackoutSheet.deleteRow(rowToDelete);
+    
+    console.log(`Successfully removed blackout date: ${normalizedDate} from row ${rowToDelete}`);
+    
+    return {
+      success: true,
+      message: 'Blackout date removed successfully',
+      date: normalizedDate
+    };
+    
+  } catch (error) {
+    console.error('Error removing blackout date:', error);
+    throw error;
+  }
+}
+
+
 
 // ============================================
 // EMAIL FUNCTIONS WITH DISCOUNT AWARENESS
@@ -1504,306 +1766,321 @@ function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionI
   try {
     const totalRefund = cancellations.reduce((sum, item) => sum + item.refundAmount, 0);
     const itemCount = cancellations.length;
-    const subject = `ACTION REQUIRED: Send Venmo Refund - $${totalRefund.toFixed(2)} (${itemCount} item${itemCount > 1 ? 's' : ''})`;
-    
-    let itemsDetail = '';
-    cancellations.forEach(item => {
-      itemsDetail += `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.childName}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemName}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDay}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDate.toLocaleDateString()}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
-            ${item.hasDiscount ? `<strike>$${item.originalAmount.toFixed(2)}</strike><br>` : ''}
-            $${item.refundAmount.toFixed(2)}
-          </td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.reason}</td>
-        </tr>
-      `;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #f44336 0%, #ff5722 100%); color: white; padding: 25px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">Venmo Refund Required</h1>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <div style="background: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h3 style="color: #d32f2f; margin: 0 0 15px 0;">ACTION REQUIRED</h3>
-            <p style="margin: 0; font-size: 1.2em; font-weight: 600;">Send $${totalRefund.toFixed(2)} via Venmo to ${parentEmail}</p>
-            <p style="margin: 10px 0 0 0; color: #666;">Session ID: ${sessionId}</p>
-          </div>
-          
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 15px 0; color: #333;">Cancellation Details:</h4>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #e9ecef;">
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Student</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Date</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Refund</th>
-                  <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsDetail}
-              </tbody>
-              <tfoot>
-                <tr style="background: #f5f5f5; font-weight: bold;">
-                  <td colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: right;">TOTAL TO REFUND:</td>
-                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${totalRefund.toFixed(2)}</td>
-                  <td style="padding: 10px; border: 1px solid #ddd;"></td>
-                </tr>
-              </tfoot>
-            </table>
-            <p style="margin-top: 10px; color: #666; font-style: italic;">
-              Note: Refund amounts reflect actual paid prices after any discounts.
-            </p>
-          </div>
-          
-          <div style="background: #e8f5e8; border: 2px solid #4caf50; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h4 style="color: #2e7d32; margin: 0 0 15px 0;">Venmo Payment Instructions:</h4>
-            <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
-              <li>Send <strong>$${totalRefund.toFixed(2)}</strong> via Venmo to <strong>${parentEmail}</strong></li>
-              <li>Use note: <strong>"Artios Cafe refund - Session ${sessionId}"</strong></li>
-              <li>No reply needed - system handles confirmation emails</li>
-            </ol>
-          </div>
-          
-          <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
-            <p style="margin: 0; color: #f57c00; font-weight: 600;">
-              These cancellations were auto-approved because they were submitted before the 10:00 AM deadline.
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      NOTIFICATION_EMAIL,
-      subject,
-      `ACTION REQUIRED: Process refund of $${totalRefund.toFixed(2)} for ${itemCount} cancelled items`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Cafe System - Refund Required'
-      }
-    );
-    
-    console.log(`Admin refund notification sent for session ${sessionId}`);
-    
-  } catch (error) {
-    console.error('Error sending batched admin refund notification:', error);
-  }
+
+const subject = `ACTION REQUIRED: Send Venmo Refund - $${totalRefund.toFixed(2)} (${itemCount} item${itemCount > 1 ? 's' : ''})`;
+   
+   let itemsDetail = '';
+   cancellations.forEach(item => {
+     itemsDetail += `
+       <tr>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.childName}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.itemName}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDay}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDate.toLocaleDateString()}</td>
+         <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+           ${item.hasDiscount ? `<strike>$${item.originalAmount.toFixed(2)}</strike><br>` : ''}
+           $${item.refundAmount.toFixed(2)}
+         </td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.reason}</td>
+       </tr>
+     `;
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
+       <div style="background: linear-gradient(135deg, #f44336 0%, #ff5722 100%); color: white; padding: 25px; text-align: center; border-radius: 12px;">
+         <h1 style="margin: 0;">Venmo Refund Required</h1>
+       </div>
+       
+       <div style="padding: 25px; background: white;">
+         <div style="background: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 20px; margin: 20px 0;">
+           <h3 style="color: #d32f2f; margin: 0 0 15px 0;">ACTION REQUIRED</h3>
+           <p style="margin: 0; font-size: 1.2em; font-weight: 600;">Send $${totalRefund.toFixed(2)} via Venmo to ${parentEmail}</p>
+           <p style="margin: 10px 0 0 0; color: #666;">Session ID: ${sessionId}</p>
+         </div>
+         
+         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h4 style="margin: 0 0 15px 0; color: #333;">Cancellation Details:</h4>
+           <table style="width: 100%; border-collapse: collapse;">
+             <thead>
+               <tr style="background: #e9ecef;">
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Student</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Date</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Refund</th>
+                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Reason</th>
+               </tr>
+             </thead>
+             <tbody>
+               ${itemsDetail}
+             </tbody>
+             <tfoot>
+               <tr style="background: #f5f5f5; font-weight: bold;">
+                 <td colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: right;">TOTAL TO REFUND:</td>
+                 <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${totalRefund.toFixed(2)}</td>
+                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
+               </tr>
+             </tfoot>
+           </table>
+           <p style="margin-top: 10px; color: #666; font-style: italic;">
+             Note: Refund amounts reflect actual paid prices after any discounts.
+           </p>
+         </div>
+         
+         <div style="background: #e8f5e8; border: 2px solid #4caf50; border-radius: 8px; padding: 20px; margin: 20px 0;">
+           <h4 style="color: #2e7d32; margin: 0 0 15px 0;">Venmo Payment Instructions:</h4>
+           <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
+             <li>Send <strong>$${totalRefund.toFixed(2)}</strong> via Venmo to <strong>${parentEmail}</strong></li>
+             <li>Use note: <strong>"Artios Cafe refund - Session ${sessionId}"</strong></li>
+             <li>No reply needed - system handles confirmation emails</li>
+           </ol>
+         </div>
+         
+         <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
+           <p style="margin: 0; color: #f57c00; font-weight: 600;">
+             These cancellations were auto-approved because they were submitted before the 10:00 AM deadline.
+           </p>
+         </div>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   GmailApp.sendEmail(
+     NOTIFICATION_EMAIL,
+     subject,
+     `ACTION REQUIRED: Process refund of $${totalRefund.toFixed(2)} for ${itemCount} cancelled items`,
+     {
+       htmlBody: emailBody,
+       name: 'Artios Cafe System - Refund Required'
+     }
+   );
+   
+   console.log(`Admin refund notification sent for session ${sessionId}`);
+   
+ } catch (error) {
+   console.error('Error sending batched admin refund notification:', error);
+ }
 }
 
 /**
- * Send order confirmation email with discount details
- */
+* Send order confirmation email with discount details
+*/
 function sendOrderConfirmationEmail(orderData) {
-  try {
-    const subject = `Cafe Order Confirmed - ${orderData.orderId}`;
-    
-    // Calculate discount rate for display
-    const discountRate = orderData.discount && orderData.subtotal > 0 
-      ? orderData.discount / orderData.subtotal 
-      : 0;
-    
-    let itemsList = '';
-    const dayGroups = {};
-    
-    orderData.items.forEach(item => {
-      if (!dayGroups[item.day]) {
-        dayGroups[item.day] = [];
-      }
-      const child = orderData.children.find(c => c.id === item.childId);
-      const discountedPrice = item.price * (1 - discountRate);
-      dayGroups[item.day].push({
-        childName: child ? `${child.firstName} ${child.lastName}` : 'Unknown',
-        itemName: item.name,
-        originalPrice: item.price,
-        discountedPrice: discountedPrice,
-        hasDiscount: discountRate > 0
-      });
-    });
-    
-    Object.keys(dayGroups).sort().forEach(day => {
-      itemsList += `<h4 style="color: #4285f4; margin-top: 20px;">${day}:</h4><ul>`;
-      dayGroups[day].forEach(item => {
-        itemsList += `<li>${item.childName}: ${item.itemName} - `;
-        if (item.hasDiscount) {
-          itemsList += `<strike style="color: #999;">${item.originalPrice.toFixed(2)}</strike> ${item.discountedPrice.toFixed(2)}`;
-        } else {
-          itemsList += `${item.originalPrice.toFixed(2)}`;
-        }
-        itemsList += '</li>';
-      });
-      itemsList += '</ul>';
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
-          <h1 style="margin: 0;">Order Confirmed!</h1>
-          <p style="margin: 10px 0 0 0; font-size: 1.2em;">Order ID: ${orderData.orderId}</p>
-        </div>
-        
-        <div style="padding: 25px; background: white;">
-          <h3 style="color: #333;">Thank you for your order!</h3>
-          
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 15px 0; color: #333;">Order Details:</h4>
-            ${itemsList}
-          </div>
-          
-          <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Payment Information:</h4>
-            <p style="margin: 5px 0;"><strong>Subtotal:</strong> ${orderData.subtotal.toFixed(2)}</p>
-            ${orderData.discount > 0 ? `
-              <p style="margin: 5px 0; color: #d32f2f;"><strong>Discount (${orderData.promoCode}):</strong> -${orderData.discount.toFixed(2)}</p>
-              <p style="margin: 5px 0; color: #666; font-style: italic; font-size: 0.9em;">
-                ${getDiscountDescription(orderData.promoCode)}
-              </p>
-            ` : ''}
-            <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Due:</strong> ${orderData.total.toFixed(2)}</p>
-          </div>
-          
-          <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
-            <h4 style="margin: 0 0 10px 0; color: #f57c00;">Payment Instructions:</h4>
-            <p style="margin: 5px 0;">Please send payment via <strong>Venmo</strong> to complete your order.</p>
-            <p style="margin: 5px 0;">Include order ID <strong>${orderData.orderId}</strong> in the payment note.</p>
-          </div>
-          
-          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="margin: 0 0 10px 0; color: #1976d2;">Important Information:</h4>
-            <ul style="margin: 0; padding-left: 20px;">
-              <li>Orders can be cancelled until 10:00 AM on the day of service</li>
-              ${orderData.discount > 0 ? '<li><strong>Refunds will be based on the discounted price you paid</strong></li>' : ''}
-              <li>Login to your family account to view or manage orders</li>
-              <li>Refunds are processed within 24 hours via Venmo</li>
-            </ul>
-          </div>
-          
-          <p style="text-align: center; margin-top: 30px; color: #666;">
-            Questions? Contact us at <strong>${NOTIFICATION_EMAIL}</strong>
-          </p>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      orderData.parentEmail,
-      subject,
-      `Order confirmed! Total: ${orderData.total.toFixed(2)}. Please send payment via Venmo.`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Academies Cafe'
-      }
-    );
-    
-    console.log(`Confirmation email sent to ${orderData.parentEmail}`);
-    
-  } catch (error) {
-    console.error('Error sending confirmation email:', error);
-  }
+ try {
+   const subject = `Cafe Order Confirmed - ${orderData.orderId}`;
+   
+   // Calculate discount rate for display
+   const discountRate = orderData.discount && orderData.subtotal > 0 
+     ? orderData.discount / orderData.subtotal 
+     : 0;
+   
+   let itemsList = '';
+   const dayGroups = {};
+   
+   orderData.items.forEach(item => {
+     if (!dayGroups[item.day]) {
+       dayGroups[item.day] = [];
+     }
+     const child = orderData.children.find(c => c.id === item.childId);
+     const discountedPrice = item.price * (1 - discountRate);
+     dayGroups[item.day].push({
+       childName: child ? `${child.firstName} ${child.lastName}` : 'Unknown',
+       itemName: item.name,
+       originalPrice: item.price,
+       discountedPrice: discountedPrice,
+       hasDiscount: discountRate > 0
+     });
+   });
+   
+   Object.keys(dayGroups).sort().forEach(day => {
+     itemsList += `<h4 style="color: #4285f4; margin-top: 20px;">${day}:</h4><ul>`;
+     dayGroups[day].forEach(item => {
+       itemsList += `<li>${item.childName}: ${item.itemName} - `;
+       if (item.hasDiscount) {
+         itemsList += `<strike style="color: #999;">$${item.originalPrice.toFixed(2)}</strike> $${item.discountedPrice.toFixed(2)}`;
+       } else {
+         itemsList += `$${item.originalPrice.toFixed(2)}`;
+       }
+       itemsList += '</li>';
+     });
+     itemsList += '</ul>';
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+       <div style="background: linear-gradient(135deg, #4285f4 0%, #7b68ee 100%); color: white; padding: 30px; text-align: center; border-radius: 12px;">
+         <h1 style="margin: 0;">Order Confirmed!</h1>
+         <p style="margin: 10px 0 0 0; font-size: 1.2em;">Order ID: ${orderData.orderId}</p>
+       </div>
+       
+       <div style="padding: 25px; background: white;">
+         <h3 style="color: #333;">Thank you for your order!</h3>
+         
+         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h4 style="margin: 0 0 15px 0; color: #333;">Order Details:</h4>
+           ${itemsList}
+         </div>
+         
+         <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Payment Information:</h4>
+           <p style="margin: 5px 0;"><strong>Subtotal:</strong> $${orderData.subtotal.toFixed(2)}</p>
+           ${orderData.discount > 0 ? `
+             <p style="margin: 5px 0; color: #d32f2f;"><strong>Discount (${orderData.promoCode}):</strong> -$${orderData.discount.toFixed(2)}</p>
+             <p style="margin: 5px 0; color: #666; font-style: italic; font-size: 0.9em;">
+               ${getDiscountDescription(orderData.promoCode)}
+             </p>
+           ` : ''}
+           <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Due:</strong> $${orderData.total.toFixed(2)}</p>
+         </div>
+         
+         <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+           <h4 style="margin: 0 0 10px 0; color: #f57c00;">Payment Instructions:</h4>
+           <p style="margin: 5px 0;">Please send payment via <strong>Venmo</strong> to complete your order.</p>
+           <p style="margin: 5px 0;">Include order ID <strong>${orderData.orderId}</strong> in the payment note.</p>
+         </div>
+         
+         <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+           <h4 style="margin: 0 0 10px 0; color: #1976d2;">Important Information:</h4>
+           <ul style="margin: 0; padding-left: 20px;">
+             <li>Orders can be cancelled until 10:00 AM on the day of service</li>
+             ${orderData.discount > 0 ? '<li><strong>Refunds will be based on the discounted price you paid</strong></li>' : ''}
+             <li>Login to your family account to view or manage orders</li>
+             <li>Refunds are processed within 24 hours via Venmo</li>
+           </ul>
+         </div>
+         
+         <p style="text-align: center; margin-top: 30px; color: #666;">
+           Questions? Contact us at <strong>${NOTIFICATION_EMAIL}</strong>
+         </p>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   GmailApp.sendEmail(
+     orderData.parentEmail,
+     subject,
+     `Order confirmed! Total: $${orderData.total.toFixed(2)}. Please send payment via Venmo.`,
+     {
+       htmlBody: emailBody,
+       name: 'Artios Academies Cafe'
+     }
+   );
+   
+   console.log(`Confirmation email sent to ${orderData.parentEmail}`);
+   
+ } catch (error) {
+   console.error('Error sending confirmation email:', error);
+ }
 }
 
 /**
- * Send admin notification email for new order
- */
+* Send admin notification email for new order
+*/
 function sendAdminNotificationEmail(orderData) {
-  try {
-    const subject = `New Cafe Order - ${orderData.orderId}`;
-    
-    const discountRate = orderData.discount && orderData.subtotal > 0 
-      ? orderData.discount / orderData.subtotal 
-      : 0;
-    
-    let itemsDetail = '';
-    orderData.items.forEach(item => {
-      const child = orderData.children.find(c => c.id === item.childId);
-      const paidPrice = item.price * (1 - discountRate);
-      itemsDetail += `
-        <tr>
-          <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.firstName + ' ' + child.lastName : 'Unknown'}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.grade : ''}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.day}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">
-            ${discountRate > 0 ? `<strike>${item.price.toFixed(2)}</strike><br>` : ''}
-            ${paidPrice.toFixed(2)}
-          </td>
-        </tr>
-      `;
-    });
-    
-    const emailBody = `
-      <html>
-      <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
-        <div style="background: #4285f4; color: white; padding: 20px; text-align: center; border-radius: 8px;">
-          <h2 style="margin: 0;">New Cafe Order Received</h2>
-        </div>
-        
-        <div style="padding: 20px; background: white;">
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-            <h3 style="margin: 0 0 10px 0; color: #333;">Order Information:</h3>
-            <p style="margin: 5px 0;"><strong>Order ID:</strong> ${orderData.orderId}</p>
-            <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${orderData.parentEmail}</p>
-            <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
-            <p style="margin: 5px 0;"><strong>Subtotal:</strong> ${orderData.subtotal.toFixed(2)}</p>
-            ${orderData.discount > 0 ? `
-              <p style="margin: 5px 0;"><strong>Discount (${orderData.promoCode}):</strong> -${orderData.discount.toFixed(2)}</p>
-            ` : ''}
-            <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Amount:</strong> ${orderData.total.toFixed(2)}</p>
-          </div>
-          
-          <h3 style="color: #333;">Items Ordered:</h3>
-          <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-            <thead>
-              <tr style="background: #e3f2fd;">
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Child</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Grade</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Price Paid</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsDetail}
-            </tbody>
-          </table>
-          
-          <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
-            <h4 style="margin: 0 0 10px 0; color: #f57c00;">Action Required:</h4>
-            <p style="margin: 5px 0;">Monitor for Venmo payment from <strong>${orderData.parentEmail}</strong></p>
-            <p style="margin: 5px 0;">Expected amount: <strong>${orderData.total.toFixed(2)}</strong></p>
-            <p style="margin: 5px 0;">Order ID in payment note: <strong>${orderData.orderId}</strong></p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    GmailApp.sendEmail(
-      NOTIFICATION_EMAIL,
-      subject,
-      `New order received from ${orderData.parentEmail}. Total: ${orderData.total.toFixed(2)}`,
-      {
-        htmlBody: emailBody,
-        name: 'Artios Cafe System'
-      }
-    );
-    
-    console.log(`Admin notification sent for order ${orderData.orderId}`);
-    
-  } catch (error) {
-    console.error('Error sending admin notification:', error);
-  }
+ try {
+   const subject = `New Cafe Order - ${orderData.orderId}`;
+   
+   const discountRate = orderData.discount && orderData.subtotal > 0 
+     ? orderData.discount / orderData.subtotal 
+     : 0;
+   
+   let itemsDetail = '';
+   orderData.items.forEach(item => {
+     const child = orderData.children.find(c => c.id === item.childId);
+     const paidPrice = item.price * (1 - discountRate);
+     itemsDetail += `
+       <tr>
+         <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.firstName + ' ' + child.lastName : 'Unknown'}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.grade : ''}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.day}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
+         <td style="padding: 8px; border: 1px solid #ddd;">
+           ${discountRate > 0 ? `<strike>$${item.price.toFixed(2)}</strike><br>` : ''}
+           $${paidPrice.toFixed(2)}
+         </td>
+       </tr>
+     `;
+   });
+   
+   const emailBody = `
+     <html>
+     <body style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
+       <div style="background: #4285f4; color: white; padding: 20px; text-align: center; border-radius: 8px;">
+         <h2 style="margin: 0;">New Cafe Order Received</h2>
+       </div>
+       
+       <div style="padding: 20px; background: white;">
+         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+           <h3 style="margin: 0 0 10px 0; color: #333;">Order Information:</h3>
+           <p style="margin: 5px 0;"><strong>Order ID:</strong> ${orderData.orderId}</p>
+           <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${orderData.parentEmail}</p>
+           <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
+           <p style="margin: 5px 0;"><strong>Subtotal:</strong> $${orderData.subtotal.toFixed(2)}</p>
+           ${orderData.discount > 0 ? `
+             <p style="margin: 5px 0;"><strong>Discount (${orderData.promoCode}):</strong> -$${orderData.discount.toFixed(2)}</p>
+           ` : ''}
+           <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Amount:</strong> $${orderData.total.toFixed(2)}</p>
+         </div>
+         
+         <h3 style="color: #333;">Items Ordered:</h3>
+         <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+           <thead>
+             <tr style="background: #e3f2fd;">
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Child</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Grade</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
+               <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Price Paid</th>
+             </tr>
+           </thead>
+           <tbody>
+             ${itemsDetail}
+           </tbody>
+         </table>
+         
+         <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ff9800;">
+           <h4 style="margin: 0 0 10px 0; color: #f57c00;">Action Required:</h4>
+           <p style="margin: 5px 0;">Monitor for Venmo payment from <strong>${orderData.parentEmail}</strong></p>
+           <p style="margin: 5px 0;">Expected amount: <strong>$${orderData.total.toFixed(2)}</strong></p>
+           <p style="margin: 5px 0;">Order ID in payment note: <strong>${orderData.orderId}</strong></p>
+         </div>
+       </div>
+     </body>
+     </html>
+   `;
+   
+   GmailApp.sendEmail(
+     NOTIFICATION_EMAIL,
+     subject,
+     `New order received from ${orderData.parentEmail}. Total: $${orderData.total.toFixed(2)}`,
+     {
+       htmlBody: emailBody,
+       name: 'Artios Cafe System'
+     }
+   );
+   
+   console.log(`Admin notification sent for order ${orderData.orderId}`);
+   
+ } catch (error) {
+   console.error('Error sending admin notification:', error);
+ }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
