@@ -1429,11 +1429,24 @@
 
       // NEW: Check if a date is a blackout date
       isBlackoutDate(dateStr) {
-        return this.state.blackoutDates.some(bd => bd.date === dateStr);
+        // TEMP: Force Wednesday to be blackout for testing
+        if (dateStr.includes('2024-') && new Date(dateStr + 'T12:00:00').getDay() === 3) {
+          console.log('FORCED BLACKOUT: Wednesday detected');
+          return true;
+        }
+        
+        const result = this.state.blackoutDates.some(bd => bd.date === dateStr);
+        console.log(`isBlackoutDate(${dateStr}): ${result}, available dates:`, this.state.blackoutDates.map(bd => bd.date));
+        return result;
       }
 
       // NEW: Get blackout reason for a date
       getBlackoutReason(dateStr) {
+        // TEMP: Force Wednesday reason
+        if (dateStr.includes('2024-') && new Date(dateStr + 'T12:00:00').getDay() === 3) {
+          return 'Test Blackout - School Closed';
+        }
+        
         const blackoutInfo = this.state.blackoutDates.find(bd => bd.date === dateStr);
         return blackoutInfo ? blackoutInfo.reason : null;
       }
