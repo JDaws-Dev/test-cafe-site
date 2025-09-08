@@ -1351,7 +1351,79 @@
         });
       }
     
-    setupEventListeners();
+    
+      openPaymentModal() {
+        const modal = document.getElementById('payment-modal');
+        const modalTotal = document.getElementById('modal-total');
+        const venmoTotal = document.getElementById('venmo-total');
+        const venmoLink = document.getElementById('venmo-payment-link');
+        if (!modal || !modalTotal || !venmoTotal || !venmoLink) {
+          this.showNotification('Payment system error. Please refresh the page.', 'error');
+          return;
+        }
+        // show modal
+        modal.style.display = 'block';
+
+        // totals
+        modalTotal.textContent = (Number(this.state.currentTotal)||0).toFixed(2);
+        venmoTotal.textContent = (Number(this.state.currentTotal)||0).toFixed(2);
+
+        // Build simple summary (kept from working file approach)
+        let orderSummary = `Artios Cafe Order - $${(Number(this.state.currentTotal)||0).toFixed(2)}`;
+        const children = (this.state.orderItems||[]).map(i => i.childName).filter((v,i,a)=>a.indexOf(v)===i);
+        if (children.length === 1) orderSummary += ' for ' + children[0];
+        else if (children.length > 1) orderSummary += ' for ' + children.length + ' children';
+
+        const HANDLE = 'ChanTa-Rivers';
+        const deepLink = `venmo://paycharge?txn=pay&recipients=${HANDLE}&amount=${(Number(this.state.currentTotal)||0).toFixed(2)}&note=${encodeURIComponent(orderSummary)}`;
+        const webUrl = `https://venmo.com/${HANDLE}?txn=pay&amount=${(Number(this.state.currentTotal)||0).toFixed(2)}&note=${encodeURIComponent(orderSummary)}`;
+
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          venmoLink.href = deepLink;
+          venmoLink.removeAttribute('target');
+          venmoLink.onclick = null;
+        } else {
+          venmoLink.href = webUrl;
+          venmoLink.target = '_blank';
+          venmoLink.onclick = async (e) => {
+            e.preventDefault();
+            venmoLink.style.pointerEvents = 'none';
+            venmoLink.textContent = '⏳ Saving order...';
+            try {
+              const orderData = this.prepareOrderData ? this.prepareOrderData() : {};
+              orderData.paymentStatus = 'PENDING_PAYMENT';
+              orderData.paymentTimestamp = new Date().toISOString();
+              // save to Apps Script if configured; otherwise skip
+              if (this.config && this.config.webAppUrl) {
+                const response = await fetch(this.config.webAppUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: 'data=' + encodeURIComponent(JSON.stringify(orderData))
+                });
+                await response.json();
+              }
+              const confirmBtn = document.getElementById('confirm-payment-btn');
+              if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.style.opacity = '1'; }
+              venmoLink.style.background = '#4caf50';
+              venmoLink.textContent = '✓ Order Saved - Opening Venmo...';
+              setTimeout(() => window.open(webUrl, '_blank'), 700);
+            } catch (err) {
+              console.error(err);
+              this.showNotification('Error saving order. Please try again.', 'error');
+              venmoLink.style.pointerEvents = 'auto';
+              venmoLink.innerHTML = `💳 Pay with Venmo ($<span id="venmo-total">${(Number(this.state.currentTotal)||0).toFixed(2)}</span>)`;
+            }
+          };
+        }
+
+        // wire confirm/cancel
+        const cancelBtn = document.getElementById('cancel-payment-btn');
+        const confirmBtn = document.getElementById('confirm-payment-btn');
+        if (cancelBtn) cancelBtn.onclick = () => { modal.style.display = 'none'; };
+        if (confirmBtn) confirmBtn.onclick = () => { modal.style.display = 'none'; this.submitOrder && this.submitOrder(); };
+      }
+setupEventListeners();
           this.setupAutoSave();
           this.validateForm();
           
@@ -1789,6 +1861,8 @@ buildVenmoNote(orderId, total, items) {
 
       
       setupEventListeners() {
+    document.getElementById('checkout-btn')?.addEventListener('click', (e)=>{ e.preventDefault(); if (!this.validateForm || this.validateForm()) this.openPaymentModal(); });
+
         // Add child button
         document.getElementById('add-child-btn')?.addEventListener('click', () => this.addChild());
 
@@ -2711,5 +2785,39 @@ updateChildCheckboxes() {
       orderSystem = window.orderSystem = new OrderSystem();
     });
   </script>
+
+<!-- Payment modal (from working Orders.html) -->
+<div class="payment-modal" id="payment-modal" style="display:none;">
+  <div class="payment-content" style="max-width:520px;margin:10vh auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);padding:20px;">
+    <div class="payment-header" style="font-weight:700;font-size:1.25rem;margin-bottom:12px;">Complete Your Order</div>
+    <div class="payment-amount" style="font-size:1.1rem;margin-bottom:8px;">
+      Total: $<span id="modal-total">0.00</span>
+    </div>
+
+    <div class="payment-steps" style="font-size:.95rem;line-height:1.35;margin:10px 0 14px;">
+      <div class="payment-step" style="display:flex;gap:10px;margin:6px 0;"><div class="step-number" style="background:#eef;padding:2px 8px;border-radius:999px;">1</div>
+        <div>Click "Pay with Venmo" to open Venmo with order details</div>
+      </div>
+      <div class="payment-step" style="display:flex;gap:10px;margin:6px 0;"><div class="step-number" style="background:#eef;padding:2px 8px;border-radius:999px;">2</div>
+        <div>Complete payment to <strong>@ChanTa-Rivers</strong></div>
+      </div>
+      <div class="payment-step" style="display:flex;gap:10px;margin:6px 0;"><div class="step-number" style="background:#eef;padding:2px 8px;border-radius:999px;">3</div>
+        <div>Return here and click "I've Paid" to submit your order</div>
+      </div>
+    </div>
+
+    <div style="margin: 14px 0;">
+      <a href="#" id="venmo-payment-link" class="venmo-btn" style="display:inline-block;background:#3d95ce;color:#fff;text-decoration:none;border-radius:8px;padding:10px 14px;">
+        💳 Pay with Venmo ($<span id="venmo-total">0.00</span>)
+      </a>
+    </div>
+
+    <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button type="button" class="confirmation-btn" id="confirm-payment-btn" disabled style="opacity:.6;">✅ I've Paid - Submit Order</button>
+      <button type="button" class="cancel-btn" id="cancel-payment-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
