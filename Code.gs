@@ -1,9 +1,9 @@
 /**
  * Artios Academies Cafe System - Google Apps Script
- * Version: 4.0 - SIMPLIFIED (No automated report emails)
+ * Version: 5.0 - WITH DISCOUNT-AWARE REFUNDS
  * 
  * Complete system with family authentication, order management,
- * and simplified session-based cancellation processing
+ * and proper refund calculations based on actual paid amounts
  */
 
 // ============================================
@@ -107,7 +107,7 @@ function doGet(e) {
         success: true,
         message: 'Google Apps Script is working correctly!',
         timestamp: new Date().toISOString(),
-        version: '4.0'
+        version: '5.0'
       });
     }
     
@@ -260,6 +260,20 @@ function doGet(e) {
       }
     }
     
+    // Migration endpoint for existing data
+    if (action === 'migrate_paid_prices' && e.parameter.secret === 'cafe2025') {
+      try {
+        const result = migrateExistingOrdersWithPaidPrices();
+        return createResponse(result);
+      } catch (migrationError) {
+        console.error('Migration error:', migrationError);
+        return createResponse({
+          success: false,
+          error: `Migration failed: ${migrationError.toString()}`
+        });
+      }
+    }
+    
     // ============================================
     // DAILY CHECKLIST ENDPOINTS
     // ============================================
@@ -381,23 +395,34 @@ function getFamilyAccountsSheet() {
 }
 
 /**
- * Get or create the Orders sheet
+ * Get or create the Orders sheet with updated structure
  */
 function getOrdersSheet() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let ordersSheet = spreadsheet.getSheetByName(ORDERS_SHEET);
+  
   if (!ordersSheet) {
     ordersSheet = spreadsheet.insertSheet(ORDERS_SHEET);
     const headers = [
       'Order_ID','Parent_Email','Child_First_Name','Child_Last_Name','Child_Grade',
-      'Items_JSON','Item_Price','Reserved','Timestamp','Parent_Phone','Child_ID',
+      'Items_JSON','Item_Price','Item_Paid_Price','Reserved','Timestamp','Parent_Phone','Child_ID',
       'Item_Date','Day_Name','Subtotal','Discount','Total','Promo_Code','Item_Status',
       'Cancellation_Date','Refund_Amount','Cancellation_Reason','Cancellation_Session_ID',
-      'Distributed' // Column W (23) for tracking distribution
+      'Distributed'
     ];
     ordersSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     const headerRange = ordersSheet.getRange(1, 1, 1, headers.length);
     headerRange.setBackground('#4285f4').setFontColor('#ffffff').setFontWeight('bold');
+  } else {
+    // Check if we need to add the Item_Paid_Price column
+    const headers = ordersSheet.getRange(1, 1, 1, ordersSheet.getLastColumn()).getValues()[0];
+    if (!headers.includes('Item_Paid_Price')) {
+      // Insert new column H for Item_Paid_Price
+      ordersSheet.insertColumnAfter(7);
+      ordersSheet.getRange(1, 8).setValue('Item_Paid_Price');
+      ordersSheet.getRange(1, 8).setBackground('#4285f4').setFontColor('#ffffff').setFontWeight('bold');
+      console.log('Added Item_Paid_Price column to existing sheet');
+    }
   }
 
   // Force column E (Child_Grade) to Plain text for the whole sheet
@@ -630,7 +655,7 @@ function normalizeDateToString(dateInput) {
 }
 
 /**
- * Enhanced lookupOrders function with normalized date handling
+ * Enhanced lookupOrders function with paid price handling
  */
 function lookupOrders(email, orderId = null) {
   try {
@@ -652,14 +677,14 @@ function lookupOrders(email, orderId = null) {
       if (!orderMap[currentOrderId]) {
         orderMap[currentOrderId] = {
           orderId: currentOrderId,
-          timestamp: row[8], // Timestamp (I)
+          timestamp: row[9], // Timestamp (J) - shifted by 1
           email: row[1],
           items: [],
           children: [],
-          subtotal: row[13] || 0, // N
-          discount: row[14] || 0, // O
-          total: row[15] || 0,    // P
-          promoCode: row[16] || ''// Q
+          subtotal: row[14] || 0, // O - shifted by 1
+          discount: row[15] || 0, // P - shifted by 1
+          total: row[16] || 0,    // Q - shifted by 1
+          promoCode: row[17] || '' // R - shifted by 1
         };
       }
 
@@ -672,28 +697,34 @@ function lookupOrders(email, orderId = null) {
         if (itemsArray.length > 0) {
           const itemData = itemsArray[0];
 
-          // Normalize date from Item_Date (L)
-          const normalizedDate = normalizeDateToString(row[11]);
+          // Normalize date from Item_Date (M) - shifted by 1
+          const normalizedDate = normalizeDateToString(row[12]);
+          
+          // Get original and paid prices
+          const originalPrice = parseFloat(row[6]) || 0; // Item_Price (G)
+          const paidPrice = parseFloat(row[7]) || originalPrice; // Item_Paid_Price (H) with fallback
 
-          // Status & cancellation columns
-          const itemStatus = row[17] || 'active';     // R
-          const cancellationDate = row[18] || null;   // S
-          const refundAmount = parseFloat(row[19]) || 0; // T
-          const cancellationReason = row[20] || null; // U
-          const sessionId = row[21] || null;          // V
+          // Status & cancellation columns - all shifted by 1
+          const itemStatus = row[18] || 'active';     // S - shifted
+          const cancellationDate = row[19] || null;   // T - shifted
+          const refundAmount = parseFloat(row[20]) || 0; // U - shifted
+          const cancellationReason = row[21] || null; // V - shifted
+          const sessionId = row[22] || null;          // W - shifted
 
           const item = {
             id: `${currentOrderId}-${i}`,
             rowIndex: i,
             name: itemData.name,
-            price: parseFloat(row[6]) || 0,             // Item_Price (G)
-            day: itemData.day || row[12],               // Day from JSON or Day_Name (M)
-            childId: row[10] || '1',                    // Child_ID (K)
-            childName: `${row[2]} ${row[3]}`.trim(),    // First + Last (C,D)
+            price: originalPrice,
+            paidPrice: paidPrice,
+            hasDiscount: paidPrice < originalPrice,
+            day: itemData.day || row[13], // Day_Name (N) - shifted
+            childId: row[11] || '1',      // Child_ID (L) - shifted
+            childName: `${row[2]} ${row[3]}`.trim(),
             childFirstName: row[2],
             childLastName: row[3],
-            grade: row[4],                               // Grade (E)
-            date: normalizedDate,                        // ALWAYS "YYYY-MM-DD"
+            grade: row[4],
+            date: normalizedDate,
             status: itemStatus,
             cancellationDate: cancellationDate,
             refundAmount: refundAmount,
@@ -707,7 +738,7 @@ function lookupOrders(email, orderId = null) {
           const childKey = item.childName;
           if (!orderMap[currentOrderId].children.find(c => c.name === childKey)) {
             orderMap[currentOrderId].children.push({
-              id: row[10] || '1',
+              id: row[11] || '1', // Child_ID - shifted
               firstName: row[2],
               lastName: row[3],
               name: childKey,
@@ -722,6 +753,15 @@ function lookupOrders(email, orderId = null) {
 
     const orders = Object.values(orderMap);
 
+    // Add discount percentage to each order
+    orders.forEach(order => {
+      if (order.discount > 0 && order.subtotal > 0) {
+        order.discountPercent = (order.discount / order.subtotal * 100).toFixed(1);
+      } else {
+        order.discountPercent = 0;
+      }
+    });
+
     console.log(`Found ${orders.length} orders for ${email}`);
 
     return { success: true, orders, count: orders.length };
@@ -733,7 +773,7 @@ function lookupOrders(email, orderId = null) {
 }
 
 /**
- * Process multiple item cancellations in a single session
+ * Process multiple item cancellations with discount-aware refunds
  */
 function processBatchCancellation(items, sessionId, reason) {
   try {
@@ -759,15 +799,15 @@ function processBatchCancellation(items, sessionId, reason) {
       
       const row = data[rowIndex];
       
-      // Check if item is already cancelled
-      const currentStatus = row[17] || 'active';
+      // Check if item is already cancelled (column S - shifted to 18)
+      const currentStatus = row[18] || 'active';
       if (currentStatus === 'cancelled') {
         console.log(`Item ${itemId} already cancelled`);
         continue;
       }
       
-      // Validate deadline
-      let itemDateStr = row[11];
+      // Validate deadline (column M - shifted to 12)
+      let itemDateStr = row[12];
       let itemDate;
       if (itemDateStr instanceof Date) {
         itemDate = new Date(itemDateStr);
@@ -789,12 +829,12 @@ function processBatchCancellation(items, sessionId, reason) {
         continue;
       }
       
-      // UPDATED: Check deadline at 10:05 AM
+      // Check deadline at 10:05 AM
       const cutoffTime = new Date(
         itemDate.getFullYear(),
         itemDate.getMonth(), 
         itemDate.getDate(),
-        10, 5, 0, 0  // Changed from 8, 15 to 10, 5
+        10, 5, 0, 0
       );
       
       if (now > cutoffTime) {
@@ -813,7 +853,12 @@ function processBatchCancellation(items, sessionId, reason) {
       }
       
       const itemData = itemsArray[0];
-      const refundAmount = parseFloat(row[6]) || 0;
+      
+      // IMPORTANT: Use paid price for refund, not original price
+      const originalPrice = parseFloat(row[6]) || 0; // Item_Price (G)
+      const paidPrice = parseFloat(row[7]) || originalPrice; // Item_Paid_Price (H) with fallback
+      const refundAmount = paidPrice; // Refund what they actually paid
+      
       const orderId = row[0];
       const parentEmail = row[1];
       
@@ -821,16 +866,16 @@ function processBatchCancellation(items, sessionId, reason) {
       const range = sheet.getRange(rowIndex + 1, 1, 1, sheet.getLastColumn());
       const updatedRow = [...row];
       
-      // Ensure we have enough columns
-      while (updatedRow.length < 23) {
+      // Ensure we have enough columns (24 with new structure)
+      while (updatedRow.length < 24) {
         updatedRow.push('');
       }
       
-      updatedRow[17] = 'cancelled'; // Status column (R)
-      updatedRow[18] = now.toISOString(); // Cancellation date (S)
-      updatedRow[19] = refundAmount; // Refund amount (T)
-      updatedRow[20] = itemReason; // Cancellation reason (U)
-      updatedRow[21] = sessionId; // Cancellation session ID (V)
+      updatedRow[18] = 'cancelled'; // Status column (S) - shifted
+      updatedRow[19] = now.toISOString(); // Cancellation date (T) - shifted
+      updatedRow[20] = refundAmount; // Refund amount (U) - USING PAID PRICE
+      updatedRow[21] = itemReason; // Cancellation reason (V) - shifted
+      updatedRow[22] = sessionId; // Cancellation session ID (W) - shifted
       
       range.setValues([updatedRow]);
       
@@ -842,7 +887,9 @@ function processBatchCancellation(items, sessionId, reason) {
         itemName: itemData.name,
         itemDay: itemData.day,
         itemDate: itemDate,
+        originalAmount: originalPrice,
         refundAmount: refundAmount,
+        hasDiscount: paidPrice < originalPrice,
         reason: itemReason,
         cancellationDate: now
       });
@@ -850,7 +897,7 @@ function processBatchCancellation(items, sessionId, reason) {
       // Log individual cancellation
       logCancellation(orderId, itemData, refundAmount, itemReason, parentEmail);
       
-      console.log(`Successfully cancelled item: ${itemData.name} for ${row[2]} ${row[3]}`);
+      console.log(`Successfully cancelled item: ${itemData.name} for ${row[2]} ${row[3]} - Refund: $${refundAmount.toFixed(2)}`);
     }
     
     if (cancelledItems.length > 0) {
@@ -938,11 +985,16 @@ function logCancellation(orderId, itemData, refundAmount, reason, email) {
 // ============================================
 
 /**
- * Save multi-child order data to Google Sheet
+ * Save multi-child order data to Google Sheet with paid prices
  */
 function saveMultiChildOrderToSheet(orderData) {
   try {
     const sheet = getOrdersSheet();
+
+    // Calculate discount rate if applicable
+    const discountRate = orderData.discount && orderData.subtotal > 0 
+      ? orderData.discount / orderData.subtotal 
+      : 0;
 
     // Build all rows first
     const rows = [];
@@ -951,6 +1003,9 @@ function saveMultiChildOrderToSheet(orderData) {
       const childId = item.childId || '1';
       const child = orderData.children.find(c => c.id === childId) || orderData.children[0];
       if (!child) return;
+
+      // Calculate the actual paid price for this item
+      const itemPaidPrice = item.price * (1 - discountRate);
 
       // Force grade to be treated as literal text by Sheets
       const gradeText = "'" + String(child.grade ?? '');
@@ -962,20 +1017,21 @@ function saveMultiChildOrderToSheet(orderData) {
         child.lastName  || '',          // D
         gradeText,                      // E - TEXT, cannot be auto-dated
         JSON.stringify([item]),         // F
-        item.price,                     // G
-        '',                             // H
-        orderData.timestamp,            // I
-        orderData.parentPhone || '',    // J
-        childId,                        // K
-        item.date,                      // L
-        item.day,                       // M
-        orderData.subtotal,             // N
-        orderData.discount || 0,        // O
-        orderData.total,                // P
-        orderData.promoCode || '',      // Q
-        'active',                       // R
-        '', '', '', '',                 // S-V
-        'FALSE'                         // W - Distributed (default false)
+        item.price,                     // G - Original price
+        itemPaidPrice,                  // H - NEW: Actual paid price after discount
+        '',                             // I - Reserved
+        orderData.timestamp,            // J
+        orderData.parentPhone || '',    // K
+        childId,                        // L
+        item.date,                      // M
+        item.day,                       // N
+        orderData.subtotal,             // O
+        orderData.discount || 0,        // P
+        orderData.total,                // Q
+        orderData.promoCode || '',      // R
+        'active',                       // S
+        '', '', '', '',                 // T-W
+        'FALSE'                         // X - Distributed (default false)
       ]);
     });
 
@@ -993,7 +1049,7 @@ function saveMultiChildOrderToSheet(orderData) {
     // And once more after write
     sheet.getRange(startRow, 5, rows.length, 1).setNumberFormat('@');
 
-    console.log(`Order ${orderData.orderId} saved (${rows.length} items) with grade as TEXT.`);
+    console.log(`Order ${orderData.orderId} saved (${rows.length} items) with paid prices and grade as TEXT.`);
   } catch (error) {
     console.error('Error saving order to sheet:', error);
     throw error;
@@ -1012,6 +1068,47 @@ function getDiscountDescription(promoCode) {
   return 'Discount Applied';
 }
 
+/**
+ * Migration function to add paid prices to existing orders
+ */
+function migrateExistingOrdersWithPaidPrices() {
+  try {
+    const sheet = getOrdersSheet();
+    const data = sheet.getDataRange().getValues();
+    let updatedCount = 0;
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const originalPrice = parseFloat(row[6]) || 0;  // Column G
+      const paidPriceCell = row[7];                    // Column H
+      const subtotal = parseFloat(row[14]) || 0;       // Column O (shifted)
+      const discount = parseFloat(row[15]) || 0;       // Column P (shifted)
+      
+      // Calculate paid price if not already set
+      if ((!paidPriceCell || paidPriceCell === '') && subtotal > 0 && originalPrice > 0) {
+        const discountRate = discount / subtotal;
+        const paidPrice = originalPrice * (1 - discountRate);
+        
+        // Update column H with paid price
+        sheet.getRange(i + 1, 8).setValue(paidPrice);
+        updatedCount++;
+      }
+    }
+    
+    console.log(`Migration completed. Updated ${updatedCount} rows with paid prices.`);
+    
+    return {
+      success: true,
+      message: `Migration completed successfully`,
+      rowsUpdated: updatedCount
+    };
+    
+  } catch (error) {
+    console.error('Error in migration:', error);
+    throw error;
+  }
+}
+
 // ============================================
 // DAILY CHECKLIST FUNCTIONS
 // ============================================
@@ -1028,8 +1125,8 @@ function getDailyOrders(dateStr) {
     
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      const itemDateStr = row[11]; // Item_Date column (L)
-      const itemStatus = row[17] || 'active'; // Status column (R)
+      const itemDateStr = row[12]; // Item_Date column (M) - shifted
+      const itemStatus = row[18] || 'active'; // Status column (S) - shifted
       
       // Skip cancelled items
       if (itemStatus === 'cancelled') continue;
@@ -1049,10 +1146,10 @@ function getDailyOrders(dateStr) {
             childName: `${row[2]} ${row[3]}`,
             grade: row[4],
             itemName: item.name,
-            itemPrice: parseFloat(row[6]) || 0,
-            childId: row[10] || '1',
-            total: parseFloat(row[15]) || 0,
-            distributed: row[22] === 'TRUE' // Column W
+            itemPrice: parseFloat(row[7]) || parseFloat(row[6]) || 0, // Use paid price
+            childId: row[11] || '1', // Child_ID - shifted
+            total: parseFloat(row[16]) || 0, // Total - shifted
+            distributed: row[23] === 'TRUE' // Column X - shifted
           });
         });
       }
@@ -1091,11 +1188,11 @@ function updateDistributionStatus(orderId, childId, distributed) {
     for (let i = 1; i < data.length; i++) {
       // Make sure we're comparing strings to strings
       const rowOrderId = String(data[i][0]);
-      const rowChildId = String(data[i][10]);
+      const rowChildId = String(data[i][11]); // Child_ID - shifted
       
       if (rowOrderId === String(orderId) && rowChildId === String(childId)) {
-        // Update column W (23) with distribution status
-        sheet.getRange(i + 1, 23).setValue(distributed ? 'TRUE' : 'FALSE');
+        // Update column X (24) with distribution status - shifted
+        sheet.getRange(i + 1, 24).setValue(distributed ? 'TRUE' : 'FALSE');
         updated = true;
         rowsUpdated++;
         console.log(`Updated row ${i + 1} for ${data[i][2]} ${data[i][3]}`);
@@ -1175,7 +1272,7 @@ function getBlackoutDates() {
 }
 
 // ============================================
-// EMAIL FUNCTIONS (Only Essential Ones)
+// EMAIL FUNCTIONS WITH DISCOUNT AWARENESS
 // ============================================
 
 /**
@@ -1298,23 +1395,31 @@ function sendPasswordResetEmail(email, tempPasscode) {
 }
 
 /**
- * Send batched cancellation confirmation to parent
+ * Send batched cancellation confirmation to parent with discount awareness
  */
 function sendBatchedParentCancellationEmail(parentEmail, cancellations, sessionId) {
   try {
     const totalRefund = cancellations.reduce((sum, item) => sum + item.refundAmount, 0);
     const itemCount = cancellations.length;
-    const subject = `Lunch Order Cancellation Confirmed - ${totalRefund.toFixed(2)} Refund`;
+    const subject = `Lunch Order Cancellation Confirmed - $${totalRefund.toFixed(2)} Refund`;
     
     let itemsList = '';
     cancellations.forEach(item => {
+      const showDiscount = item.hasDiscount;
+      
       itemsList += `
         <tr>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.childName}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.itemName}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDay}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDate.toLocaleDateString()}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${item.refundAmount.toFixed(2)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+            ${showDiscount ? 
+              `<span style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${item.originalAmount.toFixed(2)}</span><br>` 
+              : ''}
+            <strong>$${item.refundAmount.toFixed(2)}</strong>
+            ${showDiscount ? '<br><span style="font-size: 0.8em; color: #4caf50;">(after discount)</span>' : ''}
+          </td>
         </tr>
       `;
     });
@@ -1347,7 +1452,7 @@ function sendBatchedParentCancellationEmail(parentEmail, cancellations, sessionI
               <tfoot>
                 <tr style="background: #f5f5f5; font-weight: bold;">
                   <td colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: right;">Total Refund:</td>
-                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${totalRefund.toFixed(2)}</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${totalRefund.toFixed(2)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -1356,12 +1461,15 @@ function sendBatchedParentCancellationEmail(parentEmail, cancellations, sessionI
           <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
             <h4>Refund Information:</h4>
             <ul>
-              <li><strong>Amount:</strong> ${totalRefund.toFixed(2)}</li>
+              <li><strong>Amount:</strong> $${totalRefund.toFixed(2)}</li>
               <li><strong>Method:</strong> Venmo refund</li>
               <li><strong>Timeline:</strong> Within 24 hours</li>
               <li><strong>Session ID:</strong> ${sessionId}</li>
               <li><strong>Cancelled on:</strong> ${new Date().toLocaleDateString()}</li>
             </ul>
+            <p style="margin-top: 10px; font-style: italic; color: #666;">
+              Note: Refund amounts reflect the actual price paid after any discounts that were applied to your original order.
+            </p>
           </div>
           
           <p style="text-align: center; margin-top: 30px;">
@@ -1375,7 +1483,7 @@ function sendBatchedParentCancellationEmail(parentEmail, cancellations, sessionI
     GmailApp.sendEmail(
       parentEmail,
       subject,
-      `Cancellation confirmed. Refund of ${totalRefund.toFixed(2)} will be processed within 24 hours.`,
+      `Cancellation confirmed. Refund of $${totalRefund.toFixed(2)} will be processed within 24 hours.`,
       {
         htmlBody: emailBody,
         name: 'Artios Academies Cafe'
@@ -1390,13 +1498,13 @@ function sendBatchedParentCancellationEmail(parentEmail, cancellations, sessionI
 }
 
 /**
- * Send batched refund notification to admin
+ * Send batched refund notification to admin with discount details
  */
 function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionId) {
   try {
     const totalRefund = cancellations.reduce((sum, item) => sum + item.refundAmount, 0);
     const itemCount = cancellations.length;
-    const subject = `ACTION REQUIRED: Send Venmo Refund - ${totalRefund.toFixed(2)} (${itemCount} item${itemCount > 1 ? 's' : ''})`;
+    const subject = `ACTION REQUIRED: Send Venmo Refund - $${totalRefund.toFixed(2)} (${itemCount} item${itemCount > 1 ? 's' : ''})`;
     
     let itemsDetail = '';
     cancellations.forEach(item => {
@@ -1406,7 +1514,10 @@ function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionI
           <td style="padding: 8px; border: 1px solid #ddd;">${item.itemName}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDay}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.itemDate.toLocaleDateString()}</td>
-          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${item.refundAmount.toFixed(2)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">
+            ${item.hasDiscount ? `<strike>$${item.originalAmount.toFixed(2)}</strike><br>` : ''}
+            $${item.refundAmount.toFixed(2)}
+          </td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.reason}</td>
         </tr>
       `;
@@ -1422,7 +1533,7 @@ function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionI
         <div style="padding: 25px; background: white;">
           <div style="background: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #d32f2f; margin: 0 0 15px 0;">ACTION REQUIRED</h3>
-            <p style="margin: 0; font-size: 1.2em; font-weight: 600;">Send ${totalRefund.toFixed(2)} via Venmo to ${parentEmail}</p>
+            <p style="margin: 0; font-size: 1.2em; font-weight: 600;">Send $${totalRefund.toFixed(2)} via Venmo to ${parentEmail}</p>
             <p style="margin: 10px 0 0 0; color: #666;">Session ID: ${sessionId}</p>
           </div>
           
@@ -1445,17 +1556,20 @@ function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionI
               <tfoot>
                 <tr style="background: #f5f5f5; font-weight: bold;">
                   <td colspan="4" style="padding: 10px; border: 1px solid #ddd; text-align: right;">TOTAL TO REFUND:</td>
-                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${totalRefund.toFixed(2)}</td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">$${totalRefund.toFixed(2)}</td>
                   <td style="padding: 10px; border: 1px solid #ddd;"></td>
                 </tr>
               </tfoot>
             </table>
+            <p style="margin-top: 10px; color: #666; font-style: italic;">
+              Note: Refund amounts reflect actual paid prices after any discounts.
+            </p>
           </div>
           
           <div style="background: #e8f5e8; border: 2px solid #4caf50; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h4 style="color: #2e7d32; margin: 0 0 15px 0;">Venmo Payment Instructions:</h4>
             <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
-              <li>Send <strong>${totalRefund.toFixed(2)}</strong> via Venmo to <strong>${parentEmail}</strong></li>
+              <li>Send <strong>$${totalRefund.toFixed(2)}</strong> via Venmo to <strong>${parentEmail}</strong></li>
               <li>Use note: <strong>"Artios Cafe refund - Session ${sessionId}"</strong></li>
               <li>No reply needed - system handles confirmation emails</li>
             </ol>
@@ -1474,7 +1588,7 @@ function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionI
     GmailApp.sendEmail(
       NOTIFICATION_EMAIL,
       subject,
-      `ACTION REQUIRED: Process refund of ${totalRefund.toFixed(2)} for ${itemCount} cancelled items`,
+      `ACTION REQUIRED: Process refund of $${totalRefund.toFixed(2)} for ${itemCount} cancelled items`,
       {
         htmlBody: emailBody,
         name: 'Artios Cafe System - Refund Required'
@@ -1489,11 +1603,16 @@ function sendBatchedAdminRefundNotification(parentEmail, cancellations, sessionI
 }
 
 /**
- * Send order confirmation email
+ * Send order confirmation email with discount details
  */
 function sendOrderConfirmationEmail(orderData) {
   try {
     const subject = `Cafe Order Confirmed - ${orderData.orderId}`;
+    
+    // Calculate discount rate for display
+    const discountRate = orderData.discount && orderData.subtotal > 0 
+      ? orderData.discount / orderData.subtotal 
+      : 0;
     
     let itemsList = '';
     const dayGroups = {};
@@ -1503,17 +1622,26 @@ function sendOrderConfirmationEmail(orderData) {
         dayGroups[item.day] = [];
       }
       const child = orderData.children.find(c => c.id === item.childId);
+      const discountedPrice = item.price * (1 - discountRate);
       dayGroups[item.day].push({
         childName: child ? `${child.firstName} ${child.lastName}` : 'Unknown',
         itemName: item.name,
-        price: item.price
+        originalPrice: item.price,
+        discountedPrice: discountedPrice,
+        hasDiscount: discountRate > 0
       });
     });
     
     Object.keys(dayGroups).sort().forEach(day => {
       itemsList += `<h4 style="color: #4285f4; margin-top: 20px;">${day}:</h4><ul>`;
       dayGroups[day].forEach(item => {
-        itemsList += `<li>${item.childName}: ${item.itemName} - ${item.price.toFixed(2)}</li>`;
+        itemsList += `<li>${item.childName}: ${item.itemName} - `;
+        if (item.hasDiscount) {
+          itemsList += `<strike style="color: #999;">${item.originalPrice.toFixed(2)}</strike> ${item.discountedPrice.toFixed(2)}`;
+        } else {
+          itemsList += `${item.originalPrice.toFixed(2)}`;
+        }
+        itemsList += '</li>';
       });
       itemsList += '</ul>';
     });
@@ -1537,7 +1665,12 @@ function sendOrderConfirmationEmail(orderData) {
           <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h4 style="margin: 0 0 10px 0; color: #2e7d32;">Payment Information:</h4>
             <p style="margin: 5px 0;"><strong>Subtotal:</strong> ${orderData.subtotal.toFixed(2)}</p>
-            ${orderData.discount > 0 ? `<p style="margin: 5px 0; color: #d32f2f;"><strong>Discount:</strong> -${orderData.discount.toFixed(2)}</p>` : ''}
+            ${orderData.discount > 0 ? `
+              <p style="margin: 5px 0; color: #d32f2f;"><strong>Discount (${orderData.promoCode}):</strong> -${orderData.discount.toFixed(2)}</p>
+              <p style="margin: 5px 0; color: #666; font-style: italic; font-size: 0.9em;">
+                ${getDiscountDescription(orderData.promoCode)}
+              </p>
+            ` : ''}
             <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Due:</strong> ${orderData.total.toFixed(2)}</p>
           </div>
           
@@ -1551,6 +1684,7 @@ function sendOrderConfirmationEmail(orderData) {
             <h4 style="margin: 0 0 10px 0; color: #1976d2;">Important Information:</h4>
             <ul style="margin: 0; padding-left: 20px;">
               <li>Orders can be cancelled until 10:00 AM on the day of service</li>
+              ${orderData.discount > 0 ? '<li><strong>Refunds will be based on the discounted price you paid</strong></li>' : ''}
               <li>Login to your family account to view or manage orders</li>
               <li>Refunds are processed within 24 hours via Venmo</li>
             </ul>
@@ -1588,16 +1722,24 @@ function sendAdminNotificationEmail(orderData) {
   try {
     const subject = `New Cafe Order - ${orderData.orderId}`;
     
+    const discountRate = orderData.discount && orderData.subtotal > 0 
+      ? orderData.discount / orderData.subtotal 
+      : 0;
+    
     let itemsDetail = '';
     orderData.items.forEach(item => {
       const child = orderData.children.find(c => c.id === item.childId);
+      const paidPrice = item.price * (1 - discountRate);
       itemsDetail += `
         <tr>
           <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.firstName + ' ' + child.lastName : 'Unknown'}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${child ? child.grade : ''}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.day}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${item.price.toFixed(2)}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">
+            ${discountRate > 0 ? `<strike>${item.price.toFixed(2)}</strike><br>` : ''}
+            ${paidPrice.toFixed(2)}
+          </td>
         </tr>
       `;
     });
@@ -1615,8 +1757,11 @@ function sendAdminNotificationEmail(orderData) {
             <p style="margin: 5px 0;"><strong>Order ID:</strong> ${orderData.orderId}</p>
             <p style="margin: 5px 0;"><strong>Parent Email:</strong> ${orderData.parentEmail}</p>
             <p style="margin: 5px 0;"><strong>Timestamp:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
-            <p style="margin: 5px 0;"><strong>Total Amount:</strong> ${orderData.total.toFixed(2)}</p>
-            ${orderData.promoCode ? `<p style="margin: 5px 0;"><strong>Promo Code:</strong> ${orderData.promoCode}</p>` : ''}
+            <p style="margin: 5px 0;"><strong>Subtotal:</strong> ${orderData.subtotal.toFixed(2)}</p>
+            ${orderData.discount > 0 ? `
+              <p style="margin: 5px 0;"><strong>Discount (${orderData.promoCode}):</strong> -${orderData.discount.toFixed(2)}</p>
+            ` : ''}
+            <p style="margin: 5px 0; font-size: 1.2em;"><strong>Total Amount:</strong> ${orderData.total.toFixed(2)}</p>
           </div>
           
           <h3 style="color: #333;">Items Ordered:</h3>
@@ -1627,7 +1772,7 @@ function sendAdminNotificationEmail(orderData) {
                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Grade</th>
                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Day</th>
                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item</th>
-                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Price</th>
+                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Price Paid</th>
               </tr>
             </thead>
             <tbody>
