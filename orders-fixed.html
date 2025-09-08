@@ -1694,6 +1694,75 @@
         this.state.currentDay = day;
       }
 
+
+// Add inside class OrderSystem { … }, right before setupEventListeners()
+getAbbrevForItem(item) {
+  const byId = {
+    'chicken-sandwich': 'ChkSand',
+    'spicy-chicken': 'SpicySand',
+    'nuggets-8': 'Nugg8',
+    'nuggets-12': 'Nugg12',
+    'cobb-salad': 'Cobb',
+    'southwest-salad': 'SwSalad',
+    'market-salad': 'Market',
+    'fries-only': 'Fries',
+    'mac-only': 'Mac',
+    'fruit-only': 'Fruit',
+    'salad-only': 'SideSalad',
+    'kale-crunch': 'Kale',
+    'parfait-only': 'Parfait',
+    'chips-only': 'Chips',
+    'regular-drink': 'Reg Drink',
+    'premium-drink': 'Prem Drink',
+    'chicken-wrap': 'Wrap',
+    'veggie-wrap': 'VegWrap',
+    'grilled-sandwich': 'GrilledSand',
+    'grilled-gf': 'GrilledGF',
+    'grilled-nuggets': 'GrilledNugg',
+    'chicken-strips': 'Strips'
+  };
+  return byId[item.itemId] || item.itemName;
+}
+
+dayShort(day) {
+  switch (day) {
+    case 'monday': return 'M';
+    case 'tuesday': return 'T';
+    case 'wednesday': return 'W';
+    case 'thursday': return 'Th';
+    case 'friday': return 'F';
+    default: return day[0].toUpperCase();
+  }
+}
+
+buildVenmoNote(orderId, total, items) {
+  // Group items by day + abbreviation
+  const perDay = {};
+  items.forEach(it => {
+    const d = this.dayShort(it.day);
+    if (!perDay[d]) perDay[d] = {};
+    const abbr = this.getAbbrevForItem(it);
+    perDay[d][abbr] = (perDay[d][abbr] || 0) + 1;
+  });
+
+  const lineForDay = (d) => {
+    const counts = perDay[d];
+    if (!counts) return null;
+    const parts = Object.keys(counts).map(k => `${counts[k]} ${k}`);
+    return `${d}: ${parts.join(', ')}`;
+  };
+
+  const dayOrder = ['M','T','W','Th','F'];
+  const detailLines = dayOrder.map(lineForDay).filter(Boolean);
+  let note = `#${orderId} $${total.toFixed(2)} ${detailLines.join(' ')}`;
+  if (note.length <= 165) return note;
+
+  // fallback grouping
+  const totalItems = items.length;
+  return `#${orderId} $${total.toFixed(2)} M-F: ${totalItems} items total`;
+}
+
+      
       setupEventListeners() {
         // Add child button
         document.getElementById('add-child-btn')?.addEventListener('click', () => this.addChild());
@@ -1740,9 +1809,26 @@
         });
 
         // Venmo payment button
-        document.getElementById('venmo-payment-btn')?.addEventListener('click', () => {
-          this.openVenmoPayment();
-        });
+        var venmoBtn = document.getElementById('venmo-payment-btn');
+if (venmoBtn) venmoBtn.addEventListener('click', () => {
+  const finalTotal = Number(this.state.currentTotal || 0);
+
+  // fall back just in case
+  if (!finalTotal && this.state.orderItems?.length) {
+    this.state.currentTotal = this.state.orderItems.reduce(
+      (s, it) => s + (Number(it.finalPrice) || 0), 0
+    );
+  }
+
+  const orderIdEl = document.getElementById('conf-order-id');
+  const orderId = (orderIdEl?.textContent?.trim()) ||
+                  ('ORD-' + Math.random().toString(36).slice(2,8).toUpperCase());
+
+  const note = this.buildVenmoNote(orderId, this.state.currentTotal, this.state.orderItems || []);
+
+  const url = `venmo://paycharge?txn=pay&amount=${this.state.currentTotal.toFixed(2)}&note=${encodeURIComponent(note)}`;
+  window.location.href = url;
+});
       }
 
       async submitOrder() {
