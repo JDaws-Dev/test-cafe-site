@@ -2140,49 +2140,53 @@
         this.validateForm();
       }
 
-      updateChildCheckboxes() {
-        const children = document.querySelectorAll('.child-section');
+updateChildCheckboxes() {
+  const children = document.querySelectorAll('.child-section');
+  
+  document.querySelectorAll('.menu-item').forEach(menuItem => {
+    const itemId = menuItem.querySelector('.item-price')?.dataset.itemId;
+    if (!itemId) return;
+    
+    this.constants.days.forEach(day => {
+      const checkboxesContainer = document.getElementById(`${itemId}-${day}-checkboxes`);
+      if (!checkboxesContainer) return;
+      
+      checkboxesContainer.innerHTML = '';
+
+      // 👇 Add a friendly (Title Case) day label once
+      const dayLabel = day.charAt(0).toUpperCase() + day.slice(1);
+      
+      children.forEach(child => {
+        const childId = child.dataset.child;
+        const firstName = child.querySelector('.child-first-name')?.value.trim() || '';
+        const lastName  = child.querySelector('.child-last-name')?.value.trim()  || '';
         
-        document.querySelectorAll('.menu-item').forEach(menuItem => {
-          const itemId = menuItem.querySelector('.item-price')?.dataset.itemId;
-          if (!itemId) return;
+        if (firstName) {
+          const fullName = lastName ? `${firstName} ${lastName}` : firstName;
           
-          this.constants.days.forEach(day => {
-            const checkboxesContainer = document.getElementById(`${itemId}-${day}-checkboxes`);
-            if (!checkboxesContainer) return;
-            
-            checkboxesContainer.innerHTML = '';
-            
-            children.forEach(child => {
-              const childId = child.dataset.child;
-              const firstName = child.querySelector('.child-first-name')?.value.trim() || '';
-              const lastName = child.querySelector('.child-last-name')?.value.trim() || '';
-              
-              if (firstName) {
-                const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-                
-                const checkboxDiv = document.createElement('div');
-                checkboxDiv.className = 'child-checkbox';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `${itemId}-${childId}-${day}`;
-                checkbox.dataset.item = itemId;
-                checkbox.dataset.childId = childId;
-                checkbox.dataset.day = day;
-                
-                const label = document.createElement('label');
-                label.htmlFor = checkbox.id;
-                label.textContent = fullName;
-                
-                checkboxDiv.appendChild(checkbox);
-                checkboxDiv.appendChild(label);
-                checkboxesContainer.appendChild(checkboxDiv);
-              }
-            });
-          });
-        });
-      }
+          const checkboxDiv = document.createElement('div');
+          checkboxDiv.className = 'child-checkbox';
+          
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `${itemId}-${childId}-${day}`;
+          checkbox.dataset.item = itemId;
+          checkbox.dataset.childId = childId;
+          checkbox.dataset.day = day;
+          
+          const label = document.createElement('label');
+          label.htmlFor = checkbox.id;
+          // 👇 Include the day in parentheses next to the name
+          label.textContent = `${fullName} (${dayLabel})`;
+          
+          checkboxDiv.appendChild(checkbox);
+          checkboxDiv.appendChild(label);
+          checkboxesContainer.appendChild(checkboxDiv);
+        }
+      });
+    });
+  });
+}
 
       updateCart() {
         this.state.orderItems = [];
