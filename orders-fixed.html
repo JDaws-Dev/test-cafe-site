@@ -1071,16 +1071,7 @@
         grid-template-columns: 1fr;
       }
     }
-  
-/* Compact confirmation modal & banner */
-.pay-now-banner{
-  background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;
-  border-radius:8px;padding:6px 8px;margin:8px 0;font-weight:600;text-align:center;
-}
-.confirmation-content{padding:1rem;max-height:80vh;}
-.confirmation-section{margin-bottom:.75rem;padding:.75rem;}
-
-</style>
+  </style>
 </head>
 <body>
   <div class="container">
@@ -1215,14 +1206,18 @@
         Order Submitted Successfully!
       </div>
       <div class="pay-now-banner">✅ Order received — to complete, pay via Venmo below.</div>
-      <div class="payment-section">
+<div class="payment-section">
         <h4>💳 Complete Payment via Venmo</h4>
         <div class="payment-details">
           <p style="margin: 0.5rem 0;"><strong>Send: $<span id="payment-amount">0.00</span></strong></p>
           <p style="margin: 0.5rem 0;"><strong>To: @ChanTa-Rivers</strong></p>
           <p style="margin: 0.5rem 0; font-size: 0.9rem;">Include order #<span id="payment-order-id"></span> in note</p>
         </div>
-
+        <button class="venmo-btn" id="venmo-payment-btn">
+          Pay with Venmo
+        </button>
+        <p style="margin-top: 0.75rem; font-size: 0.85rem; color: #666;">or open Venmo manually</p>
+      </div>
       
       <div class="confirmation-section" style="margin: 0.5rem 0;">
         <h4>📋 Order Details</h4>
@@ -1249,11 +1244,6 @@
       </div>
 
       
-        <button class="venmo-btn" id="venmo-payment-btn">
-          Pay with Venmo
-        </button>
-        <p style="margin-top: 0.75rem; font-size: 0.85rem; color: #666;">or open Venmo manually</p>
-      </div>
 
       <div class="confirmation-section" style="margin: 0.5rem 0;">
         <h4>📧 Next Steps</h4>
