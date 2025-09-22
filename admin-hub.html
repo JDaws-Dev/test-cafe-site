@@ -876,16 +876,512 @@
             </div>
 
             <!-- Other tabs remain unchanged but hidden -->
-            <div class="tab-content" id="order-management">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">💳 Order Management & Venmo Reconciliation</h2>
-                    </div>
-                    <p style="text-align: center; color: #666; padding: 40px;">
-                        Order management features will be implemented here.
-                    </p>
-                </div>
+        <!-- Simple Order Management Tab - Uses existing Google Apps Script -->
+<!-- Replace the content inside <div class="tab-content" id="order-management"> with this -->
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">💳 Order Management & Venmo Reconciliation</h2>
+        <button onclick="SimplifyOrders.refresh()" class="action-btn btn-success">
+            🔄 Refresh Orders
+        </button>
+    </div>
+    
+    <!-- Simple Controls -->
+    <div style="padding: 20px; border-bottom: 1px solid #e9ecef;">
+        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Email Filter:</label>
+                <input type="email" id="email-filter" placeholder="Enter family email..." 
+                       style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 250px;">
             </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
+                <select id="sort-orders" onchange="SimplifyOrders.sortAndDisplay()" 
+                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                    <option value="date">Date (Newest First)</option>
+                    <option value="family">Family Name (A-Z)</option>
+                    <option value="email">Email (A-Z)</option>
+                    <option value="amount">Amount</option>
+                </select>
+            </div>
+            
+            <button onclick="SimplifyOrders.checkEmail()" class="action-btn btn-primary">
+                🔍 Search Orders
+            </button>
+            
+            <button onclick="SimplifyOrders.exportCSV()" class="action-btn btn-secondary">
+                📥 Export CSV
+            </button>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+            <span style="padding: 5px 15px; background: #e3f2fd; border-radius: 20px; font-size: 0.9em;">
+                Total: <strong id="stat-total">0</strong>
+            </span>
+            <span style="padding: 5px 15px; background: #e8f5e9; border-radius: 20px; font-size: 0.9em;">
+                Paid: <strong id="stat-paid">0</strong>
+            </span>
+            <span style="padding: 5px 15px; background: #fff3e0; border-radius: 20px; font-size: 0.9em;">
+                Pending: <strong id="stat-pending">0</strong>
+            </span>
+            <span id="duplicate-alert" style="padding: 5px 15px; background: #ffebee; border-radius: 20px; font-size: 0.9em; display: none;">
+                ⚠️ Duplicates: <strong id="stat-duplicates">0</strong>
+            </span>
+        </div>
+    </div>
+    
+    <!-- Orders Display -->
+    <div style="padding: 20px;">
+        <div id="orders-list" style="max-height: 600px; overflow-y: auto;">
+            <!-- Orders will load here -->
+            <div style="text-align: center; padding: 40px; color: #999;">
+                Enter an email address and click "Search Orders" to begin
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Simple styles that work with existing admin-hub */
+.order-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.order-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.order-card.duplicate {
+    border-left: 4px solid #f44336;
+    background: #fff5f5;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 10px;
+}
+
+.order-info {
+    flex: 1;
+}
+
+.order-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.order-id {
+    font-weight: bold;
+    color: #333;
+    margin-right: 10px;
+}
+
+.order-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.order-family {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 5px 0;
+}
+
+.order-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.detail-item {
+    font-size: 0.9em;
+}
+
+.detail-label {
+    color: #666;
+    margin-right: 5px;
+}
+
+.detail-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.venmo-handle {
+    color: #3b82f6;
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.payment-check {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.payment-check input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    padding: 4px 12px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+
+.cancel-btn:hover {
+    background: #d32f2f;
+}
+
+.cancelled-badge {
+    background: #f44336;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+}
+
+/* Loading spinner */
+.simple-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.simple-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+// Simplified Order Management using existing APIs
+const SimplifyOrders = {
+    orders: [],
+    allOrders: [], // Store all loaded orders
+    API_URL: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
+    
+    async checkEmail() {
+        const email = document.getElementById('email-filter').value.trim();
+        
+        if (!email) {
+            alert('Please enter an email address');
+            return;
+        }
+        
+        document.getElementById('orders-list').innerHTML = `
+            <div class="simple-loading">
+                <div class="simple-spinner"></div>
+                <p>Loading orders for ${email}...</p>
+            </div>
+        `;
+        
+        try {
+            // Use your existing lookup_orders endpoint
+            const response = await fetch(`${this.API_URL}?action=lookup_orders&email=${encodeURIComponent(email)}`);
+            const data = await response.json();
+            
+            if (data.success && data.orders) {
+                this.allOrders = data.orders;
+                this.orders = [...data.orders];
+                
+                // Mark duplicates
+                this.detectDuplicates();
+                
+                // Sort and display
+                this.sortAndDisplay();
+            } else {
+                document.getElementById('orders-list').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        No orders found for ${email}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('orders-list').innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #f44336;">
+                    Error loading orders. Please try again.
+                </div>
+            `;
+        }
+    },
+    
+    detectDuplicates() {
+        // Reset duplicate flags
+        this.orders.forEach(order => {
+            order.isDuplicate = false;
+        });
+        
+        // Check for duplicates (same day, similar total)
+        for (let i = 0; i < this.orders.length; i++) {
+            for (let j = i + 1; j < this.orders.length; j++) {
+                const order1 = this.orders[i];
+                const order2 = this.orders[j];
+                
+                // Same date and similar amount (within $2)
+                if (order1.orderDate === order2.orderDate &&
+                    Math.abs(order1.total - order2.total) < 2) {
+                    order1.isDuplicate = true;
+                    order2.isDuplicate = true;
+                }
+            }
+        }
+        
+        const duplicateCount = this.orders.filter(o => o.isDuplicate).length;
+        if (duplicateCount > 0) {
+            document.getElementById('duplicate-alert').style.display = 'inline-block';
+            document.getElementById('stat-duplicates').textContent = duplicateCount;
+        } else {
+            document.getElementById('duplicate-alert').style.display = 'none';
+        }
+    },
+    
+    sortAndDisplay() {
+        const sortBy = document.getElementById('sort-orders').value;
+        
+        // Sort orders
+        switch(sortBy) {
+            case 'date':
+                this.orders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+                break;
+            case 'family':
+                this.orders.sort((a, b) => {
+                    // Sort by first child's last name
+                    const aName = a.children[0]?.lastName || '';
+                    const bName = b.children[0]?.lastName || '';
+                    return aName.localeCompare(bName);
+                });
+                break;
+            case 'email':
+                this.orders.sort((a, b) => a.email.localeCompare(b.email));
+                break;
+            case 'amount':
+                this.orders.sort((a, b) => b.total - a.total);
+                break;
+        }
+        
+        this.display();
+    },
+    
+    display() {
+        const container = document.getElementById('orders-list');
+        
+        if (this.orders.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #999;">
+                    No orders to display
+                </div>
+            `;
+            return;
+        }
+        
+        // Update stats
+        const total = this.orders.filter(o => o.status !== 'cancelled').length;
+        const paid = this.orders.filter(o => o.paymentStatus === 'paid').length;
+        const pending = total - paid;
+        
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-paid').textContent = paid;
+        document.getElementById('stat-pending').textContent = pending;
+        
+        // Build order cards
+        container.innerHTML = this.orders.map(order => {
+            const familyName = order.children[0]?.lastName || 'Unknown';
+            const childrenNames = order.children.map(c => `${c.firstName} ${c.lastName}`).join(', ');
+            const itemCount = order.items?.length || 0;
+            const isCancelled = order.status === 'cancelled';
+            const isPaid = order.paymentStatus === 'paid';
+            
+            return `
+                <div class="order-card ${order.isDuplicate ? 'duplicate' : ''}">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <div>
+                                <span class="order-id">${order.orderId}</span>
+                                <span class="order-date">${new Date(order.orderDate).toLocaleDateString()} ${order.orderTime}</span>
+                                ${order.isDuplicate ? '<span style="color: red; margin-left: 10px;">⚠️ Possible Duplicate</span>' : ''}
+                                ${isCancelled ? '<span class="cancelled-badge" style="margin-left: 10px;">CANCELLED</span>' : ''}
+                            </div>
+                            <div class="order-family">${familyName} Family</div>
+                        </div>
+                        <div class="order-actions">
+                            <div class="payment-check">
+                                <input type="checkbox" 
+                                       id="pay-${order.orderId}"
+                                       ${isPaid ? 'checked' : ''}
+                                       ${isCancelled ? 'disabled' : ''}
+                                       onchange="SimplifyOrders.togglePayment('${order.orderId}', this.checked)">
+                                <label for="pay-${order.orderId}" style="cursor: pointer; font-size: 0.9em;">
+                                    ${isPaid ? 'Paid' : 'Mark Paid'}
+                                </label>
+                            </div>
+                            ${!isCancelled ? `
+                                <button class="cancel-btn" onclick="SimplifyOrders.cancelOrder('${order.orderId}')">
+                                    Cancel
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="order-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">${order.email}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Venmo:</span>
+                            <span class="detail-value venmo-handle">@ChanTa-Rivers</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Children:</span>
+                            <span class="detail-value">${childrenNames}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Items:</span>
+                            <span class="detail-value">${itemCount} items</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total:</span>
+                            <span class="detail-value" style="font-size: 1.1em; color: #10b981;">
+                                <strong>$${order.total.toFixed(2)}</strong>
+                                ${order.discount > 0 ? `<small style="color: #f59e0b;"> (${order.discountPercent}% off)</small>` : ''}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    ${order.items && order.items.length > 0 ? `
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; color: #667eea; font-size: 0.9em;">
+                                View Items (${itemCount})
+                            </summary>
+                            <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 4px;">
+                                ${order.items.map(item => `
+                                    <div style="padding: 5px 0; font-size: 0.85em;">
+                                        • ${item.childName}: ${item.name} - $${item.finalPrice.toFixed(2)}
+                                        ${item.status === 'cancelled' ? '<span style="color: red;">(Cancelled)</span>' : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </details>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    },
+    
+    togglePayment(orderId, isPaid) {
+        // Update local state
+        const order = this.orders.find(o => o.orderId === orderId);
+        if (order) {
+            order.paymentStatus = isPaid ? 'paid' : 'pending';
+            
+            // Update stats
+            const total = this.orders.filter(o => o.status !== 'cancelled').length;
+            const paid = this.orders.filter(o => o.paymentStatus === 'paid').length;
+            const pending = total - paid;
+            
+            document.getElementById('stat-paid').textContent = paid;
+            document.getElementById('stat-pending').textContent = pending;
+            
+            // In production, you'd save this to the backend
+            console.log(`Order ${orderId} marked as ${isPaid ? 'paid' : 'unpaid'}`);
+        }
+    },
+    
+    async cancelOrder(orderId) {
+        const reason = prompt('Please enter a reason for cancellation:');
+        
+        if (!reason) return;
+        
+        // For now, just update local state
+        const order = this.orders.find(o => o.orderId === orderId);
+        if (order) {
+            order.status = 'cancelled';
+            order.cancelReason = reason;
+            order.paymentStatus = 'cancelled';
+            
+            // Redisplay
+            this.display();
+            
+            alert(`Order ${orderId} has been cancelled.\nReason: ${reason}`);
+            
+            // In production, you would call your cancel_order API endpoint
+            // const response = await fetch(`${this.API_URL}?action=cancel_order&orderId=${orderId}&reason=${reason}`);
+        }
+    },
+    
+    refresh() {
+        const email = document.getElementById('email-filter').value.trim();
+        if (email) {
+            this.checkEmail();
+        } else {
+            alert('Please enter an email address first');
+        }
+    },
+    
+    exportCSV() {
+        if (this.orders.length === 0) {
+            alert('No orders to export');
+            return;
+        }
+        
+        let csv = 'Order ID,Date,Time,Family,Email,Children,Items,Total,Payment Status,Notes\n';
+        
+        this.orders.forEach(order => {
+            const familyName = order.children[0]?.lastName || 'Unknown';
+            const childrenNames = order.children.map(c => `${c.firstName} ${c.lastName}`).join('; ');
+            const status = order.status === 'cancelled' ? 'Cancelled' : 
+                          (order.paymentStatus === 'paid' ? 'Paid' : 'Pending');
+            const notes = order.isDuplicate ? 'POSSIBLE DUPLICATE' : '';
+            
+            csv += `"${order.orderId}","${order.orderDate}","${order.orderTime}","${familyName}","${order.email}","${childrenNames}","${order.items?.length || 0}","$${order.total.toFixed(2)}","${status}","${notes}"\n`;
+        });
+        
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+    }
+};
+</script>
+
+
+
+            
             <div class="tab-content" id="financial-reports">
                 <div class="card">
                     <div class="card-header">
