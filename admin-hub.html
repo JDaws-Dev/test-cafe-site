@@ -878,11 +878,13 @@
             <!-- Other tabs remain unchanged but hidden -->
         <!-- Simple Order Management Tab - Uses existing Google Apps Script -->
 <!-- Replace the content inside <div class="tab-content" id="order-management"> with this -->
+<!-- Fixed Order Management Tab -->
+<!-- Replace the content inside <div class="tab-content" id="order-management"> with this -->
 
 <div class="card">
     <div class="card-header">
         <h2 class="card-title">💳 Order Management & Venmo Reconciliation</h2>
-        <button onclick="SimplifyOrders.refresh()" class="action-btn btn-success">
+        <button onclick="OrderManager.refresh()" class="action-btn btn-success">
             🔄 Refresh Orders
         </button>
     </div>
@@ -898,7 +900,7 @@
             
             <div>
                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
-                <select id="sort-orders" onchange="SimplifyOrders.sortAndDisplay()" 
+                <select id="sort-orders" onchange="OrderManager.sortAndDisplay()" 
                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                     <option value="date">Date (Newest First)</option>
                     <option value="family">Family Name (A-Z)</option>
@@ -907,11 +909,11 @@
                 </select>
             </div>
             
-            <button onclick="SimplifyOrders.checkEmail()" class="action-btn btn-primary">
+            <button onclick="OrderManager.checkEmail()" class="action-btn btn-primary">
                 🔍 Search Orders
             </button>
             
-            <button onclick="SimplifyOrders.exportCSV()" class="action-btn btn-secondary">
+            <button onclick="OrderManager.exportCSV()" class="action-btn btn-secondary">
                 📥 Export CSV
             </button>
         </div>
@@ -1085,10 +1087,10 @@
 </style>
 
 <script>
-// Simplified Order Management using existing APIs
-const SimplifyOrders = {
+// Fixed Order Management with proper error handling
+const OrderManager = {
     orders: [],
-    allOrders: [], // Store all loaded orders
+    allOrders: [],
     API_URL: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
     
     async checkEmail() {
@@ -1107,11 +1109,10 @@ const SimplifyOrders = {
         `;
         
         try {
-            // Use your existing lookup_orders endpoint
             const response = await fetch(`${this.API_URL}?action=lookup_orders&email=${encodeURIComponent(email)}`);
             const data = await response.json();
             
-            if (data.success && data.orders) {
+            if (data.success && data.orders && data.orders.length > 0) {
                 this.allOrders = data.orders;
                 this.orders = [...data.orders];
                 
@@ -1126,6 +1127,7 @@ const SimplifyOrders = {
                         No orders found for ${email}
                     </div>
                 `;
+                this.updateStats(0, 0, 0);
             }
         } catch (error) {
             console.error('Error:', error);
@@ -1143,15 +1145,20 @@ const SimplifyOrders = {
             order.isDuplicate = false;
         });
         
-        // Check for duplicates (same day, similar total)
+        // Check for duplicates
         for (let i = 0; i < this.orders.length; i++) {
             for (let j = i + 1; j < this.orders.length; j++) {
                 const order1 = this.orders[i];
                 const order2 = this.orders[j];
                 
-                // Same date and similar amount (within $2)
-                if (order1.orderDate === order2.orderDate &&
-                    Math.abs(order1.total - order2.total) < 2) {
+                // Get safe values with defaults
+                const date1 = order1.orderDate || '';
+                const date2 = order2.orderDate || '';
+                const total1 = parseFloat(order1.total || 0);
+                const total2 = parseFloat(order2.total || 0);
+                
+                // Same date and similar amount
+                if (date1 === date2 && Math.abs(total1 - total2) < 2) {
                     order1.isDuplicate = true;
                     order2.isDuplicate = true;
                 }
@@ -1170,24 +1177,35 @@ const SimplifyOrders = {
     sortAndDisplay() {
         const sortBy = document.getElementById('sort-orders').value;
         
-        // Sort orders
+        // Sort orders with null checking
         switch(sortBy) {
             case 'date':
-                this.orders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+                this.orders.sort((a, b) => {
+                    const dateA = new Date(a.orderDate || '1900-01-01');
+                    const dateB = new Date(b.orderDate || '1900-01-01');
+                    return dateB - dateA;
+                });
                 break;
             case 'family':
                 this.orders.sort((a, b) => {
-                    // Sort by first child's last name
-                    const aName = a.children[0]?.lastName || '';
-                    const bName = b.children[0]?.lastName || '';
+                    const aName = (a.children && a.children[0]?.lastName) || 'Unknown';
+                    const bName = (b.children && b.children[0]?.lastName) || 'Unknown';
                     return aName.localeCompare(bName);
                 });
                 break;
             case 'email':
-                this.orders.sort((a, b) => a.email.localeCompare(b.email));
+                this.orders.sort((a, b) => {
+                    const emailA = a.email || '';
+                    const emailB = b.email || '';
+                    return emailA.localeCompare(emailB);
+                });
                 break;
             case 'amount':
-                this.orders.sort((a, b) => b.total - a.total);
+                this.orders.sort((a, b) => {
+                    const amountA = parseFloat(a.total || 0);
+                    const amountB = parseFloat(b.total || 0);
+                    return amountB - amountA;
+                });
                 break;
         }
         
@@ -1197,39 +1215,57 @@ const SimplifyOrders = {
     display() {
         const container = document.getElementById('orders-list');
         
-        if (this.orders.length === 0) {
+        if (!this.orders || this.orders.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: #999;">
                     No orders to display
                 </div>
             `;
+            this.updateStats(0, 0, 0);
             return;
         }
         
-        // Update stats
+        // Calculate stats
         const total = this.orders.filter(o => o.status !== 'cancelled').length;
         const paid = this.orders.filter(o => o.paymentStatus === 'paid').length;
         const pending = total - paid;
         
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-paid').textContent = paid;
-        document.getElementById('stat-pending').textContent = pending;
+        this.updateStats(total, paid, pending);
         
-        // Build order cards
+        // Build order cards with safe property access
         container.innerHTML = this.orders.map(order => {
-            const familyName = order.children[0]?.lastName || 'Unknown';
-            const childrenNames = order.children.map(c => `${c.firstName} ${c.lastName}`).join(', ');
-            const itemCount = order.items?.length || 0;
-            const isCancelled = order.status === 'cancelled';
-            const isPaid = order.paymentStatus === 'paid';
+            // Safely extract values with defaults
+            const orderId = order.orderId || 'Unknown';
+            const orderDate = order.orderDate || '';
+            const orderTime = order.orderTime || '';
+            const email = order.email || 'No email';
+            const total = parseFloat(order.total || 0);
+            const discount = parseFloat(order.discount || 0);
+            const discountPercent = parseFloat(order.discountPercent || 0);
+            const status = order.status || '';
+            const paymentStatus = order.paymentStatus || '';
+            
+            // Handle children array safely
+            const children = order.children || [];
+            const familyName = (children[0] && children[0].lastName) || 'Unknown';
+            const childrenNames = children.map(c => 
+                `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Unknown'
+            ).join(', ') || 'No children';
+            
+            // Handle items array safely
+            const items = order.items || [];
+            const itemCount = items.length;
+            
+            const isCancelled = status === 'cancelled';
+            const isPaid = paymentStatus === 'paid';
             
             return `
                 <div class="order-card ${order.isDuplicate ? 'duplicate' : ''}">
                     <div class="order-header">
                         <div class="order-info">
                             <div>
-                                <span class="order-id">${order.orderId}</span>
-                                <span class="order-date">${new Date(order.orderDate).toLocaleDateString()} ${order.orderTime}</span>
+                                <span class="order-id">${orderId}</span>
+                                <span class="order-date">${orderDate ? new Date(orderDate).toLocaleDateString() : ''} ${orderTime}</span>
                                 ${order.isDuplicate ? '<span style="color: red; margin-left: 10px;">⚠️ Possible Duplicate</span>' : ''}
                                 ${isCancelled ? '<span class="cancelled-badge" style="margin-left: 10px;">CANCELLED</span>' : ''}
                             </div>
@@ -1238,16 +1274,16 @@ const SimplifyOrders = {
                         <div class="order-actions">
                             <div class="payment-check">
                                 <input type="checkbox" 
-                                       id="pay-${order.orderId}"
+                                       id="pay-${orderId}"
                                        ${isPaid ? 'checked' : ''}
                                        ${isCancelled ? 'disabled' : ''}
-                                       onchange="SimplifyOrders.togglePayment('${order.orderId}', this.checked)">
-                                <label for="pay-${order.orderId}" style="cursor: pointer; font-size: 0.9em;">
+                                       onchange="OrderManager.togglePayment('${orderId}', this.checked)">
+                                <label for="pay-${orderId}" style="cursor: pointer; font-size: 0.9em;">
                                     ${isPaid ? 'Paid' : 'Mark Paid'}
                                 </label>
                             </div>
                             ${!isCancelled ? `
-                                <button class="cancel-btn" onclick="SimplifyOrders.cancelOrder('${order.orderId}')">
+                                <button class="cancel-btn" onclick="OrderManager.cancelOrder('${orderId}')">
                                     Cancel
                                 </button>
                             ` : ''}
@@ -1257,7 +1293,7 @@ const SimplifyOrders = {
                     <div class="order-details">
                         <div class="detail-item">
                             <span class="detail-label">Email:</span>
-                            <span class="detail-value">${order.email}</span>
+                            <span class="detail-value">${email}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Venmo:</span>
@@ -1274,24 +1310,31 @@ const SimplifyOrders = {
                         <div class="detail-item">
                             <span class="detail-label">Total:</span>
                             <span class="detail-value" style="font-size: 1.1em; color: #10b981;">
-                                <strong>$${order.total.toFixed(2)}</strong>
-                                ${order.discount > 0 ? `<small style="color: #f59e0b;"> (${order.discountPercent}% off)</small>` : ''}
+                                <strong>$${total.toFixed(2)}</strong>
+                                ${discount > 0 ? `<small style="color: #f59e0b;"> (${discountPercent}% off)</small>` : ''}
                             </span>
                         </div>
                     </div>
                     
-                    ${order.items && order.items.length > 0 ? `
+                    ${itemCount > 0 ? `
                         <details style="margin-top: 10px;">
                             <summary style="cursor: pointer; color: #667eea; font-size: 0.9em;">
                                 View Items (${itemCount})
                             </summary>
                             <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 4px;">
-                                ${order.items.map(item => `
-                                    <div style="padding: 5px 0; font-size: 0.85em;">
-                                        • ${item.childName}: ${item.name} - $${item.finalPrice.toFixed(2)}
-                                        ${item.status === 'cancelled' ? '<span style="color: red;">(Cancelled)</span>' : ''}
-                                    </div>
-                                `).join('')}
+                                ${items.map(item => {
+                                    const itemName = item.name || 'Unknown item';
+                                    const childName = item.childName || 'Unknown';
+                                    const finalPrice = parseFloat(item.finalPrice || 0);
+                                    const itemStatus = item.status || '';
+                                    
+                                    return `
+                                        <div style="padding: 5px 0; font-size: 0.85em;">
+                                            • ${childName}: ${itemName} - $${finalPrice.toFixed(2)}
+                                            ${itemStatus === 'cancelled' ? '<span style="color: red;">(Cancelled)</span>' : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
                             </div>
                         </details>
                     ` : ''}
@@ -1300,21 +1343,24 @@ const SimplifyOrders = {
         }).join('');
     },
     
+    updateStats(total, paid, pending) {
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-paid').textContent = paid;
+        document.getElementById('stat-pending').textContent = pending;
+    },
+    
     togglePayment(orderId, isPaid) {
-        // Update local state
         const order = this.orders.find(o => o.orderId === orderId);
         if (order) {
             order.paymentStatus = isPaid ? 'paid' : 'pending';
             
-            // Update stats
+            // Recalculate stats
             const total = this.orders.filter(o => o.status !== 'cancelled').length;
             const paid = this.orders.filter(o => o.paymentStatus === 'paid').length;
             const pending = total - paid;
             
-            document.getElementById('stat-paid').textContent = paid;
-            document.getElementById('stat-pending').textContent = pending;
+            this.updateStats(total, paid, pending);
             
-            // In production, you'd save this to the backend
             console.log(`Order ${orderId} marked as ${isPaid ? 'paid' : 'unpaid'}`);
         }
     },
@@ -1324,20 +1370,15 @@ const SimplifyOrders = {
         
         if (!reason) return;
         
-        // For now, just update local state
         const order = this.orders.find(o => o.orderId === orderId);
         if (order) {
             order.status = 'cancelled';
             order.cancelReason = reason;
             order.paymentStatus = 'cancelled';
             
-            // Redisplay
             this.display();
             
             alert(`Order ${orderId} has been cancelled.\nReason: ${reason}`);
-            
-            // In production, you would call your cancel_order API endpoint
-            // const response = await fetch(`${this.API_URL}?action=cancel_order&orderId=${orderId}&reason=${reason}`);
         }
     },
     
@@ -1351,7 +1392,7 @@ const SimplifyOrders = {
     },
     
     exportCSV() {
-        if (this.orders.length === 0) {
+        if (!this.orders || this.orders.length === 0) {
             alert('No orders to export');
             return;
         }
@@ -1359,16 +1400,28 @@ const SimplifyOrders = {
         let csv = 'Order ID,Date,Time,Family,Email,Children,Items,Total,Payment Status,Notes\n';
         
         this.orders.forEach(order => {
-            const familyName = order.children[0]?.lastName || 'Unknown';
-            const childrenNames = order.children.map(c => `${c.firstName} ${c.lastName}`).join('; ');
-            const status = order.status === 'cancelled' ? 'Cancelled' : 
-                          (order.paymentStatus === 'paid' ? 'Paid' : 'Pending');
+            const orderId = order.orderId || 'Unknown';
+            const orderDate = order.orderDate || '';
+            const orderTime = order.orderTime || '';
+            const email = order.email || '';
+            const total = parseFloat(order.total || 0);
+            const status = order.status || '';
+            const paymentStatus = order.paymentStatus || '';
+            
+            const children = order.children || [];
+            const familyName = (children[0] && children[0].lastName) || 'Unknown';
+            const childrenNames = children.map(c => 
+                `${c.firstName || ''} ${c.lastName || ''}`.trim()
+            ).join('; ') || '';
+            
+            const items = order.items || [];
+            const finalStatus = status === 'cancelled' ? 'Cancelled' : 
+                               (paymentStatus === 'paid' ? 'Paid' : 'Pending');
             const notes = order.isDuplicate ? 'POSSIBLE DUPLICATE' : '';
             
-            csv += `"${order.orderId}","${order.orderDate}","${order.orderTime}","${familyName}","${order.email}","${childrenNames}","${order.items?.length || 0}","$${order.total.toFixed(2)}","${status}","${notes}"\n`;
+            csv += `"${orderId}","${orderDate}","${orderTime}","${familyName}","${email}","${childrenNames}","${items.length}","$${total.toFixed(2)}","${finalStatus}","${notes}"\n`;
         });
         
-        // Download
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
