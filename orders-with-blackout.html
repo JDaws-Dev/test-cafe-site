@@ -1398,7 +1398,7 @@
             { id: 'grilled-gf', name: 'Grilled Sandwich (GF Bun)', price: 9.50, desc: 'Grilled chicken with gluten-free bun', image: 'assets/grilledsandwich.png' },
             { id: 'chicken-wrap', name: 'Chicken Wrap', price: 9.75, desc: 'Grilled chicken in tortilla wrap', image: 'assets/chickenwrap.png' },
             { id: 'veggie-wrap', name: 'Southwest Veggie Wrap', price: 9.50, desc: 'Vegetarian wrap with southwest flavors', image: 'assets/veggiewrap.png' },
- <!--  { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' } -->  
+      <!--  { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' }-->  
           ],
           salads: [
             { id: 'cobb-salad', name: 'Cobb Salad', price: 11.25, desc: 'Mixed greens with chicken, bacon, cheese, and more', image: 'assets/cobbsalad.png' },
@@ -2567,13 +2567,17 @@
           this.state.orderItems
             .filter(item => item.childId === parseInt(childId))
             .forEach(item => {
+              // Get proper day name (capitalized)
+              const dayIndex = this.constants.days.indexOf(item.day);
+              const properDayName = this.constants.dayNames[dayIndex]; // This gives us "Monday" instead of "monday"
+              
               items.push({
                 childId: childId,
                 childName: `${firstName} ${lastName}`,
                 name: item.name,
                 price: item.price,
-                date: this.calculateDateForDay(item.day),
-                day: item.day
+                date: this.calculateDateForDay(properDayName),
+                day: properDayName // Use capitalized day name
               });
             });
         });
