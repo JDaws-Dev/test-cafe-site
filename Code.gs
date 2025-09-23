@@ -293,13 +293,21 @@ function doGet(e) {
       }
     }
     
-    if (action === 'update_distribution') {
-      const orderId = e.parameter.order_id;
-      const childId = e.parameter.child_id;
-      const distributed = e.parameter.distributed === 'true';
-      
-      try {
-        const result = updateDistributionStatus(orderId, childId, distributed);
+
+if (action === 'update_distribution') {
+  const orderId = e.parameter.order_id;
+  const childId = e.parameter.child_id;
+  const date = e.parameter.date; // ADD THIS LINE
+  const distributed = e.parameter.distributed === 'true';
+  
+  try {
+    const result = updateDistributionStatus(orderId, childId, date, distributed); // ADD DATE PARAMETER
+
+
+
+
+
+        
         return createResponse(result);
       } catch (error) {
         console.error('Error updating distribution:', error);
@@ -1269,27 +1277,31 @@ function getDailyOrders(dateStr) {
  * Update distribution status for an order item
  * Updates ALL items for a specific child in an order (across all days)
  */
-function updateDistributionStatus(orderId, childId, distributed) {
+function updateDistributionStatus(orderId, childId, date, distributed) {
   try {
-    console.log(`Updating distribution status for Order: ${orderId}, Child: ${childId}, Distributed: ${distributed}`);
+    console.log(`Updating distribution status for Order: ${orderId}, Child: ${childId}, Date: ${date}, Distributed: ${distributed}`);
     
     const sheet = getOrdersSheet();
     const data = sheet.getDataRange().getValues();
     let updated = false;
     let rowsUpdated = 0;
     
-    // Find ALL rows matching this order and child
+    // Normalize the input date to YYYY-MM-DD format
+    const normalizedInputDate = normalizeDateToString(date);
+    
+    // Find ALL rows matching this order, child, and date
     for (let i = 1; i < data.length; i++) {
       // Make sure we're comparing strings to strings
       const rowOrderId = String(data[i][0]);
       const rowChildId = String(data[i][11]); // Child_ID - shifted
+      const rowDate = normalizeDateToString(data[i][12]); // Column M contains the date - NORMALIZE IT
       
-      if (rowOrderId === String(orderId) && rowChildId === String(childId)) {
+      if (rowOrderId === String(orderId) && rowChildId === String(childId) && rowDate === normalizedInputDate) {
         // Update column X (24) with distribution status - shifted
         sheet.getRange(i + 1, 24).setValue(distributed ? 'TRUE' : 'FALSE');
         updated = true;
         rowsUpdated++;
-        console.log(`Updated row ${i + 1} for ${data[i][2]} ${data[i][3]}`);
+        console.log(`Updated row ${i + 1} for ${data[i][2]} ${data[i][3]} on ${rowDate}`);
       }
     }
     
@@ -1301,10 +1313,13 @@ function updateDistributionStatus(orderId, childId, distributed) {
         rowsUpdated: rowsUpdated
       };
     } else {
-      console.log(`No matching rows found for Order: ${orderId}, Child: ${childId}`);
+      console.log(`No matching rows found for Order: ${orderId}, Child: ${childId}, Date: ${normalizedInputDate}`);
+      console.log(`Available dates for this order/child:`, data.slice(1).filter(row => 
+        String(row[0]) === String(orderId) && String(row[11]) === String(childId)
+      ).map(row => normalizeDateToString(row[12])));
       return {
         success: false,
-        error: 'Order not found'
+        error: 'Order not found for the specified date'
       };
     }
     
@@ -1313,6 +1328,8 @@ function updateDistributionStatus(orderId, childId, distributed) {
     throw error;
   }
 }
+
+
 
 // ============================================
 // BLACKOUT DATES FUNCTIONS (NEW)
