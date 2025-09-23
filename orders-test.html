@@ -2033,7 +2033,7 @@
           `;
           
           childData.items.forEach((item, index) => {
-            const uniqueId = `${childId}-${item.itemId}-${item.day}-${index}`;
+const uniqueId = `${childId}_${item.itemId}_${item.day}_${index}`;
             const dayName = this.constants.dayNames[this.constants.days.indexOf(item.day)];
             const dateStr = this.calculateDateForDay(dayName);
             const displayDate = this.formatDateForDisplay(dateStr);
@@ -2064,8 +2064,8 @@
         // Add remove functionality
         document.querySelectorAll('.remove-item-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const uniqueId = btn.dataset.uniqueId;
-            const [childId, itemId, day] = uniqueId.split('-');
+const uniqueId = btn.dataset.uniqueId;
+const [childId, itemId, day, index] = uniqueId.split('_');
             
             // Find and uncheck the checkbox
             const checkbox = document.querySelector(`input[data-child-id="${childId}"][data-item="${itemId}"][data-day="${day}"]`);
