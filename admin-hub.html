@@ -877,18 +877,18 @@
 
             <!-- Other tabs remain unchanged but hidden -->
         <!-- Simple Order Management Tab - Uses existing Google Apps Script -->
-<!-- Fixed Order Management Tab -->
-<!-- Replace the content inside <div class="tab-content" id="order-management"> with this -->
+<!-- Enhanced Order Management Tab with Individual Item Cancellation -->
+<!-- Replace everything inside <div class="tab-content" id="order-management"> with this -->
 
 <div class="card">
     <div class="card-header">
-        <h2 class="card-title">💳 Order Management & Venmo Reconciliation</h2>
-        <button onclick="OrderManager.refresh()" class="action-btn btn-success">
+        <h2 class="card-title">📋 Order Management</h2>
+        <button onclick="OM.refresh()" class="action-btn btn-success">
             🔄 Refresh Orders
         </button>
     </div>
     
-    <!-- Simple Controls -->
+    <!-- Controls -->
     <div style="padding: 20px; border-bottom: 1px solid #e9ecef;">
         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div>
@@ -899,45 +899,35 @@
             
             <div>
                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
-                <select id="sort-orders" onchange="OrderManager.sortAndDisplay()" 
+                <select id="sort-orders" onchange="OM.sortAndDisplay()" 
                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                     <option value="date">Date (Newest First)</option>
                     <option value="family">Family Name (A-Z)</option>
-                    <option value="email">Email (A-Z)</option>
-                    <option value="amount">Amount</option>
                 </select>
             </div>
             
-            <button onclick="OrderManager.checkEmail()" class="action-btn btn-primary">
+            <button onclick="OM.search()" class="action-btn btn-primary">
                 🔍 Search Orders
-            </button>
-            
-            <button onclick="OrderManager.exportCSV()" class="action-btn btn-secondary">
-                📥 Export CSV
             </button>
         </div>
         
-        <!-- Quick Stats -->
+        <!-- Stats -->
         <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
             <span style="padding: 5px 15px; background: #e3f2fd; border-radius: 20px; font-size: 0.9em;">
-                Total: <strong id="stat-total">0</strong>
+                Total Orders: <strong id="total-count">0</strong>
             </span>
-            <span style="padding: 5px 15px; background: #e8f5e9; border-radius: 20px; font-size: 0.9em;">
-                Paid: <strong id="stat-paid">0</strong>
+            <span style="padding: 5px 15px; background: #ffebee; border-radius: 20px; font-size: 0.9em;">
+                Cancelled: <strong id="cancel-count">0</strong>
             </span>
-            <span style="padding: 5px 15px; background: #fff3e0; border-radius: 20px; font-size: 0.9em;">
-                Pending: <strong id="stat-pending">0</strong>
-            </span>
-            <span id="duplicate-alert" style="padding: 5px 15px; background: #ffebee; border-radius: 20px; font-size: 0.9em; display: none;">
-                ⚠️ Duplicates: <strong id="stat-duplicates">0</strong>
+            <span style="padding: 5px 15px; background: #e8f5e8; border-radius: 20px; font-size: 0.9em;">
+                Total Items: <strong id="item-count">0</strong>
             </span>
         </div>
     </div>
     
     <!-- Orders Display -->
     <div style="padding: 20px;">
-        <div id="orders-list" style="max-height: 600px; overflow-y: auto;">
-            <!-- Orders will load here -->
+        <div id="order-display" style="max-height: 700px; overflow-y: auto;">
             <div style="text-align: center; padding: 40px; color: #999;">
                 Enter an email address and click "Search Orders" to begin
             </div>
@@ -946,489 +936,823 @@
 </div>
 
 <style>
-/* Simple styles that work with existing admin-hub */
-.order-card {
+.om-order-card {
     background: white;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 10px;
-    transition: all 0.2s;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
 }
 
-.order-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.order-card.duplicate {
-    border-left: 4px solid #f44336;
-    background: #fff5f5;
-}
-
-.order-header {
+.om-order-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
     display: flex;
     justify-content: space-between;
-    align-items: start;
-    margin-bottom: 10px;
+    align-items: center;
 }
 
-.order-info {
+.om-order-header:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.om-order-header.expanded {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.om-order-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.om-order-meta {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.om-expand-icon {
+    font-size: 1.5em;
+    transition: transform 0.3s ease;
+}
+
+.om-expand-icon.expanded {
+    transform: rotate(180deg);
+}
+
+.om-order-details {
+    display: none;
+    padding: 0;
+}
+
+.om-order-details.expanded {
+    display: block;
+}
+
+.om-children-container {
+    background: #f8f9fa;
+}
+
+.om-child-section {
+    border-bottom: 1px solid #e9ecef;
+    padding: 20px;
+}
+
+.om-child-section:last-child {
+    border-bottom: none;
+}
+
+.om-child-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.om-child-info h4 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 1.2em;
+}
+
+.om-child-grade {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 2px;
+}
+
+.om-items-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.om-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.om-item:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.om-item-info {
     flex: 1;
 }
 
-.order-actions {
+.om-item-name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 5px;
+}
+
+.om-item-details {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.om-item-price {
+    font-weight: 600;
+    color: #38a169;
+    margin-right: 15px;
+}
+
+.om-item-price.discounted {
+    color: #f56565;
+}
+
+.om-original-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 0.9em;
+    margin-right: 8px;
+}
+
+.om-discount-badge {
+    background: #fed7d7;
+    color: #c53030;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    margin-left: 8px;
+}
+
+.om-item-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-left: 10px;
+}
+
+.om-status-active {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.om-status-cancelled {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.om-item-actions {
     display: flex;
     gap: 10px;
     align-items: center;
 }
 
-.order-id {
-    font-weight: bold;
-    color: #333;
-    margin-right: 10px;
-}
-
-.order-date {
-    color: #666;
+.om-cancel-item {
+    background: #f56565;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
     font-size: 0.9em;
+    transition: background 0.2s ease;
 }
 
-.order-family {
-    font-size: 1.1em;
+.om-cancel-item:hover {
+    background: #e53e3e;
+}
+
+.om-cancel-item:disabled {
+    background: #e2e8f0;
+    color: #a0aec0;
+    cursor: not-allowed;
+}
+
+.om-cancel-item:disabled:hover {
+    background: #e2e8f0;
+}
+
+.om-order-totals {
+    background: #edf2f7;
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.om-totals-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.om-totals-row.final {
     font-weight: 600;
-    color: #2c3e50;
-    margin: 5px 0;
+    font-size: 1.1em;
+    border-top: 1px solid #cbd5e0;
+    padding-top: 8px;
+    margin-top: 8px;
 }
 
-.order-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #f0f0f0;
+.om-order-actions {
+    padding: 15px 20px;
+    background: #f7fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.detail-item {
-    font-size: 0.9em;
-}
-
-.detail-label {
-    color: #666;
-    margin-right: 5px;
-}
-
-.detail-value {
-    color: #333;
+.om-bulk-cancel {
+    background: #e53e3e;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
     font-weight: 500;
 }
 
-.venmo-handle {
-    color: #3b82f6;
-    font-family: monospace;
-    font-weight: 600;
+.om-bulk-cancel:hover {
+    background: #c53030;
 }
 
-.payment-check {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.om-cancelled-order {
+    opacity: 0.7;
 }
 
-.payment-check input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
+.om-cancelled-order .om-order-header {
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
 }
 
-.cancel-btn {
-    padding: 4px 12px;
-    background: #f44336;
+.om-badge {
+    background: #e53e3e;
     color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.85em;
-    cursor: pointer;
-}
-
-.cancel-btn:hover {
-    background: #d32f2f;
-}
-
-.cancelled-badge {
-    background: #f44336;
-    color: white;
-    padding: 2px 8px;
+    padding: 4px 8px;
     border-radius: 12px;
     font-size: 0.8em;
-}
-
-/* Loading spinner */
-.simple-loading {
-    text-align: center;
-    padding: 40px;
-}
-
-.simple-spinner {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    margin-left: 10px;
 }
 </style>
 
 <script>
-// Fixed Order Management with proper error handling
-const OrderManager = {
-    orders: [],
-    allOrders: [],
-    API_URL: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
+(function() {
+    'use strict';
     
-    async checkEmail() {
-        const email = document.getElementById('email-filter').value.trim();
+    window.OM = {
+        data: [],
+        apiUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
         
-        if (!email) {
-            alert('Please enter an email address');
-            return;
-        }
-        
-        document.getElementById('orders-list').innerHTML = `
-            <div class="simple-loading">
-                <div class="simple-spinner"></div>
-                <p>Loading orders for ${email}...</p>
-            </div>
-        `;
-        
-        try {
-            const response = await fetch(`${this.API_URL}?action=lookup_orders&email=${encodeURIComponent(email)}`);
-            const data = await response.json();
+        search: function() {
+            var email = document.getElementById('email-filter').value.trim();
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
             
-            if (data.success && data.orders && data.orders.length > 0) {
-                this.allOrders = data.orders;
-                this.orders = [...data.orders];
-                
-                // Mark duplicates
-                this.detectDuplicates();
-                
-                // Sort and display
-                this.sortAndDisplay();
-            } else {
-                document.getElementById('orders-list').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #999;">
-                        No orders found for ${email}
-                    </div>
-                `;
-                this.updateStats(0, 0, 0);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            document.getElementById('orders-list').innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #f44336;">
-                    Error loading orders. Please try again.
-                </div>
-            `;
-        }
-    },
-    
-    detectDuplicates() {
-        // Reset duplicate flags
-        this.orders.forEach(order => {
-            order.isDuplicate = false;
-        });
-        
-        // Check for duplicates
-        for (let i = 0; i < this.orders.length; i++) {
-            for (let j = i + 1; j < this.orders.length; j++) {
-                const order1 = this.orders[i];
-                const order2 = this.orders[j];
-                
-                // Get safe values with defaults
-                const date1 = order1.orderDate || '';
-                const date2 = order2.orderDate || '';
-                const total1 = parseFloat(order1.total || 0);
-                const total2 = parseFloat(order2.total || 0);
-                
-                // Same date and similar amount
-                if (date1 === date2 && Math.abs(total1 - total2) < 2) {
-                    order1.isDuplicate = true;
-                    order2.isDuplicate = true;
-                }
-            }
-        }
-        
-        const duplicateCount = this.orders.filter(o => o.isDuplicate).length;
-        if (duplicateCount > 0) {
-            document.getElementById('duplicate-alert').style.display = 'inline-block';
-            document.getElementById('stat-duplicates').textContent = duplicateCount;
-        } else {
-            document.getElementById('duplicate-alert').style.display = 'none';
-        }
-    },
-    
-    sortAndDisplay() {
-        const sortBy = document.getElementById('sort-orders').value;
-        
-        // Sort orders with null checking
-        switch(sortBy) {
-            case 'date':
-                this.orders.sort((a, b) => {
-                    const dateA = new Date(a.orderDate || '1900-01-01');
-                    const dateB = new Date(b.orderDate || '1900-01-01');
-                    return dateB - dateA;
+            var self = this;
+            document.getElementById('order-display').innerHTML = '<div style="text-align: center; padding: 40px;">Loading...</div>';
+            
+            fetch(this.apiUrl + '?action=lookup_orders&email=' + encodeURIComponent(email))
+                .then(function(r) { return r.json(); })
+                .then(function(result) {
+                    if (result.success && result.orders) {
+                        self.data = result.orders;
+                        self.processOrderData();
+                        self.sortAndDisplay();
+                    } else {
+                        document.getElementById('order-display').innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No orders found</div>';
+                        self.updateCounts(0, 0, 0);
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('order-display').innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;">Error loading orders</div>';
                 });
-                break;
-            case 'family':
-                this.orders.sort((a, b) => {
-                    const aName = (a.children && a.children[0]?.lastName) || 'Unknown';
-                    const bName = (b.children && b.children[0]?.lastName) || 'Unknown';
+        },
+        
+        processOrderData: function() {
+            for (var i = 0; i < this.data.length; i++) {
+                var order = this.data[i];
+                
+                // Check overall order status
+                var allCancelled = true;
+                var totalItems = 0;
+                var cancelledItems = 0;
+                
+                if (order.items) {
+                    for (var j = 0; j < order.items.length; j++) {
+                        totalItems++;
+                        if (order.items[j].status === 'cancelled') {
+                            cancelledItems++;
+                        } else {
+                            allCancelled = false;
+                        }
+                    }
+                }
+                
+                order.status = allCancelled ? 'cancelled' : 'active';
+                order.totalItems = totalItems;
+                order.cancelledItems = cancelledItems;
+            }
+        },
+        
+        sortAndDisplay: function() {
+            var sort = document.getElementById('sort-orders').value;
+            
+            if (sort === 'date') {
+                this.data.sort(function(a, b) {
+                    return (b.orderId || '').localeCompare(a.orderId || '');
+                });
+            } else if (sort === 'family') {
+                this.data.sort(function(a, b) {
+                    var aName = (a.children && a.children[0]) ? a.children[0].lastName : '';
+                    var bName = (b.children && b.children[0]) ? b.children[0].lastName : '';
                     return aName.localeCompare(bName);
                 });
-                break;
-            case 'email':
-                this.orders.sort((a, b) => {
-                    const emailA = a.email || '';
-                    const emailB = b.email || '';
-                    return emailA.localeCompare(emailB);
+            }
+            
+            this.render();
+        },
+        
+        render: function() {
+            var container = document.getElementById('order-display');
+            
+            if (this.data.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No orders</div>';
+                this.updateCounts(0, 0, 0);
+                return;
+            }
+            
+            var html = '';
+            var totalOrders = 0;
+            var cancelledOrders = 0;
+            var totalItems = 0;
+            
+            for (var i = 0; i < this.data.length; i++) {
+                var order = this.data[i];
+                totalOrders++;
+                totalItems += order.totalItems || 0;
+                
+                if (order.status === 'cancelled') {
+                    cancelledOrders++;
+                }
+                
+                html += this.renderOrder(order, i);
+            }
+            
+            container.innerHTML = html;
+            this.updateCounts(totalOrders, cancelledOrders, totalItems);
+        },
+        
+        renderOrder: function(order, index) {
+            var id = order.orderId || '';
+            var isCancelled = order.status === 'cancelled';
+            var dateStr = this.parseDate(id);
+            var family = this.getFamily(order);
+            var total = (order.total || 0).toFixed(2);
+            
+            var html = '<div class="om-order-card' + (isCancelled ? ' om-cancelled-order' : '') + '">';
+            
+            // Order Header - Build onclick function separately
+            var headerOnclick = 'OM.toggleOrder(' + index + ')';
+            html += '<div class="om-order-header" onclick="' + headerOnclick + '" id="header-' + index + '">';
+            html += '<div class="om-order-info">';
+            html += '<h3>' + dateStr + ' - ' + family + ' Family';
+            if (isCancelled) html += '<span class="om-badge">CANCELLED</span>';
+            html += '</h3>';
+            html += '<div class="om-order-meta">';
+            html += 'Order ID: ' + id + ' | ';
+            html += 'Items: ' + (order.totalItems || 0) + ' | ';
+            html += 'Total: $' + total;
+            if (order.cancelledItems > 0) {
+                html += ' | Cancelled Items: ' + order.cancelledItems;
+            }
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="om-expand-icon" id="icon-' + index + '">▼</div>';
+            html += '</div>';
+            
+            // Order Details
+            html += '<div class="om-order-details" id="details-' + index + '">';
+            html += this.renderOrderDetails(order);
+            html += '</div>';
+            
+            html += '</div>';
+            return html;
+        },
+        
+        renderOrderDetails: function(order) {
+            var html = '<div class="om-children-container">';
+            
+            // Group items by child
+            var childrenMap = {};
+            if (order.items) {
+                for (var i = 0; i < order.items.length; i++) {
+                    var item = order.items[i];
+                    var childKey = item.childId || '1';
+                    if (!childrenMap[childKey]) {
+                        childrenMap[childKey] = {
+                            name: item.childName || 'Unknown',
+                            firstName: item.childFirstName || '',
+                            lastName: item.childLastName || '',
+                            grade: item.grade || '',
+                            items: []
+                        };
+                    }
+                    childrenMap[childKey].items.push(item);
+                }
+            }
+            
+            // Render each child's section
+            for (var childId in childrenMap) {
+                var child = childrenMap[childId];
+                html += this.renderChildSection(child, order.orderId);
+            }
+            
+            // Order totals and actions
+            html += this.renderOrderTotals(order);
+            html += this.renderOrderActions(order);
+            
+            html += '</div>';
+            return html;
+        },
+        
+        renderChildSection: function(child, orderId) {
+            var html = '<div class="om-child-section">';
+            html += '<div class="om-child-header">';
+            html += '<div class="om-child-info">';
+            html += '<h4>' + child.name + '</h4>';
+            html += '<div class="om-child-grade">Grade: ' + child.grade + '</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div class="om-items-grid">';
+            for (var i = 0; i < child.items.length; i++) {
+                var item = child.items[i];
+                html += this.renderItem(item, orderId);
+            }
+            html += '</div>';
+            
+            html += '</div>';
+            return html;
+        },
+        
+        renderItem: function(item, orderId) {
+            var isCancelled = item.status === 'cancelled';
+            var hasDiscount = item.hasDiscount || (item.paidPrice < item.price);
+            var displayPrice = item.paidPrice || item.price || 0;
+            var isPastDate = this.isDateInPast(item.date);
+            var itemId = (item.id || '').replace(/'/g, '');
+            var safeOrderId = (orderId || '').replace(/'/g, '');
+            
+            var html = '<div class="om-item">';
+            html += '<div class="om-item-info">';
+            html += '<div class="om-item-name">' + (item.name || 'Unknown Item') + '</div>';
+            html += '<div class="om-item-details">';
+            html += 'Day: ' + (item.day || 'Unknown') + ' | ';
+            html += 'Date: ' + (item.date || 'Unknown');
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div class="om-item-actions">';
+            
+            // Price display
+            if (hasDiscount) {
+                html += '<span class="om-original-price">$' + (item.price || 0).toFixed(2) + '</span>';
+                html += '<span class="om-item-price discounted">$' + displayPrice.toFixed(2) + '</span>';
+                html += '<span class="om-discount-badge">DISCOUNT</span>';
+            } else {
+                html += '<span class="om-item-price">$' + displayPrice.toFixed(2) + '</span>';
+            }
+            
+            // Status badge
+            html += '<span class="om-item-status om-status-' + (isCancelled ? 'cancelled' : 'active') + '">';
+            html += isCancelled ? 'Cancelled' : 'Active';
+            html += '</span>';
+            
+            // Action button - Build onclick function separately
+            if (isCancelled) {
+                if (item.refundAmount) {
+                    html += '<span style="color: #38a169; font-size: 0.9em; margin-left: 10px;">Refunded: $' + item.refundAmount.toFixed(2) + '</span>';
+                }
+            } else if (isPastDate) {
+                html += '<button class="om-cancel-item" disabled>Cannot Cancel</button>';
+            } else {
+                var cancelOnclick = 'OM.cancelItem(\'' + itemId + '\', \'' + safeOrderId + '\')';
+                html += '<button class="om-cancel-item" onclick="' + cancelOnclick + '">Cancel Item</button>';
+            }
+            
+            html += '</div>';
+            html += '</div>';
+            return html;
+        },
+        
+        renderOrderTotals: function(order) {
+            var subtotal = order.subtotal || 0;
+            var discount = order.discount || 0;
+            var total = order.total || 0;
+            
+            var html = '<div class="om-order-totals">';
+            html += '<div class="om-totals-row">';
+            html += '<span>Subtotal:</span><span>$' + subtotal.toFixed(2) + '</span>';
+            html += '</div>';
+            
+            if (discount > 0) {
+                html += '<div class="om-totals-row">';
+                html += '<span>Discount:</span><span>-$' + discount.toFixed(2) + '</span>';
+                html += '</div>';
+            }
+            
+            html += '<div class="om-totals-row final">';
+            html += '<span>Total:</span><span>$' + total.toFixed(2) + '</span>';
+            html += '</div>';
+            html += '</div>';
+            
+            return html;
+        },
+        
+        renderOrderActions: function(order) {
+            var isCancelled = order.status === 'cancelled';
+            var email = order.email || order.parentEmail || 'Unknown';
+            var orderId = (order.orderId || '').replace(/'/g, '');
+            
+            var html = '<div class="om-order-actions">';
+            html += '<div>';
+            html += '<strong>Order ID:</strong> ' + (order.orderId || 'Unknown');
+            html += ' | <strong>Email:</strong> ' + email;
+            html += '</div>';
+            html += '<div>';
+            
+            if (isCancelled) {
+                html += '<span style="color: #999; font-style: italic;">Order is cancelled</span>';
+            } else {
+                // Check if any items can still be cancelled (not past date)
+                var hasActiveItems = false;
+                if (order.items) {
+                    for (var i = 0; i < order.items.length; i++) {
+                        var item = order.items[i];
+                        if (item.status !== 'cancelled' && !this.isDateInPast(item.date)) {
+                            hasActiveItems = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (hasActiveItems) {
+                    var bulkOnclick = 'OM.cancelEntireOrder(\'' + orderId + '\')';
+                    html += '<button class="om-bulk-cancel" onclick="' + bulkOnclick + '">Cancel Entire Order</button>';
+                } else {
+                    html += '<span style="color: #999; font-style: italic;">All items are cancelled or past date</span>';
+                }
+            }
+            
+            html += '</div>';
+            html += '</div>';
+            
+            return html;
+        },
+        
+        isDateInPast: function(dateStr) {
+            if (!dateStr || dateStr === 'Unknown') return false;
+            
+            try {
+                var itemDate;
+                if (dateStr.includes('-')) {
+                    itemDate = new Date(dateStr);
+                } else if (dateStr.includes('/')) {
+                    itemDate = new Date(dateStr);
+                } else {
+                    return false;
+                }
+                
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                itemDate.setHours(0, 0, 0, 0);
+                
+                return itemDate < today;
+            } catch (e) {
+                console.error('Error parsing date:', dateStr, e);
+                return false;
+            }
+        },
+        
+        toggleOrder: function(index) {
+            var details = document.getElementById('details-' + index);
+            var header = document.getElementById('header-' + index);
+            var icon = document.getElementById('icon-' + index);
+            
+            if (details.classList.contains('expanded')) {
+                details.classList.remove('expanded');
+                header.classList.remove('expanded');
+                icon.classList.remove('expanded');
+            } else {
+                details.classList.add('expanded');
+                header.classList.add('expanded');
+                icon.classList.add('expanded');
+            }
+        },
+        
+        cancelItem: function(itemId, orderId) {
+            var self = this;
+            var item = null;
+            for (var i = 0; i < this.data.length; i++) {
+                var order = this.data[i];
+                if (order.orderId === orderId && order.items) {
+                    for (var j = 0; j < order.items.length; j++) {
+                        if (order.items[j].id === itemId) {
+                            item = order.items[j];
+                            break;
+                        }
+                    }
+                }
+                if (item) break;
+            }
+            
+            if (!item) {
+                alert('Item not found');
+                return;
+            }
+            
+            if (this.isDateInPast(item.date)) {
+                alert('Cannot cancel items from past dates. This item was scheduled for ' + item.date + '.');
+                return;
+            }
+            
+            var confirmMsg = 'Cancel this item?\n\nItem: ' + item.name + '\nDate: ' + item.date + '\n\nThis action cannot be undone.';
+            if (!confirm(confirmMsg)) return;
+            
+            var session = 'session_' + Date.now();
+            var items = [{ itemId: itemId }];
+            var url = this.apiUrl + '?action=cancel_multiple_items&session_id=' + session + '&items=' + encodeURIComponent(JSON.stringify(items));
+            
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(result) {
+                    if (result.success) {
+                        self.updateLocalItemStatus(itemId, 'cancelled', result.totalRefund || 0);
+                        self.processOrderData();
+                        self.render();
+                        alert('Item cancelled successfully. Refund: $' + (result.totalRefund || 0).toFixed(2));
+                    } else {
+                        alert('Failed to cancel item: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(function() {
+                    alert('Error cancelling item');
                 });
-                break;
-            case 'amount':
-                this.orders.sort((a, b) => {
-                    const amountA = parseFloat(a.total || 0);
-                    const amountB = parseFloat(b.total || 0);
-                    return amountB - amountA;
+        },
+        
+        updateLocalItemStatus: function(itemId, status, refundAmount) {
+            for (var i = 0; i < this.data.length; i++) {
+                var order = this.data[i];
+                if (order.items) {
+                    for (var j = 0; j < order.items.length; j++) {
+                        if (order.items[j].id === itemId) {
+                            order.items[j].status = status;
+                            if (refundAmount) {
+                                order.items[j].refundAmount = refundAmount;
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        },
+        
+        cancelEntireOrder: function(orderId) {
+            var self = this;
+            var order = null;
+            
+            for (var i = 0; i < this.data.length; i++) {
+                if (this.data[i].orderId === orderId) {
+                    order = this.data[i];
+                    break;
+                }
+            }
+            
+            if (!order) return;
+            
+            var items = [];
+            var pastDateItems = 0;
+            var alreadyCancelledItems = 0;
+            
+            if (order.items) {
+                for (var i = 0; i < order.items.length; i++) {
+                    var item = order.items[i];
+                    if (item.status === 'cancelled') {
+                        alreadyCancelledItems++;
+                    } else if (this.isDateInPast(item.date)) {
+                        pastDateItems++;
+                    } else {
+                        var itemId = item.id || (orderId + '-' + (item.rowIndex || ''));
+                        if (itemId && itemId !== orderId + '-') {
+                            items.push({ itemId: itemId });
+                        }
+                    }
+                }
+            }
+            
+            if (items.length === 0) {
+                var message = 'No items can be cancelled. ';
+                if (alreadyCancelledItems > 0) {
+                    message += alreadyCancelledItems + ' item(s) already cancelled. ';
+                }
+                if (pastDateItems > 0) {
+                    message += pastDateItems + ' item(s) are past the cancellation date.';
+                }
+                alert(message);
+                return;
+            }
+            
+            var confirmMsg = 'Cancel ' + items.length + ' active item(s) from this order?';
+            if (pastDateItems > 0) {
+                confirmMsg += '\n\nNote: ' + pastDateItems + ' item(s) from past dates will remain active (cannot be cancelled).';
+            }
+            if (alreadyCancelledItems > 0) {
+                confirmMsg += '\n\nNote: ' + alreadyCancelledItems + ' item(s) were already cancelled.';
+            }
+            
+            if (!confirm(confirmMsg)) return;
+            
+            var session = 'session_' + Date.now();
+            var url = this.apiUrl + '?action=cancel_multiple_items&session_id=' + session + '&items=' + encodeURIComponent(JSON.stringify(items));
+            
+            fetch(url)
+                .then(function(r) { return r.json(); })
+                .then(function(result) {
+                    if (result.success) {
+                        for (var i = 0; i < order.items.length; i++) {
+                            var item = order.items[i];
+                            if (item.status !== 'cancelled' && !self.isDateInPast(item.date)) {
+                                item.status = 'cancelled';
+                            }
+                        }
+                        
+                        var allInactive = true;
+                        for (var i = 0; i < order.items.length; i++) {
+                            if (order.items[i].status !== 'cancelled' && !self.isDateInPast(order.items[i].date)) {
+                                allInactive = false;
+                                break;
+                            }
+                        }
+                        
+                        if (allInactive) {
+                            order.status = 'cancelled';
+                        }
+                        
+                        self.processOrderData();
+                        self.render();
+                        
+                        var successMsg = items.length + ' item(s) cancelled successfully. Refund: $' + (result.totalRefund || 0).toFixed(2);
+                        if (pastDateItems > 0) {
+                            successMsg += '\n\n' + pastDateItems + ' item(s) from past dates were not cancelled.';
+                        }
+                        alert(successMsg);
+                    } else {
+                        alert('Failed to cancel items: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(function() {
+                    alert('Error cancelling items');
                 });
-                break;
+        },
+        
+        parseDate: function(id) {
+            if (!id || id === 'Unknown') return 'No Date';
+            var parts = id.split('-');
+            if (parts[0] && parts[0].length === 6) {
+                var yr = '20' + parts[0].substr(0, 2);
+                var mo = parts[0].substr(2, 2);
+                var dy = parts[0].substr(4, 2);
+                return mo + '/' + dy + '/' + yr;
+            }
+            return 'No Date';
+        },
+        
+        getFamily: function(order) {
+            if (order.children && order.children[0] && order.children[0].lastName) {
+                return order.children[0].lastName;
+            }
+            return 'Unknown';
+        },
+        
+        updateCounts: function(total, cancelled, items) {
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('cancel-count').textContent = cancelled;
+            document.getElementById('item-count').textContent = items;
+        },
+        
+        refresh: function() {
+            var email = document.getElementById('email-filter').value.trim();
+            if (email) {
+                this.search();
+            } else {
+                alert('Enter an email first');
+            }
         }
-        
-        this.display();
-    },
-    
-    display() {
-        const container = document.getElementById('orders-list');
-        
-        if (!this.orders || this.orders.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #999;">
-                    No orders to display
-                </div>
-            `;
-            this.updateStats(0, 0, 0);
-            return;
-        }
-        
-        // Calculate stats
-        const total = this.orders.filter(o => o.status !== 'cancelled').length;
-        const paid = this.orders.filter(o => o.paymentStatus === 'paid').length;
-        const pending = total - paid;
-        
-        this.updateStats(total, paid, pending);
-        
-        // Build order cards with safe property access
-        container.innerHTML = this.orders.map(order => {
-            // Safely extract values with defaults
-            const orderId = order.orderId || 'Unknown';
-            const orderDate = order.orderDate || '';
-            const orderTime = order.orderTime || '';
-            const email = order.email || 'No email';
-            const total = parseFloat(order.total || 0);
-            const discount = parseFloat(order.discount || 0);
-            const discountPercent = parseFloat(order.discountPercent || 0);
-            const status = order.status || '';
-            const paymentStatus = order.paymentStatus || '';
-            
-            // Handle children array safely
-            const children = order.children || [];
-            const familyName = (children[0] && children[0].lastName) || 'Unknown';
-            const childrenNames = children.map(c => 
-                `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Unknown'
-            ).join(', ') || 'No children';
-            
-            // Handle items array safely
-            const items = order.items || [];
-            const itemCount = items.length;
-            
-            const isCancelled = status === 'cancelled';
-            const isPaid = paymentStatus === 'paid';
-            
-            return `
-                <div class="order-card ${order.isDuplicate ? 'duplicate' : ''}">
-                    <div class="order-header">
-                        <div class="order-info">
-                            <div>
-                                <span class="order-id">${orderId}</span>
-                                <span class="order-date">${orderDate ? new Date(orderDate).toLocaleDateString() : ''} ${orderTime}</span>
-                                ${order.isDuplicate ? '<span style="color: red; margin-left: 10px;">⚠️ Possible Duplicate</span>' : ''}
-                                ${isCancelled ? '<span class="cancelled-badge" style="margin-left: 10px;">CANCELLED</span>' : ''}
-                            </div>
-                            <div class="order-family">${familyName} Family</div>
-                        </div>
-                        <div class="order-actions">
-                            <div class="payment-check">
-                                <input type="checkbox" 
-                                       id="pay-${orderId}"
-                                       ${isPaid ? 'checked' : ''}
-                                       ${isCancelled ? 'disabled' : ''}
-                                       onchange="OrderManager.togglePayment('${orderId}', this.checked)">
-                                <label for="pay-${orderId}" style="cursor: pointer; font-size: 0.9em;">
-                                    ${isPaid ? 'Paid' : 'Mark Paid'}
-                                </label>
-                            </div>
-                            ${!isCancelled ? `
-                                <button class="cancel-btn" onclick="OrderManager.cancelOrder('${orderId}')">
-                                    Cancel
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="order-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Email:</span>
-                            <span class="detail-value">${email}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Venmo:</span>
-                            <span class="detail-value venmo-handle">@ChanTa-Rivers</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Children:</span>
-                            <span class="detail-value">${childrenNames}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Items:</span>
-                            <span class="detail-value">${itemCount} items</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Total:</span>
-                            <span class="detail-value" style="font-size: 1.1em; color: #10b981;">
-                                <strong>$${total.toFixed(2)}</strong>
-                                ${discount > 0 ? `<small style="color: #f59e0b;"> (${discountPercent}% off)</small>` : ''}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    ${itemCount > 0 ? `
-                        <details style="margin-top: 10px;">
-                            <summary style="cursor: pointer; color: #667eea; font-size: 0.9em;">
-                                View Items (${itemCount})
-                            </summary>
-                            <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 4px;">
-                                ${items.map(item => {
-                                    const itemName = item.name || 'Unknown item';
-                                    const childName = item.childName || 'Unknown';
-                                    const finalPrice = parseFloat(item.finalPrice || 0);
-                                    const itemStatus = item.status || '';
-                                    
-                                    return `
-                                        <div style="padding: 5px 0; font-size: 0.85em;">
-                                            • ${childName}: ${itemName} - $${finalPrice.toFixed(2)}
-                                            ${itemStatus === 'cancelled' ? '<span style="color: red;">(Cancelled)</span>' : ''}
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </details>
-                    ` : ''}
-                </div>
-            `;
-        }).join('');
-    },
-    
-    updateStats(total, paid, pending) {
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-paid').textContent = paid;
-        document.getElementById('stat-pending').textContent = pending;
-    },
-    
-    togglePayment(orderId, isPaid) {
-        const order = this.orders.find(o => o.orderId === orderId);
-        if (order) {
-            order.paymentStatus = isPaid ? 'paid' : 'pending';
-            
-            // Recalculate stats
-            const total = this.orders.filter(o => o.status !== 'cancelled').length;
-            const paid = this.orders.filter(o => o.paymentStatus === 'paid').length;
-            const pending = total - paid;
-            
-            this.updateStats(total, paid, pending);
-            
-            console.log(`Order ${orderId} marked as ${isPaid ? 'paid' : 'unpaid'}`);
-        }
-    },
-    
-    async cancelOrder(orderId) {
-        const reason = prompt('Please enter a reason for cancellation:');
-        
-        if (!reason) return;
-        
-        const order = this.orders.find(o => o.orderId === orderId);
-        if (order) {
-            order.status = 'cancelled';
-            order.cancelReason = reason;
-            order.paymentStatus = 'cancelled';
-            
-            this.display();
-            
-            alert(`Order ${orderId} has been cancelled.\nReason: ${reason}`);
-        }
-    },
-    
-    refresh() {
-        const email = document.getElementById('email-filter').value.trim();
-        if (email) {
-            this.checkEmail();
-        } else {
-            alert('Please enter an email address first');
-        }
-    },
-    
-    exportCSV() {
-        if (!this.orders || this.orders.length === 0) {
-            alert('No orders to export');
-            return;
-        }
-        
-        let csv = 'Order ID,Date,Time,Family,Email,Children,Items,Total,Payment Status,Notes\n';
-        
-        this.orders.forEach(order => {
-            const orderId = order.orderId || 'Unknown';
-            const orderDate = order.orderDate || '';
-            const orderTime = order.orderTime || '';
-            const email = order.email || '';
-            const total = parseFloat(order.total || 0);
-            const status = order.status || '';
-            const paymentStatus = order.paymentStatus || '';
-            
-            const children = order.children || [];
-            const familyName = (children[0] && children[0].lastName) || 'Unknown';
-            const childrenNames = children.map(c => 
-                `${c.firstName || ''} ${c.lastName || ''}`.trim()
-            ).join('; ') || '';
-            
-            const items = order.items || [];
-            const finalStatus = status === 'cancelled' ? 'Cancelled' : 
-                               (paymentStatus === 'paid' ? 'Paid' : 'Pending');
-            const notes = order.isDuplicate ? 'POSSIBLE DUPLICATE' : '';
-            
-            csv += `"${orderId}","${orderDate}","${orderTime}","${familyName}","${email}","${childrenNames}","${items.length}","$${total.toFixed(2)}","${finalStatus}","${notes}"\n`;
-        });
-        
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-    }
-};
+    };
+})();
 </script>
 
 
