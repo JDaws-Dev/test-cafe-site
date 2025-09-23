@@ -1070,6 +1070,11 @@
       }
     }
 
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
     /* Mobile-first responsive design */
     @media (max-width: 640px) {
       .header {
@@ -1393,7 +1398,7 @@
             { id: 'grilled-gf', name: 'Grilled Sandwich (GF Bun)', price: 9.50, desc: 'Grilled chicken with gluten-free bun', image: 'assets/grilledsandwich.png' },
             { id: 'chicken-wrap', name: 'Chicken Wrap', price: 9.75, desc: 'Grilled chicken in tortilla wrap', image: 'assets/chickenwrap.png' },
             { id: 'veggie-wrap', name: 'Southwest Veggie Wrap', price: 9.50, desc: 'Vegetarian wrap with southwest flavors', image: 'assets/veggiewrap.png' },
-  <!--     { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' }--> 
+     <!--     { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' }--> 
           ],
           salads: [
             { id: 'cobb-salad', name: 'Cobb Salad', price: 11.25, desc: 'Mixed greens with chicken, bacon, cheese, and more', image: 'assets/cobbsalad.png' },
@@ -1421,6 +1426,7 @@
       async init() {
         try {
           this.loadUserEmail();
+          this.loadUserDataFromCookies(); // Load saved family data
           this.setupEventListeners();
           this.setupAutoSave();
           this.checkStoreHours();
@@ -1846,19 +1852,29 @@
               checkbox.dataset.childId = childId;
               checkbox.dataset.childName = childName;
               
-              const [itemId, day] = container.id.split('-checkboxes')[0].split('-').slice(0, -1).join('-').split(/-(monday|tuesday|wednesday|thursday|friday)/);
-              checkbox.dataset.item = itemId;
-              checkbox.dataset.day = day;
+              // Parse the container ID to get item and day
+              const parts = container.id.split('-');
+              const dayIndex = parts.findIndex(part => this.constants.days.includes(part));
               
-              const label = document.createElement('label');
-              label.htmlFor = checkbox.id;
-              label.textContent = childName;
-              
-              childCheckbox.appendChild(checkbox);
-              childCheckbox.appendChild(label);
-              container.appendChild(childCheckbox);
-              
-              checkbox.addEventListener('change', () => this.updateCart());
+              if (dayIndex !== -1) {
+                const day = parts[dayIndex];
+                const itemId = parts.slice(0, dayIndex).join('-');
+                
+                checkbox.dataset.item = itemId;
+                checkbox.dataset.day = day;
+                
+                const dayName = this.constants.dayNames[this.constants.days.indexOf(day)];
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = `${childName} (${dayName})`;
+                
+                childCheckbox.appendChild(checkbox);
+                childCheckbox.appendChild(label);
+                container.appendChild(childCheckbox);
+                
+                checkbox.addEventListener('change', () => this.updateCart());
+              }
             });
           }
         });
@@ -1979,6 +1995,8 @@
           childData.items.forEach((item, index) => {
             const uniqueId = `${childId}-${item.itemId}-${item.day}-${index}`;
             const dayName = this.constants.dayNames[this.constants.days.indexOf(item.day)];
+            const dateStr = this.calculateDateForDay(dayName);
+            const displayDate = this.formatDateForDisplay(dateStr);
             
             let itemClass = 'cart-item';
             if (item.discountApplied) {
@@ -1989,7 +2007,7 @@
               <div class="${itemClass}">
                 <div class="cart-item-content">
                   <div class="cart-item-name">${item.name}</div>
-                  <div class="cart-item-date">${dayName}</div>
+                  <div class="cart-item-date">${dayName} - ${displayDate}</div>
                   <div class="cart-item-price">$${item.price.toFixed(2)}</div>
                   ${item.discountReason ? `<div class="discount-line">${item.discountReason}</div>` : ''}
                 </div>
@@ -2136,12 +2154,53 @@
           expires.setTime(expires.getTime() + (30 * 24 * 60 * 60 * 1000));
           document.cookie = `artios_family_data=${encodeURIComponent(JSON.stringify(familyData))}; expires=${expires.toUTCString()}; path=/`;
           
-          if (Math.random() < 0.1) {
+          if (Math.random() < 0.3) {
             this.showSavedIndicator();
           }
           
         } catch (error) {
           console.error('Error saving family data:', error);
+        }
+      }
+
+      loadUserDataFromCookies() {
+        try {
+          const cookies = document.cookie.split(';');
+          let familyData = null;
+          
+          for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'artios_family_data') {
+              familyData = JSON.parse(decodeURIComponent(value));
+              break;
+            }
+          }
+          
+          if (!familyData) return;
+          
+          const emailInput = document.getElementById('family-email');
+          if (emailInput && familyData.email) {
+            emailInput.value = familyData.email;
+          }
+          
+          if (familyData.children?.length > 0) {
+            const defaultChild = document.querySelector('.child-section');
+            if (defaultChild) {
+              const firstChild = familyData.children[0];
+              defaultChild.querySelector('.child-first-name').value = firstChild.firstName || '';
+              defaultChild.querySelector('.child-last-name').value = firstChild.lastName || '';
+              defaultChild.querySelector('.child-grade').value = firstChild.grade || '';
+            }
+            
+            for (let i = 1; i < familyData.children.length; i++) {
+              this.addChild(familyData.children[i]);
+            }
+          }
+          
+          this.validateForm();
+          
+        } catch (error) {
+          console.error('Error loading family data from cookies:', error);
         }
       }
 
@@ -2206,6 +2265,73 @@
         });
 
         this.state.currentDay = day;
+      }
+
+      // Venmo helper functions
+      getAbbrevForItem(item) {
+        const byId = {
+          'chicken-sandwich': 'ChkSand',
+          'spicy-chicken': 'SpicySand',
+          'nuggets-8': 'Nugg8',
+          'nuggets-12': 'Nugg12',
+          'cobb-salad': 'Cobb',
+          'southwest-salad': 'SwSalad',
+          'market-salad': 'Market',
+          'fries-only': 'Fries',
+          'mac-only': 'Mac',
+          'fruit-only': 'Fruit',
+          'salad-only': 'SideSalad',
+          'kale-crunch': 'Kale',
+          'parfait-only': 'Parfait',
+          'chips-only': 'Chips',
+          'regular-drink': 'Reg Drink',
+          'premium-drink': 'Prem Drink',
+          'chicken-wrap': 'Wrap',
+          'veggie-wrap': 'VegWrap',
+          'grilled-sandwich': 'GrilledSand',
+          'grilled-gf': 'GrilledGF',
+          'grilled-nuggets': 'GrilledNugg',
+          'chicken-strips': 'Strips'
+        };
+        return byId[item.itemId] || item.name;
+      }
+
+      dayShort(day) {
+        switch (day) {
+          case 'monday': return 'M';
+          case 'tuesday': return 'T';
+          case 'wednesday': return 'W';
+          case 'thursday': return 'Th';
+          case 'friday': return 'F';
+          default: return day[0].toUpperCase();
+        }
+      }
+
+      buildVenmoNote(orderId, total, items) {
+        // Group items by day + abbreviation
+        const perDay = {};
+        items.forEach(it => {
+          const d = this.dayShort(it.day);
+          if (!perDay[d]) perDay[d] = {};
+          const abbr = this.getAbbrevForItem(it);
+          perDay[d][abbr] = (perDay[d][abbr] || 0) + 1;
+        });
+
+        const lineForDay = (d) => {
+          const counts = perDay[d];
+          if (!counts) return null;
+          const parts = Object.keys(counts).map(k => `${counts[k]} ${k}`);
+          return `${d}: ${parts.join(', ')}`;
+        };
+
+        const dayOrder = ['M','T','W','Th','F'];
+        const detailLines = dayOrder.map(lineForDay).filter(Boolean);
+        let note = `#${orderId} $${total.toFixed(2)} ${detailLines.join(' ')}`;
+        if (note.length <= 165) return note;
+
+        // fallback grouping
+        const totalItems = items.length;
+        return `#${orderId} $${total.toFixed(2)} M-F: ${totalItems} items total`;
       }
 
       addChild(childData = null) {
@@ -2481,7 +2607,7 @@
       openVenmoPayment() {
         const total = this.state.currentTotal;
         const orderId = document.getElementById('conf-order-id')?.textContent || '';
-        const note = `Artios Lunch Order #${orderId}`;
+        const note = this.buildVenmoNote(orderId, total, this.state.orderItems);
 
         const HANDLE = 'ChanTa-Rivers';
         const webUrl = `https://venmo.com/${HANDLE}?txn=pay&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
