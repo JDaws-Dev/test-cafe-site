@@ -832,7 +832,7 @@
                 <input type="checkbox" 
                        class="student-checkbox" 
                        ${isDelivered ? 'checked' : ''}
-                       onchange="toggleDelivered('${studentKey}', '${student.orderId}', '${student.childId}')">
+                  onchange="toggleDelivered('${studentKey}', '${student.orderId}', '${student.childId}')"
                 <div class="student-name">${student.name}</div>
               </div>
               <div class="student-details">
@@ -864,9 +864,10 @@
       studentItem.classList.add('updating');
       
       try {
-        const response = await fetch(
-          `${API_URL}?action=update_distribution&order_id=${encodeURIComponent(orderId)}&child_id=${encodeURIComponent(childId)}&distributed=${isNowDelivered}`
-        );
+     const dateInput = document.getElementById('date-input').value; // Get the current date
+const response = await fetch(
+  `${API_URL}?action=update_distribution&order_id=${encodeURIComponent(orderId)}&child_id=${encodeURIComponent(childId)}&date=${encodeURIComponent(dateInput)}&distributed=${isNowDelivered}`
+);
         const result = await response.json();
         
         if (result.success) {
