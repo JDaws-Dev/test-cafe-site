@@ -1398,7 +1398,7 @@
             { id: 'grilled-gf', name: 'Grilled Sandwich (GF Bun)', price: 9.50, desc: 'Grilled chicken with gluten-free bun', image: 'assets/grilledsandwich.png' },
             { id: 'chicken-wrap', name: 'Chicken Wrap', price: 9.75, desc: 'Grilled chicken in tortilla wrap', image: 'assets/chickenwrap.png' },
             { id: 'veggie-wrap', name: 'Southwest Veggie Wrap', price: 9.50, desc: 'Vegetarian wrap with southwest flavors', image: 'assets/veggiewrap.png' },
-     <!--     { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' }--> 
+ <!--  { id: 'chicken-strips', name: 'Chicken Strips (3ct)', price: 6.75, desc: 'Hand-breaded chicken strips', image: 'assets/chickenstrips.png' } -->  
           ],
           salads: [
             { id: 'cobb-salad', name: 'Cobb Salad', price: 11.25, desc: 'Mixed greens with chicken, bacon, cheese, and more', image: 'assets/cobbsalad.png' },
@@ -2150,6 +2150,10 @@
             }
           });
           
+          // Save to localStorage (more persistent than cookies)
+          localStorage.setItem('artios_family_data', JSON.stringify(familyData));
+          
+          // Also save to cookies as backup
           const expires = new Date();
           expires.setTime(expires.getTime() + (30 * 24 * 60 * 60 * 1000));
           document.cookie = `artios_family_data=${encodeURIComponent(JSON.stringify(familyData))}; expires=${expires.toUTCString()}; path=/`;
@@ -2165,14 +2169,21 @@
 
       loadUserDataFromCookies() {
         try {
-          const cookies = document.cookie.split(';');
           let familyData = null;
           
-          for (const cookie of cookies) {
-            const [name, value] = cookie.trim().split('=');
-            if (name === 'artios_family_data') {
-              familyData = JSON.parse(decodeURIComponent(value));
-              break;
+          // First try localStorage (more persistent)
+          const localData = localStorage.getItem('artios_family_data');
+          if (localData) {
+            familyData = JSON.parse(localData);
+          } else {
+            // Fallback to cookies
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+              const [name, value] = cookie.trim().split('=');
+              if (name === 'artios_family_data') {
+                familyData = JSON.parse(decodeURIComponent(value));
+                break;
+              }
             }
           }
           
@@ -2200,7 +2211,7 @@
           this.validateForm();
           
         } catch (error) {
-          console.error('Error loading family data from cookies:', error);
+          console.error('Error loading family data from storage:', error);
         }
       }
 
