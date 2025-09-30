@@ -2632,51 +2632,57 @@ const [childId, itemId, day, index] = uniqueId.split('_');
 
       removeChild(childSection) {
         const childNumber = parseInt(childSection.dataset.child);
-        
+
+        // Uncheck and remove all checkboxes for this child
         document.querySelectorAll(`input[data-child-id="${childNumber}"]`).forEach(checkbox => {
           checkbox.checked = false;
         });
-        
+
+        // Remove orderItems for this child
         this.state.orderItems = this.state.orderItems.filter(item => {
           return item.childId !== childNumber;
         });
-        
+
+        // Remove the child section from DOM
         childSection.remove();
-        
+
         const remainingChildren = document.querySelectorAll('.child-section');
         const childMapping = new Map();
-        
+
+        // Renumber remaining children
         remainingChildren.forEach((child, index) => {
           const oldChildId = parseInt(child.dataset.child);
           const newChildId = index + 1;
-          
+
           childMapping.set(oldChildId, newChildId);
-          
+
           child.dataset.child = newChildId;
           child.querySelector('.child-icon').textContent = newChildId;
           child.querySelector('.child-title').childNodes[1].textContent = ` Child ${newChildId}`;
-          
+
           const removeButton = child.querySelector('.remove-child');
           removeButton.setAttribute('aria-label', `Remove child ${newChildId}`);
           removeButton.onclick = () => this.removeChild(child);
         });
-        
+
+        // Update orderItems with new child IDs
         this.state.orderItems.forEach(item => {
           if (childMapping.has(item.childId)) {
             item.childId = childMapping.get(item.childId);
           }
         });
-        
+
+        // Update checkbox data attributes with new child IDs
         document.querySelectorAll('input[data-child-id]').forEach(checkbox => {
           const oldChildId = parseInt(checkbox.dataset.childId);
           if (childMapping.has(oldChildId)) {
             checkbox.dataset.childId = childMapping.get(oldChildId);
           }
         });
-        
+
         this.state.childCount = remainingChildren.length;
         this.updateChildCheckboxes();
-        this.updateCartDisplay();
+        this.updateCart(); // Changed from updateCartDisplay to rebuild cart from checkboxes
         this.validateForm();
       }
 
