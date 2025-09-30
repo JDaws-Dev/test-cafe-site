@@ -2366,21 +2366,36 @@ const [childId, itemId, day, index] = uniqueId.split('_');
         const checkboxContainer = document.getElementById('copy-day-checkboxes');
         checkboxContainer.innerHTML = '';
 
+        const now = new Date();
+        const monday = this.getOrderingWeekMonday();
+
         this.constants.days.forEach((day, index) => {
           if (day !== sourceDay) {
             const dayName = this.constants.dayNames[index];
             const dateStr = this.calculateDateForDay(dayName);
             const isBlackout = this.isBlackoutDate(dateStr);
 
+            // Check if day is past cutoff time
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + index);
+            const cutoffTime = new Date(
+              date.getFullYear(),
+              date.getMonth(),
+              date.getDate(),
+              10, 5, 0, 0
+            );
+            const isPast = now > cutoffTime;
+
             const label = document.createElement('label');
             label.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg-secondary); border-radius: var(--radius-md); cursor: pointer;';
 
-            if (isBlackout) {
+            if (isBlackout || isPast) {
               label.style.opacity = '0.5';
               label.style.cursor = 'not-allowed';
+              const reason = isBlackout ? 'Not Available' : 'Orders Closed';
               label.innerHTML = `
                 <input type="checkbox" value="${day}" disabled style="width: 18px; height: 18px;">
-                <span>${dayName} (Not Available)</span>
+                <span>${dayName} (${reason})</span>
               `;
             } else {
               label.innerHTML = `
