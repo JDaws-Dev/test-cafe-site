@@ -1126,12 +1126,25 @@
             .tabs {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                gap: 4px;
             }
 
             .tab-btn {
-                min-width: 100px;
-                font-size: 0.85em;
-                padding: 12px 16px;
+                flex: 1;
+                min-width: 60px;
+                max-width: 80px;
+                font-size: 0.7em;
+                padding: 10px 8px;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .tab-btn span:not(.tab-icon) {
+                display: none; /* Hide text labels on mobile */
+            }
+
+            .tab-icon {
+                font-size: 1.5em;
             }
 
             /* Mobile-friendly header */
@@ -1522,6 +1535,49 @@
                     </div>
                 </div>
 
+                <!-- Revenue Reconciliation Card (Full Width) -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">💵 Revenue Reconciliation</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1em;">
+                                <span style="font-weight: 500;">Original Menu Prices (before discounts):</span>
+                                <span style="font-weight: 600;" id="fin-original-subtotal">$0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em; color: #dc3545; padding-left: 20px;">
+                                <span>− Combo Meal Discounts:</span>
+                                <span id="fin-combo-discount-display">$0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em; color: #dc3545; padding-left: 20px;">
+                                <span>− Promo Code Discounts:</span>
+                                <span id="fin-promo-discount-display">$0.00</span>
+                            </div>
+                            <div style="height: 1px; background: #dee2e6; margin: 12px 0;"></div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1em;">
+                                <span style="font-weight: 600;">= Gross Revenue (at checkout):</span>
+                                <span style="font-weight: 700;" id="fin-gross-revenue">$0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em; color: #f44336; padding-left: 20px;">
+                                <span>− Refunds (cancelled items):</span>
+                                <span id="fin-refunds-display">$0.00</span>
+                            </div>
+                            <div style="height: 2px; background: #4caf50; margin: 12px 0;"></div>
+                            <div style="display: flex; justify-content: space-between; font-size: 1.2em;">
+                                <span style="font-weight: 700;">NET REVENUE (Actual $ in Hand):</span>
+                                <span style="font-weight: 700; color: #4caf50;" id="fin-net-display">$0.00</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 4px; font-size: 0.9em;">
+                            <strong>💡 For Financial Records:</strong><br>
+                            • <strong>Gross Revenue</strong> = Total charged at checkout (before cancellations)<br>
+                            • <strong>Net Revenue</strong> = Actual money you keep (after refunds)<br>
+                            • Use <strong>Net Revenue</strong> for bank reconciliation and accounting
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Two Column Layout -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                     <!-- Discount Summary Card -->
@@ -1530,6 +1586,9 @@
                             <h2 class="card-title">🎟️ Discounts Applied</h2>
                         </div>
                         <div style="padding: 20px;">
+                            <div style="margin-bottom: 15px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.85em;">
+                                <strong>Note:</strong> Only includes discounts on active items (excludes refunded items)
+                            </div>
                             <div style="margin-bottom: 20px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                     <span style="font-weight: 600;">Total Discounts:</span>
@@ -2984,51 +3043,94 @@
             },
 
             calculateMetrics: function(orders) {
-                let totalRevenue = 0;
+                let grossRevenue = 0;        // Sum of order.total (before cancellations)
+                let actualRevenue = 0;       // Actual money collected (after refunds)
                 let totalRefunds = 0;
                 let refundCount = 0;
-                let totalDiscounts = 0;
-                let ordersWithDiscounts = 0;
+                let totalPromoDiscounts = 0;  // Promo code discounts (active items only)
+                let totalComboDiscounts = 0;  // Combo meal discounts (active items only)
+                let ordersWithPromoDiscounts = 0;
+                let originalSubtotal = 0;     // Total before any discounts (active items only)
                 const discountCodes = {};
 
                 orders.forEach(order => {
-                    // Revenue
-                    totalRevenue += order.total || 0;
+                    // Original order total (what was charged at checkout)
+                    const orderTotal = order.total || 0;
+                    grossRevenue += orderTotal;
 
-                    // Discounts
-                    if (order.discount > 0) {
-                        totalDiscounts += order.discount;
-                        ordersWithDiscounts++;
-                        const code = order.promoCode || 'Unknown';
-                        discountCodes[code] = (discountCodes[code] || 0) + order.discount;
-                    }
+                    // Calculate the discount rate for this order (if promo code was used)
+                    const orderDiscountRate = (order.discount > 0 && order.subtotal > 0)
+                        ? order.discount / order.subtotal
+                        : 0;
 
-                    // Refunds
+                    // Track original subtotal and discounts - only for active items
+                    let activeSubtotal = 0;
+                    let orderRefundTotal = 0;
+                    let hasActiveItemsWithPromo = false;
+
                     if (order.items) {
                         order.items.forEach(item => {
-                            if (item.status === 'cancelled' && item.refundAmount) {
-                                totalRefunds += item.refundAmount;
-                                refundCount++;
+                            const basePrice = item.price || 0;
+                            const paidPrice = item.paidPrice || item.price || 0;
+                            const itemComboDiscount = basePrice - paidPrice;
+                            const isCancelled = item.status === 'cancelled';
+
+                            if (isCancelled) {
+                                // Track refund amount
+                                if (item.refundAmount) {
+                                    totalRefunds += item.refundAmount;
+                                    orderRefundTotal += item.refundAmount;
+                                    refundCount++;
+                                }
+                            } else {
+                                // Active item - count subtotal and discounts
+                                activeSubtotal += basePrice;
+                                hasActiveItemsWithPromo = true;
+
+                                // Combo discounts only for active items
+                                if (itemComboDiscount > 0) {
+                                    totalComboDiscounts += itemComboDiscount;
+                                }
                             }
                         });
                     }
+
+                    originalSubtotal += activeSubtotal;
+
+                    // Promo code discounts - only count for orders with active items
+                    if (order.discount > 0 && hasActiveItemsWithPromo) {
+                        // Calculate promo discount only on active items
+                        const activePromoDiscount = activeSubtotal * orderDiscountRate;
+                        totalPromoDiscounts += activePromoDiscount;
+                        ordersWithPromoDiscounts++;
+                        const code = order.promoCode || 'Unknown';
+                        discountCodes[code] = (discountCodes[code] || 0) + activePromoDiscount;
+                    }
+
+                    // Actual revenue for this order = what they paid minus what we refunded
+                    actualRevenue += (orderTotal - orderRefundTotal);
                 });
 
-                const netRevenue = totalRevenue - totalRefunds;
-                const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
-                const netMargin = totalRevenue > 0 ? ((netRevenue / totalRevenue) * 100) : 0;
+                const totalDiscounts = totalPromoDiscounts + totalComboDiscounts;
+                const netRevenue = actualRevenue;  // Already accounts for refunds
+                const avgOrderValue = orders.length > 0 ? actualRevenue / orders.length : 0;
+                const netMargin = actualRevenue > 0 ? ((actualRevenue / (actualRevenue + totalRefunds)) * 100) : 0;
 
                 return {
-                    totalRevenue,
+                    totalRevenue: actualRevenue,    // Actual $ collected (after refunds)
+                    grossRevenue,                   // Original order totals (before refunds)
+                    originalSubtotal,               // What it would have been without discounts (active only)
                     totalRefunds,
                     refundCount,
-                    netRevenue,
+                    netRevenue,                     // Same as actualRevenue
                     netMargin,
                     avgOrderValue,
                     totalOrders: orders.length,
-                    totalDiscounts,
-                    ordersWithDiscounts,
-                    discountCodes
+                    totalPromoDiscounts,            // Discount from promo codes (active items only)
+                    totalComboDiscounts,            // Discount from combo meals (active items only)
+                    totalDiscounts,                 // Total of all discounts (active items only)
+                    ordersWithPromoDiscounts,
+                    discountCodes                   // Breakdown by code (active items only)
                 };
             },
 
@@ -3124,21 +3226,53 @@
             },
 
             updateSummaryCards: function(metrics) {
+                // Main revenue card - ACTUAL money collected
                 document.getElementById('fin-total-revenue').textContent = '$' + metrics.totalRevenue.toFixed(2);
+                const periodText = document.getElementById('fin-revenue-period').textContent.split('\n')[0];
+                document.getElementById('fin-revenue-period').innerHTML = periodText +
+                    '<br><span style="font-size: 0.75em; opacity: 0.8;">(Actual $ Collected)</span>';
+
                 document.getElementById('fin-total-refunds').textContent = '$' + metrics.totalRefunds.toFixed(2);
                 document.getElementById('fin-refund-count').textContent = metrics.refundCount + ' items';
+
                 document.getElementById('fin-net-revenue').textContent = '$' + metrics.netRevenue.toFixed(2);
                 document.getElementById('fin-net-margin').textContent = metrics.netMargin.toFixed(1) + '% margin';
+
                 document.getElementById('fin-avg-order').textContent = '$' + metrics.avgOrderValue.toFixed(2);
                 document.getElementById('fin-total-orders').textContent = metrics.totalOrders + ' orders';
+
+                // Update discount display
                 document.getElementById('fin-total-discounts').textContent = '$' + metrics.totalDiscounts.toFixed(2);
-                document.getElementById('fin-discount-orders').textContent = metrics.ordersWithDiscounts;
+                document.getElementById('fin-discount-orders').textContent = metrics.ordersWithPromoDiscounts;
+
+                // Update reconciliation card
+                document.getElementById('fin-original-subtotal').textContent = '$' + metrics.originalSubtotal.toFixed(2);
+                document.getElementById('fin-combo-discount-display').textContent = '$' + metrics.totalComboDiscounts.toFixed(2);
+                document.getElementById('fin-promo-discount-display').textContent = '$' + metrics.totalPromoDiscounts.toFixed(2);
+                document.getElementById('fin-gross-revenue').textContent = '$' + metrics.grossRevenue.toFixed(2);
+                document.getElementById('fin-refunds-display').textContent = '$' + metrics.totalRefunds.toFixed(2);
+                document.getElementById('fin-net-display').textContent = '$' + metrics.netRevenue.toFixed(2);
             },
 
             updateDiscountBreakdown: function(metrics) {
                 const container = document.getElementById('fin-discount-breakdown');
                 let html = '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9ecef;">';
 
+                // Show breakdown by discount type
+                html += '<div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">';
+                html += '<div style="font-weight: 600; margin-bottom: 8px;">Discount Breakdown:</div>';
+                html += '<div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 5px;">';
+                html += '<span>Promo Codes:</span><span style="color: #dc3545; font-weight: 600;">$' + metrics.totalPromoDiscounts.toFixed(2) + '</span>';
+                html += '</div>';
+                html += '<div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 5px;">';
+                html += '<span>Combo Meals:</span><span style="color: #dc3545; font-weight: 600;">$' + metrics.totalComboDiscounts.toFixed(2) + '</span>';
+                html += '</div>';
+                html += '<div style="display: flex; justify-content: space-between; font-size: 0.9em; padding-top: 8px; border-top: 1px solid #dee2e6; font-weight: 600;">';
+                html += '<span>Total Discounts:</span><span style="color: #dc3545;">$' + metrics.totalDiscounts.toFixed(2) + '</span>';
+                html += '</div>';
+                html += '</div>';
+
+                // Show promo code breakdown
                 const codes = Object.entries(metrics.discountCodes).sort((a, b) => b[1] - a[1]);
 
                 if (codes.length === 0) {
