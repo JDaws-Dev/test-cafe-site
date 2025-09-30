@@ -1519,45 +1519,42 @@
                     </div>
                     <div style="padding: 20px;">
                         <!-- Quick Date Buttons -->
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 8px; font-size: 0.9em; color: #666;">Quick Select:</label>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 0.9em; color: #666; font-weight: 600;">Quick Select:</label>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button onclick="FIN.setThisMonth()" class="action-btn" style="background: #9c27b0;">This Month</button>
-                                <button onclick="FIN.setLastMonth()" class="action-btn" style="background: #9c27b0;">Last Month</button>
-                                <button onclick="FIN.setYearToDate()" class="action-btn" style="background: #9c27b0;">Year to Date</button>
-                                <button onclick="FIN.setSchoolYear()" class="action-btn" style="background: #9c27b0;">School Year</button>
+                                <button onclick="FIN.setThisMonth()" class="action-btn" style="background: var(--artios-green); color: white;">This Month</button>
+                                <button onclick="FIN.setLastMonth()" class="action-btn" style="background: var(--artios-green); color: white;">Last Month</button>
+                                <button onclick="FIN.setYearToDate()" class="action-btn" style="background: var(--artios-green); color: white;">Year to Date</button>
+                                <button onclick="FIN.setSchoolYear()" class="action-btn" style="background: var(--artios-green); color: white;">School Year</button>
                             </div>
                         </div>
 
                         <!-- Date Inputs -->
-                        <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
                             <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Start Date:</label>
-                                <input type="date" id="fin-start-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">End Date:</label>
-                                <input type="date" id="fin-end-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666; font-weight: 600;">Start Date:</label>
+                                <input type="date" id="fin-start-date" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%;">
                             </div>
                             <div>
-                                <button onclick="FIN.loadFinancials()" class="action-btn btn-primary">📊 Generate Report</button>
-                                <button onclick="FIN.clearDates()" class="action-btn" style="background: #6c757d; margin-left: 10px;">Clear Dates</button>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666; font-weight: 600;">End Date:</label>
+                                <input type="date" id="fin-end-date" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%;">
                             </div>
-                            <div style="margin-left: auto; display: flex; gap: 10px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Export:</label>
-                                    <select id="export-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-right: 10px;">
-                                        <option value="full">Full Report</option>
-                                        <option value="summary">Summary Only</option>
-                                        <option value="orders">Orders Detail</option>
-                                        <option value="students">Student Breakdown</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">&nbsp;</label>
-                                    <button onclick="FIN.exportData()" class="action-btn" style="background: #4caf50;">📥 Download CSV</button>
-                                </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666; font-weight: 600;">Export Type:</label>
+                                <select id="export-type" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%;">
+                                    <option value="full">Full Report</option>
+                                    <option value="summary">Summary Only</option>
+                                    <option value="orders">Orders Detail</option>
+                                    <option value="students">Student Breakdown</option>
+                                </select>
                             </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-start;">
+                            <button onclick="FIN.loadFinancials()" class="action-btn btn-primary">📊 Generate Report</button>
+                            <button onclick="FIN.clearDates()" class="action-btn" style="background: #6c757d;">Clear Dates</button>
+                            <button onclick="FIN.exportData()" class="action-btn" style="background: #4caf50;">📥 Download CSV</button>
                         </div>
                     </div>
                 </div>

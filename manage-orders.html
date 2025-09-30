@@ -748,28 +748,28 @@
             .header {
                 padding: 1rem;
             }
-            
+
             .back-btn {
                 position: static;
                 margin-bottom: 1rem;
                 width: fit-content;
             }
-            
+
             .header-actions {
                 position: static;
                 margin-top: 1rem;
                 justify-content: center;
             }
-            
+
             .header-brand {
                 flex-direction: column;
                 text-align: center;
             }
-            
+
             .header-text {
                 text-align: center;
             }
-            
+
             .header-text h1 {
                 font-size: 1.5rem;
             }
@@ -783,6 +783,52 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
+            }
+
+            /* Fix date card layout on mobile */
+            .date-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 12px 15px;
+            }
+
+            .date-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .date-title {
+                font-size: 1em;
+            }
+
+            /* Make badges wrap properly */
+            .item-count,
+            .refundable-count,
+            .cancelled-count,
+            .discounted-count {
+                font-size: 0.75em;
+                padding: 3px 8px;
+                white-space: nowrap;
+            }
+
+            /* Fix toggle icon position */
+            .toggle-icon {
+                position: absolute;
+                right: 15px;
+                top: 15px;
+            }
+
+            .date-header {
+                position: relative;
+            }
+
+            /* Stack badges in a row that can wrap */
+            .date-info {
+                display: flex;
+                flex-wrap: wrap;
             }
         }
     </style>
