@@ -89,17 +89,23 @@
         }
 
         .login-logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: var(--danger-gradient);
-            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 2em;
-            font-weight: bold;
+            background: var(--primary-gradient);
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 8px 25px rgba(139, 159, 60, 0.3);
+        }
+
+        .login-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
         }
 
         .login-title {
@@ -1179,7 +1185,9 @@
     <!-- Login Screen -->
     <div class="login-container" id="login-screen">
         <div class="login-box">
-            <div class="login-logo">🔐</div>
+            <div class="login-logo">
+                <img src="artios-logo.png" alt="Artios Academies Logo">
+            </div>
             <h1 class="login-title">Admin Portal</h1>
             <p class="login-subtitle">Artios Academies Cafe Management</p>
             
@@ -1206,8 +1214,7 @@
             <div class="header-content">
                 <div class="header-title">
                     <div>
-                        <h1>🍽️ Artios Cafe Admin Hub</h1>
-                        <div class="header-subtitle">Comprehensive Management Portal</div>
+                        <h1>Artios Cafe Admin Hub</h1>
                     </div>
                 </div>
                 <div class="header-actions">
