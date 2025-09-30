@@ -1383,6 +1383,29 @@
     </div>
   </div>
 
+  <!-- Copy Days Modal -->
+  <div class="confirmation-modal" id="copy-days-modal" style="display: none;">
+    <div class="confirmation-content" style="max-width: 400px;">
+      <h3 style="margin-bottom: 20px; color: var(--artios-green);">📋 Copy to Other Days</h3>
+      <p style="margin-bottom: 15px; color: var(--text-secondary);">
+        Select which days to copy <strong id="copy-source-day"></strong>'s order to:
+      </p>
+      <div id="copy-day-checkboxes" style="display: flex; flex-direction: column; gap: 12px; margin: 20px 0;">
+        <!-- Will be populated by JavaScript -->
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 25px;">
+        <button onclick="app.executeCopy()"
+                style="flex: 1; padding: 12px; background: var(--primary-gradient); color: white; border: none; border-radius: var(--radius-md); font-weight: 600; cursor: pointer;">
+          Copy Selected
+        </button>
+        <button onclick="app.closeCopyModal()"
+                style="flex: 1; padding: 12px; background: #6b7280; color: white; border: none; border-radius: var(--radius-md); font-weight: 600; cursor: pointer;">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
 
 
@@ -1802,6 +1825,20 @@
               </div>
             `;
           } else {
+            // Add "Copy to Other Days" button at the top
+            const copyButtonDiv = document.createElement('div');
+            copyButtonDiv.style.cssText = 'margin-bottom: 20px; padding: 15px; background: var(--bg-tertiary); border-radius: var(--radius-lg); border: 2px dashed var(--border-accent);';
+            copyButtonDiv.innerHTML = `
+              <button type="button"
+                      onclick="app.showCopyDaysModal('${day}')"
+                      style="width: 100%; padding: 12px 20px; background: var(--accent-gradient); color: white; border: none; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; font-size: 1rem; transition: all var(--transition-normal);"
+                      onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(139, 159, 60, 0.3)';"
+                      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                📋 Copy ${this.constants.dayNames[this.constants.days.indexOf(day)]}'s Order to Other Days
+              </button>
+            `;
+            dayMenu.appendChild(copyButtonDiv);
+
             Object.keys(this.menuData).forEach(category => {
               const categoryDiv = document.createElement('div');
               categoryDiv.className = 'menu-category';
@@ -2318,11 +2355,106 @@ const [childId, itemId, day, index] = uniqueId.split('_');
         this.validateForm();
       }
 
+      showCopyDaysModal(sourceDay) {
+        this.state.copySourceDay = sourceDay;
+        const modal = document.getElementById('copy-days-modal');
+        const sourceDayName = this.constants.dayNames[this.constants.days.indexOf(sourceDay)];
+
+        document.getElementById('copy-source-day').textContent = sourceDayName;
+
+        // Build checkboxes for other days
+        const checkboxContainer = document.getElementById('copy-day-checkboxes');
+        checkboxContainer.innerHTML = '';
+
+        this.constants.days.forEach((day, index) => {
+          if (day !== sourceDay) {
+            const dayName = this.constants.dayNames[index];
+            const dateStr = this.calculateDateForDay(dayName);
+            const isBlackout = this.isBlackoutDate(dateStr);
+
+            const label = document.createElement('label');
+            label.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg-secondary); border-radius: var(--radius-md); cursor: pointer;';
+
+            if (isBlackout) {
+              label.style.opacity = '0.5';
+              label.style.cursor = 'not-allowed';
+              label.innerHTML = `
+                <input type="checkbox" value="${day}" disabled style="width: 18px; height: 18px;">
+                <span>${dayName} (Not Available)</span>
+              `;
+            } else {
+              label.innerHTML = `
+                <input type="checkbox" value="${day}" class="copy-day-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                <span>${dayName}</span>
+              `;
+            }
+
+            checkboxContainer.appendChild(label);
+          }
+        });
+
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+      }
+
+      closeCopyModal() {
+        const modal = document.getElementById('copy-days-modal');
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+        setTimeout(() => modal.style.display = 'none', 250);
+      }
+
+      executeCopy() {
+        const sourceDay = this.state.copySourceDay;
+        const selectedDays = Array.from(document.querySelectorAll('.copy-day-checkbox:checked')).map(cb => cb.value);
+
+        if (selectedDays.length === 0) {
+          this.showNotification('Please select at least one day to copy to', 'error');
+          return;
+        }
+
+        // Get all checked items from source day using data attributes
+        const sourceCheckboxes = document.querySelectorAll(`input[type="checkbox"][data-day="${sourceDay}"]`);
+        const itemsToCopy = [];
+
+        sourceCheckboxes.forEach(checkbox => {
+          if (checkbox.checked && checkbox.dataset.item && checkbox.dataset.childId) {
+            itemsToCopy.push({
+              itemId: checkbox.dataset.item,
+              childId: checkbox.dataset.childId
+            });
+          }
+        });
+
+        if (itemsToCopy.length === 0) {
+          this.showNotification('No items selected on ' + this.constants.dayNames[this.constants.days.indexOf(sourceDay)], 'error');
+          return;
+        }
+
+        // Copy to selected days
+        let copiedCount = 0;
+        selectedDays.forEach(targetDay => {
+          itemsToCopy.forEach(item => {
+            // Find target checkbox using data attributes
+            const targetCheckbox = document.querySelector(`input[type="checkbox"][data-day="${targetDay}"][data-item="${item.itemId}"][data-child-id="${item.childId}"]`);
+            if (targetCheckbox && !targetCheckbox.checked) {
+              targetCheckbox.checked = true;
+              copiedCount++;
+            }
+          });
+        });
+
+        this.updateCart();
+        this.closeCopyModal();
+        this.showNotification(`Copied ${itemsToCopy.length} item(s) to ${selectedDays.length} day(s) successfully!`, 'success');
+      }
+
       switchDay(day) {
         const dayIndex = this.constants.days.indexOf(day);
         const dateStr = this.calculateDateForDay(this.constants.dayNames[dayIndex]);
         const isBlackout = this.isBlackoutDate(dateStr);
-        
+
         if (isBlackout) {
           const blackoutReason = this.getBlackoutReason(dateStr);
           this.showNotification(`${this.constants.dayNames[dayIndex]} is not available: ${blackoutReason}`, 'warning');
@@ -2786,7 +2918,8 @@ const [childId, itemId, day, index] = uniqueId.split('_');
     }
 
     // Initialize the system
-    new OrderSystem();
+    const app = new OrderSystem();
+    window.app = app;
   </script>
 </body>
 </html>
