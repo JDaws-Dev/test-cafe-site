@@ -1190,6 +1190,31 @@
                 gap: 8px;
             }
 
+            /* Financials tab mobile fixes */
+            #financials .card > div[style*="padding"] {
+                padding: 15px !important;
+            }
+
+            /* Fix two-column grid to single column on mobile */
+            #financials > div[style*="grid-template-columns: 1fr 1fr"] {
+                display: block !important;
+            }
+
+            #financials > div[style*="grid-template-columns: 1fr 1fr"] > .card {
+                margin-bottom: 20px;
+            }
+
+            /* Make sure text doesn't overflow in discount/customer cards */
+            #financials .card div[style*="display: flex"] {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            /* Better spacing for discount breakdown */
+            #fin-discount-breakdown > div {
+                font-size: 0.85em !important;
+            }
+
             /* Payments tab mobile */
             #payments-tab .card {
                 overflow-x: auto;
@@ -1553,7 +1578,7 @@
                         <!-- Action Buttons -->
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-start;">
                             <button onclick="FIN.loadFinancials()" class="action-btn btn-primary">📊 Generate Report</button>
-                            <button onclick="FIN.clearDates()" class="action-btn" style="background: #6c757d;">Clear Dates</button>
+                            <button onclick="FIN.clearDates()" class="action-btn" style="background: #e5e7eb; color: #374151; border: 1px solid #d1d5db;">Clear Dates</button>
                             <button onclick="FIN.exportData()" class="action-btn" style="background: #4caf50;">📥 Download CSV</button>
                         </div>
                     </div>
