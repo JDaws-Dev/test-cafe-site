@@ -941,7 +941,7 @@ function lookupOrders(email, orderId = null) {
           
           // Get original and paid prices
           const originalPrice = parseFloat(row[6]) || 0; // Item_Price (G)
-          const paidPrice = parseFloat(row[7]) || originalPrice; // Item_Paid_Price (H) with fallback
+          const paidPrice = (row[7] !== undefined && row[7] !== null && row[7] !== '') ? parseFloat(row[7]) : originalPrice; // Item_Paid_Price (H) with fallback
 
           // Status & cancellation columns - all shifted by 1
           const itemStatus = row[18] || 'active';     // S - shifted
@@ -1063,7 +1063,7 @@ function lookupOrdersByStudentName(studentName) {
             const itemData = itemsArray[0];
             const normalizedDate = normalizeDateToString(row[12]);
             const originalPrice = parseFloat(row[6]) || 0;
-            const paidPrice = parseFloat(row[7]) || originalPrice;
+            const paidPrice = (row[7] !== undefined && row[7] !== null && row[7] !== '') ? parseFloat(row[7]) : originalPrice;
             const itemStatus = row[18] || 'active';
             const cancellationDate = row[19] || null;
             const refundAmount = parseFloat(row[20]) || 0;
@@ -1226,7 +1226,7 @@ function processBatchCancellation(items, sessionId, reason, adminOverride = fals
       
       // IMPORTANT: Use paid price for refund, not original price
       const originalPrice = parseFloat(row[6]) || 0; // Item_Price (G)
-      const paidPrice = parseFloat(row[7]) || originalPrice; // Item_Paid_Price (H) with fallback
+      const paidPrice = (row[7] !== undefined && row[7] !== null && row[7] !== '') ? parseFloat(row[7]) : originalPrice; // Item_Paid_Price (H) with fallback
       const refundAmount = paidPrice; // Refund what they actually paid
       
       const orderId = row[0];
@@ -1460,14 +1460,28 @@ function migrateExistingOrdersWithPaidPrices() {
       const discount = parseFloat(row[15]) || 0;       // Column P (shifted)
       
       // Calculate paid price and update if missing or incorrect
-      if (subtotal > 0 && originalPrice > 0) {
-        const discountRate = discount / subtotal;
-        const correctPaidPrice = originalPrice * (1 - discountRate);
+      if (originalPrice > 0) {
+        let correctPaidPrice = originalPrice;
+
+        if (subtotal > 0 && discount > 0) {
+          const discountRate = discount / subtotal;
+          correctPaidPrice = originalPrice * (1 - discountRate);
+          // Round to avoid floating point issues
+          correctPaidPrice = Math.round(correctPaidPrice * 100) / 100;
+        }
+
         const currentPaidPrice = parseFloat(paidPriceCell) || 0;
 
-        // Update if empty, or if current value doesn't match calculated value
+        // Update if empty, or if current value doesn't match calculated value (always update to fix issues)
         if (!paidPriceCell || paidPriceCell === '' || Math.abs(currentPaidPrice - correctPaidPrice) > 0.01) {
           sheet.getRange(i + 1, 8).setValue(correctPaidPrice);
+          updatedCount++;
+        }
+      } else if (originalPrice === 0) {
+        // Free items should have 0 paid price
+        const currentPaidPrice = parseFloat(paidPriceCell);
+        if (currentPaidPrice !== 0) {
+          sheet.getRange(i + 1, 8).setValue(0);
           updatedCount++;
         }
       }

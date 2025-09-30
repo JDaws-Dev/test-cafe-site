@@ -985,6 +985,19 @@
                     const itemPaidPrice = (item.paidPrice !== undefined && item.paidPrice !== null) ? item.paidPrice : item.price;
                     const itemHasDiscount = item.hasDiscount || (order.discount > 0) || (itemPaidPrice < item.price);
 
+                    // Debug logging for first few items
+                    if (order.orderId && itemsByDate[itemDate].length < 3) {
+                        console.log('Item debug:', {
+                            name: item.name,
+                            originalPrice: item.price,
+                            paidPrice: item.paidPrice,
+                            itemPaidPrice: itemPaidPrice,
+                            hasDiscount: itemHasDiscount,
+                            orderDiscount: order.discount,
+                            promoCode: order.promoCode
+                        });
+                    }
+
                     itemsByDate[itemDate].push({
                         ...item,
                         date: itemDate,
