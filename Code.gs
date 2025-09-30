@@ -444,6 +444,74 @@ if (action === 'update_distribution') {
       }
     }
 
+    // ============================================
+    // PAYMENT RECONCILIATION ENDPOINTS
+    // ============================================
+
+    if (action === 'get_orders_for_payment') {
+      try {
+        const result = getOrdersForPayment();
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error getting orders for payment:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to get orders for payment: ${error.toString()}`
+        });
+      }
+    }
+
+    if (action === 'update_payment_status') {
+      const orderId = e.parameter.order_id;
+      const status = e.parameter.status;
+      const paymentDate = e.parameter.payment_date;
+      const notes = e.parameter.notes;
+      const adminEmail = e.parameter.admin_email;
+
+      if (!orderId || !status) {
+        return createResponse({
+          success: false,
+          error: 'order_id and status parameters required'
+        });
+      }
+
+      try {
+        const result = updatePaymentStatus(orderId, status, paymentDate, notes, adminEmail);
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error updating payment status:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to update payment status: ${error.toString()}`
+        });
+      }
+    }
+
+    if (action === 'bulk_update_payment_status') {
+      const orderIdsParam = e.parameter.order_ids;
+      const status = e.parameter.status;
+      const adminEmail = e.parameter.admin_email;
+
+      if (!orderIdsParam || !status) {
+        return createResponse({
+          success: false,
+          error: 'order_ids and status parameters required'
+        });
+      }
+
+      try {
+        const orderIds = JSON.parse(orderIdsParam);
+        const result = bulkUpdatePaymentStatus(orderIds, status, adminEmail);
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error bulk updating payment status:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to bulk update payment status: ${error.toString()}`
+        });
+      }
+    }
+
     return createResponse({
       success: false,
       error: 'Unknown action: ' + action
@@ -517,7 +585,7 @@ function getFamilyAccountsSheet() {
 function getOrdersSheet() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let ordersSheet = spreadsheet.getSheetByName(ORDERS_SHEET);
-  
+
   if (!ordersSheet) {
     ordersSheet = spreadsheet.insertSheet(ORDERS_SHEET);
     const headers = [
@@ -525,20 +593,48 @@ function getOrdersSheet() {
       'Items_JSON','Item_Price','Item_Paid_Price','Reserved','Timestamp','Parent_Phone','Child_ID',
       'Item_Date','Day_Name','Subtotal','Discount','Total','Promo_Code','Item_Status',
       'Cancellation_Date','Refund_Amount','Cancellation_Reason','Cancellation_Session_ID',
-      'Distributed'
+      'Distributed','Payment_Status','Payment_Date','Payment_Notes','Payment_Updated_By'
     ];
     ordersSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     const headerRange = ordersSheet.getRange(1, 1, 1, headers.length);
     headerRange.setBackground('#4285f4').setFontColor('#ffffff').setFontWeight('bold');
   } else {
-    // Check if we need to add the Item_Paid_Price column
+    // Check if we need to add columns
     const headers = ordersSheet.getRange(1, 1, 1, ordersSheet.getLastColumn()).getValues()[0];
+
+    // Add Item_Paid_Price if missing
     if (!headers.includes('Item_Paid_Price')) {
-      // Insert new column H for Item_Paid_Price
       ordersSheet.insertColumnAfter(7);
       ordersSheet.getRange(1, 8).setValue('Item_Paid_Price');
       ordersSheet.getRange(1, 8).setBackground('#4285f4').setFontColor('#ffffff').setFontWeight('bold');
       console.log('Added Item_Paid_Price column to existing sheet');
+    }
+
+    // Add Payment Status columns if missing
+    const currentLastCol = ordersSheet.getLastColumn();
+    const currentHeaders = ordersSheet.getRange(1, 1, 1, currentLastCol).getValues()[0];
+
+    if (!currentHeaders.includes('Payment_Status')) {
+      const newHeaders = ['Payment_Status', 'Payment_Date', 'Payment_Notes', 'Payment_Updated_By'];
+      const startCol = currentLastCol + 1;
+
+      ordersSheet.getRange(1, startCol, 1, newHeaders.length).setValues([newHeaders]);
+      ordersSheet.getRange(1, startCol, 1, newHeaders.length)
+        .setBackground('#4285f4')
+        .setFontColor('#ffffff')
+        .setFontWeight('bold');
+
+      console.log('Added Payment Status columns to existing sheet');
+
+      // Set default value "Pending" for all existing orders
+      const lastRow = ordersSheet.getLastRow();
+      if (lastRow > 1) {
+        const statusCol = startCol; // Payment_Status column
+        const statusRange = ordersSheet.getRange(2, statusCol, lastRow - 1, 1);
+        const defaultValues = Array(lastRow - 1).fill(['Pending']);
+        statusRange.setValues(defaultValues);
+        console.log(`Set ${lastRow - 1} existing orders to Pending status`);
+      }
     }
   }
 
@@ -1302,9 +1398,13 @@ function saveMultiChildOrderToSheet(orderData) {
         orderData.discount || 0,        // P
         orderData.total,                // Q
         orderData.promoCode || '',      // R
-        'active',                       // S
-        '', '', '', '',                 // T-W
-        'FALSE'                         // X - Distributed (default false)
+        'active',                       // S - Item_Status
+        '', '', '', '',                 // T-W - Cancellation fields
+        'FALSE',                        // X - Distributed (default false)
+        'Pending',                      // Y - Payment_Status (default pending)
+        '',                             // Z - Payment_Date
+        '',                             // AA - Payment_Notes
+        ''                              // AB - Payment_Updated_By
       ]);
     });
 
@@ -1849,6 +1949,230 @@ function getFamilyAccounts() {
 
   } catch (error) {
     console.error('Error in getFamilyAccounts:', error);
+    throw error;
+  }
+}
+
+// ============================================
+// PAYMENT RECONCILIATION FUNCTIONS
+// ============================================
+
+/**
+ * Get all orders grouped by Order ID for payment reconciliation
+ */
+function getOrdersForPayment() {
+  try {
+    console.log('Getting orders for payment reconciliation');
+
+    const sheet = getOrdersSheet();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+
+    // Find column indices (payment columns are at the end)
+    const paymentStatusIdx = headers.indexOf('Payment_Status');
+    const paymentDateIdx = headers.indexOf('Payment_Date');
+    const paymentNotesIdx = headers.indexOf('Payment_Notes');
+
+    const orderMap = {};
+
+    // Process all rows
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const orderId = row[0];
+      const itemStatus = row[18] || 'active'; // Item_Status column
+
+      // Skip cancelled items
+      if (itemStatus === 'cancelled') continue;
+
+      if (!orderMap[orderId]) {
+        orderMap[orderId] = {
+          orderId: orderId,
+          parentEmail: row[1],
+          timestamp: row[9],
+          subtotal: row[14] || 0,
+          discount: row[15] || 0,
+          total: row[16] || 0,
+          promoCode: row[17] || '',
+          paymentStatus: paymentStatusIdx >= 0 ? (row[paymentStatusIdx] || 'Pending') : 'Pending',
+          paymentDate: paymentDateIdx >= 0 ? row[paymentDateIdx] : null,
+          paymentNotes: paymentNotesIdx >= 0 ? row[paymentNotesIdx] : '',
+          children: [],
+          items: [],
+          itemCount: 0,
+          studentCount: 0
+        };
+      }
+
+      const order = orderMap[orderId];
+
+      // Parse items
+      try {
+        let itemsArray = [];
+        if (row[5]) {
+          itemsArray = typeof row[5] === 'string' ? JSON.parse(row[5]) : row[5];
+        }
+
+        if (itemsArray.length > 0) {
+          const itemData = itemsArray[0];
+          order.items.push({
+            name: itemData.name,
+            day: itemData.day,
+            date: row[12],
+            childName: `${row[2]} ${row[3]}`
+          });
+          order.itemCount++;
+
+          // Track unique children
+          const childKey = `${row[2]} ${row[3]}`;
+          if (!order.children.find(c => c.name === childKey)) {
+            order.children.push({
+              firstName: row[2],
+              lastName: row[3],
+              name: childKey,
+              grade: row[4]
+            });
+          }
+        }
+      } catch (parseError) {
+        console.error(`Error parsing item data for row ${i}:`, parseError);
+      }
+    }
+
+    // Convert to array and add derived fields
+    const orders = Object.values(orderMap).map(order => {
+      // Extract last name from first child
+      let lastName = '';
+      if (order.children.length > 0) {
+        const nameParts = order.children[0].name.trim().split(' ');
+        lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
+      }
+
+      return {
+        ...order,
+        lastName: lastName,
+        studentCount: order.children.length,
+        itemsSummary: `${order.itemCount} item${order.itemCount !== 1 ? 's' : ''} for ${order.children.length} student${order.children.length !== 1 ? 's' : ''}`
+      };
+    });
+
+    console.log(`Retrieved ${orders.length} orders for payment reconciliation`);
+
+    return {
+      success: true,
+      orders: orders,
+      count: orders.length
+    };
+
+  } catch (error) {
+    console.error('Error in getOrdersForPayment:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update payment status for a single order
+ */
+function updatePaymentStatus(orderId, status, paymentDate, notes, adminEmail) {
+  try {
+    console.log(`Updating payment status for order ${orderId} to ${status}`);
+
+    const sheet = getOrdersSheet();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+
+    // Find column indices
+    const paymentStatusIdx = headers.indexOf('Payment_Status');
+    const paymentDateIdx = headers.indexOf('Payment_Date');
+    const paymentNotesIdx = headers.indexOf('Payment_Notes');
+    const paymentUpdatedByIdx = headers.indexOf('Payment_Updated_By');
+
+    if (paymentStatusIdx < 0) {
+      throw new Error('Payment columns not found in sheet');
+    }
+
+    let rowsUpdated = 0;
+
+    // Update all rows for this order
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === orderId) { // Match Order_ID
+        const row = i + 1; // Sheet rows are 1-indexed
+
+        sheet.getRange(row, paymentStatusIdx + 1).setValue(status);
+        sheet.getRange(row, paymentDateIdx + 1).setValue(paymentDate || new Date());
+        sheet.getRange(row, paymentNotesIdx + 1).setValue(notes || '');
+        sheet.getRange(row, paymentUpdatedByIdx + 1).setValue(adminEmail || 'Admin');
+
+        rowsUpdated++;
+      }
+    }
+
+    console.log(`Updated ${rowsUpdated} rows for order ${orderId}`);
+
+    return {
+      success: true,
+      message: `Payment status updated for order ${orderId}`,
+      rowsUpdated: rowsUpdated,
+      orderId: orderId,
+      status: status
+    };
+
+  } catch (error) {
+    console.error('Error in updatePaymentStatus:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk update payment status for multiple orders
+ */
+function bulkUpdatePaymentStatus(orderIds, status, adminEmail) {
+  try {
+    console.log(`Bulk updating payment status for ${orderIds.length} orders to ${status}`);
+
+    const sheet = getOrdersSheet();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+
+    // Find column indices
+    const paymentStatusIdx = headers.indexOf('Payment_Status');
+    const paymentDateIdx = headers.indexOf('Payment_Date');
+    const paymentNotesIdx = headers.indexOf('Payment_Notes');
+    const paymentUpdatedByIdx = headers.indexOf('Payment_Updated_By');
+
+    if (paymentStatusIdx < 0) {
+      throw new Error('Payment columns not found in sheet');
+    }
+
+    const paymentDate = new Date();
+    let rowsUpdated = 0;
+    const orderIdsSet = new Set(orderIds);
+
+    // Update all matching rows
+    for (let i = 1; i < data.length; i++) {
+      if (orderIdsSet.has(data[i][0])) { // Match Order_ID
+        const row = i + 1; // Sheet rows are 1-indexed
+
+        sheet.getRange(row, paymentStatusIdx + 1).setValue(status);
+        sheet.getRange(row, paymentDateIdx + 1).setValue(paymentDate);
+        sheet.getRange(row, paymentNotesIdx + 1).setValue('Bulk update');
+        sheet.getRange(row, paymentUpdatedByIdx + 1).setValue(adminEmail || 'Admin');
+
+        rowsUpdated++;
+      }
+    }
+
+    console.log(`Bulk updated ${rowsUpdated} rows for ${orderIds.length} orders`);
+
+    return {
+      success: true,
+      message: `Payment status updated for ${orderIds.length} orders`,
+      rowsUpdated: rowsUpdated,
+      ordersUpdated: orderIds.length,
+      status: status
+    };
+
+  } catch (error) {
+    console.error('Error in bulkUpdatePaymentStatus:', error);
     throw error;
   }
 }
