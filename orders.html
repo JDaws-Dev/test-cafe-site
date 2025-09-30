@@ -1935,52 +1935,74 @@
 
       // Add all missing methods
       updateChildCheckboxes() {
+        // Save currently checked items BEFORE clearing checkboxes
+        const checkedItems = [];
+        document.querySelectorAll('input[type="checkbox"]:checked[data-child-id]').forEach(checkbox => {
+          checkedItems.push({
+            childId: parseInt(checkbox.dataset.childId),
+            itemId: checkbox.dataset.item,
+            day: checkbox.dataset.day
+          });
+        });
+
+        // Clear all checkbox containers
         document.querySelectorAll('.child-checkboxes').forEach(checkboxContainer => {
           checkboxContainer.innerHTML = '';
         });
 
+        // Rebuild checkboxes for each child
         document.querySelectorAll('.child-section').forEach(childSection => {
           const childId = childSection.dataset.child;
           const firstName = childSection.querySelector('.child-first-name').value;
           const lastName = childSection.querySelector('.child-last-name').value;
-          
+
           if (firstName) {
             const childName = `${firstName} ${lastName}`.trim();
-            
+
             document.querySelectorAll('.child-checkboxes').forEach(container => {
               const childCheckbox = document.createElement('div');
               childCheckbox.className = 'child-checkbox';
-              
+
               const checkbox = document.createElement('input');
               checkbox.type = 'checkbox';
               checkbox.id = `${container.id}-child-${childId}`;
               checkbox.dataset.childId = childId;
               checkbox.dataset.childName = childName;
-              
+
               // Parse the container ID to get item and day
               const parts = container.id.split('-');
               const dayIndex = parts.findIndex(part => this.constants.days.includes(part));
-              
+
               if (dayIndex !== -1) {
                 const day = parts[dayIndex];
                 const itemId = parts.slice(0, dayIndex).join('-');
-                
+
                 checkbox.dataset.item = itemId;
                 checkbox.dataset.day = day;
-                
+
                 const dayName = this.constants.dayNames[this.constants.days.indexOf(day)];
-                
+
                 const label = document.createElement('label');
                 label.htmlFor = checkbox.id;
                 label.textContent = `${childName} (${dayName})`;
-                
+
                 childCheckbox.appendChild(checkbox);
                 childCheckbox.appendChild(label);
                 container.appendChild(childCheckbox);
-                
+
                 checkbox.addEventListener('change', () => this.updateCart());
               }
             });
+          }
+        });
+
+        // Restore checked state AFTER rebuilding checkboxes
+        checkedItems.forEach(item => {
+          const checkbox = document.querySelector(
+            `input[type="checkbox"][data-child-id="${item.childId}"][data-item="${item.itemId}"][data-day="${item.day}"]`
+          );
+          if (checkbox) {
+            checkbox.checked = true;
           }
         });
       }
@@ -2098,16 +2120,16 @@
           `;
           
           childData.items.forEach((item, index) => {
-const uniqueId = `${childId}_${item.itemId}_${item.day}_${index}`;
+            const uniqueId = `${childId}_${item.itemId}_${item.day}_${index}`;
             const dayName = this.constants.dayNames[this.constants.days.indexOf(item.day)];
             const dateStr = this.calculateDateForDay(dayName);
             const displayDate = this.formatDateForDisplay(dateStr);
-            
+
             let itemClass = 'cart-item';
             if (item.discountApplied) {
               itemClass += item.price === 0 ? ' free-item' : ' discounted-item';
             }
-            
+
             html += `
               <div class="${itemClass}">
                 <div class="cart-item-content">
@@ -2128,12 +2150,15 @@ const uniqueId = `${childId}_${item.itemId}_${item.day}_${index}`;
         
         // Add remove functionality
         document.querySelectorAll('.remove-item-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-const uniqueId = btn.dataset.uniqueId;
-const [childId, itemId, day, index] = uniqueId.split('_');
-            
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const uniqueId = btn.dataset.uniqueId;
+            const [childId, itemId, day, index] = uniqueId.split('_');
+
             // Find and uncheck the checkbox
-            const checkbox = document.querySelector(`input[data-child-id="${childId}"][data-item="${itemId}"][data-day="${day}"]`);
+            const checkbox = document.querySelector(`input[type="checkbox"][data-child-id="${childId}"][data-item="${itemId}"][data-day="${day}"]`);
             if (checkbox) {
               checkbox.checked = false;
               this.updateCart();
@@ -2574,11 +2599,11 @@ const [childId, itemId, day, index] = uniqueId.split('_');
 
       addChild(childData = null) {
         this.state.childCount++;
-        
+
         const newChildSection = document.createElement('div');
         newChildSection.className = 'child-section';
         newChildSection.dataset.child = this.state.childCount;
-        
+
         newChildSection.innerHTML = `
           <div class="child-header">
             <div class="child-title">
@@ -2613,19 +2638,20 @@ const [childId, itemId, day, index] = uniqueId.split('_');
             </div>
           </div>
         `;
-        
+
         newChildSection.querySelector('.remove-child').addEventListener('click', () => {
           this.removeChild(newChildSection);
         });
-        
+
         document.getElementById('children-container').appendChild(newChildSection);
-        
+
         if (childData) {
           newChildSection.querySelector('.child-first-name').value = childData.firstName || '';
           newChildSection.querySelector('.child-last-name').value = childData.lastName || '';
           newChildSection.querySelector('.child-grade').value = childData.grade || '';
         }
-        
+
+        // Rebuild checkboxes to include new child (preserves checked state internally)
         this.updateChildCheckboxes();
         this.validateForm();
       }
@@ -2664,8 +2690,10 @@ const [childId, itemId, day, index] = uniqueId.split('_');
           child.querySelector('.child-title').childNodes[1].textContent = ` Child ${newChildId}`;
 
           const removeButton = child.querySelector('.remove-child');
-          removeButton.setAttribute('aria-label', `Remove child ${newChildId}`);
-          removeButton.onclick = () => this.removeChild(child);
+          if (removeButton) {
+            removeButton.setAttribute('aria-label', `Remove child ${newChildId}`);
+            removeButton.onclick = () => this.removeChild(child);
+          }
         });
 
         this.state.childCount = remainingChildren.length;
