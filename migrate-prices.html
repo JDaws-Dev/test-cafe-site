@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migrate Paid Prices - Artios Cafe</title>
+    <style>
+        :root {
+            --artios-green: #8B9F3C;
+            --artios-green-dark: #6d7d2f;
+        }
+
+        body {
+            font-family: 'Inter', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f9fafb;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--artios-green);
+            margin-bottom: 10px;
+        }
+
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--artios-green) 0%, var(--artios-green-dark) 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 159, 60, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--artios-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        ul {
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Migrate Paid Prices</h1>
+        <p>This tool will recalculate the paid prices for all existing orders in the database.</p>
+
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> This will update all orders in the database. Make sure you understand what this does before proceeding.
+        </div>
+
+        <div class="info">
+            <strong>What this migration does:</strong>
+            <ul>
+                <li>Recalculates the actual paid price for each item based on discounts</li>
+                <li>For DAWS (100% discount): Sets paid price to $0.00</li>
+                <li>For STAFF2025 (10% discount): Calculates 90% of original price</li>
+                <li>For JOHN (25% discount): Calculates 75% of original price</li>
+                <li>Only updates rows where the paid price is missing or incorrect</li>
+            </ul>
+        </div>
+
+        <button id="migrateBtn" onclick="runMigration()">Run Migration</button>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Processing... This may take a moment.</p>
+        </div>
+
+        <div class="success" id="successMsg">
+            <strong>✅ Success!</strong>
+            <p id="successText"></p>
+        </div>
+
+        <div class="error" id="errorMsg">
+            <strong>❌ Error:</strong>
+            <p id="errorText"></p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec';
+
+        async function runMigration() {
+            const btn = document.getElementById('migrateBtn');
+            const loading = document.getElementById('loading');
+            const successMsg = document.getElementById('successMsg');
+            const errorMsg = document.getElementById('errorMsg');
+            const successText = document.getElementById('successText');
+            const errorText = document.getElementById('errorText');
+
+            // Hide messages
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            // Show loading
+            btn.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_URL}?action=migrate_paid_prices&secret=cafe2025`);
+                const result = await response.json();
+
+                loading.style.display = 'none';
+
+                if (result.success) {
+                    successMsg.style.display = 'block';
+                    successText.textContent = `Migration completed successfully! Updated ${result.rowsUpdated} rows with correct paid prices.`;
+                    btn.textContent = 'Migration Complete ✓';
+                } else {
+                    errorMsg.style.display = 'block';
+                    errorText.textContent = result.error || 'Migration failed. Please check the console logs.';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                errorMsg.style.display = 'block';
+                errorText.textContent = `Network error: ${error.message}`;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

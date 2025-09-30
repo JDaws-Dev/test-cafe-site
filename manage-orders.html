@@ -982,6 +982,9 @@
                     // Fix grade field - use multiple fallbacks
                     const grade = item.grade || item.childGrade || order.grade || 'Unknown';
                     
+                    const itemPaidPrice = (item.paidPrice !== undefined && item.paidPrice !== null) ? item.paidPrice : item.price;
+                    const itemHasDiscount = item.hasDiscount || (order.discount > 0) || (itemPaidPrice < item.price);
+
                     itemsByDate[itemDate].push({
                         ...item,
                         date: itemDate,
@@ -992,7 +995,9 @@
                         childLastName: item.childLastName || item.childName?.split(' ')[1] || '',
                         status: item.status || 'active',
                         promoCode: order.promoCode || '',
-                        discountPercent: order.discountPercent || 0
+                        discountPercent: order.discountPercent || 0,
+                        hasDiscount: itemHasDiscount,
+                        paidPrice: itemPaidPrice
                     });
                 });
             });
@@ -1049,11 +1054,19 @@
 
             items.forEach(item => {
                 const isCancelled = item.status === 'cancelled';
-                const canRefund = !isCancelled && canRefundItem(dateStr);
-                const itemId = `${item.orderId}-${item.id || Math.random().toString(36).substr(2, 9)}`;
                 const hasDiscount = item.hasDiscount || false;
                 const originalPrice = item.price || 0;
-                const paidPrice = item.paidPrice || originalPrice;
+                const paidPrice = (item.paidPrice !== undefined && item.paidPrice !== null) ? item.paidPrice : originalPrice;
+                const canRefund = !isCancelled && canRefundItem(dateStr);
+                const itemId = `${item.orderId}-${item.id || Math.random().toString(36).substr(2, 9)}`;
+
+                // Calculate discount percentage from prices
+                let discountPercent = 0;
+                if (hasDiscount && originalPrice > 0) {
+                    discountPercent = ((originalPrice - paidPrice) / originalPrice * 100).toFixed(0);
+                } else if (item.discountPercent) {
+                    discountPercent = item.discountPercent;
+                }
                 
                 html += `
                     <div class="refund-item ${!canRefund && !isCancelled ? 'disabled' : ''} ${isCancelled ? 'cancelled' : ''}">
@@ -1089,9 +1102,9 @@
                                 <div class="item-meta">
                                     <span>${item.day}</span>
                                     <span>Grade: ${item.grade}</span>
-                                    ${hasDiscount && !isCancelled ? 
+                                    ${hasDiscount && !isCancelled ?
                                         `<span style="color: #f59e0b; font-weight: 600;">
-                                            ${item.discountPercent}% discount applied
+                                            ${discountPercent}% discount applied
                                         </span>` : ''}
                                     ${isCancelled && item.cancellationDate ? 
                                         `<span style="color: #ef4444;">Cancelled: ${new Date(item.cancellationDate).toLocaleDateString()}</span>` : ''}

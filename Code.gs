@@ -1459,14 +1459,17 @@ function migrateExistingOrdersWithPaidPrices() {
       const subtotal = parseFloat(row[14]) || 0;       // Column O (shifted)
       const discount = parseFloat(row[15]) || 0;       // Column P (shifted)
       
-      // Calculate paid price if not already set
-      if ((!paidPriceCell || paidPriceCell === '') && subtotal > 0 && originalPrice > 0) {
+      // Calculate paid price and update if missing or incorrect
+      if (subtotal > 0 && originalPrice > 0) {
         const discountRate = discount / subtotal;
-        const paidPrice = originalPrice * (1 - discountRate);
-        
-        // Update column H with paid price
-        sheet.getRange(i + 1, 8).setValue(paidPrice);
-        updatedCount++;
+        const correctPaidPrice = originalPrice * (1 - discountRate);
+        const currentPaidPrice = parseFloat(paidPriceCell) || 0;
+
+        // Update if empty, or if current value doesn't match calculated value
+        if (!paidPriceCell || paidPriceCell === '' || Math.abs(currentPaidPrice - correctPaidPrice) > 0.01) {
+          sheet.getRange(i + 1, 8).setValue(correctPaidPrice);
+          updatedCount++;
+        }
       }
     }
     
