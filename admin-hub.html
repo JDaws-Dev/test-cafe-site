@@ -322,6 +322,7 @@
             font-size: 1.3em;
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap; /* Prevent title wrapping */
         }
 
         /* Status Messages */
@@ -542,7 +543,7 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(5, 1fr); /* Mon-Fri only */
             gap: 8px;
         }
 
@@ -1090,18 +1091,33 @@
                 grid-template-columns: 1fr;
             }
 
+            .calendar-container {
+                padding: 10px;
+                margin: 0 -10px; /* Extend to edges */
+            }
+
+            .calendar-grid {
+                gap: 4px; /* Smaller gap on mobile */
+            }
+
             .calendar-day {
-                font-size: 0.85em;
-                min-height: 65px;
+                font-size: 0.75em;
+                min-height: 50px;
+                padding: 2px;
             }
 
             .calendar-day-number {
-                font-size: 0.95em;
+                font-size: 0.9em;
             }
 
             .calendar-day-reason {
-                font-size: 0.55em;
+                font-size: 0.5em;
                 -webkit-line-clamp: 1;
+            }
+
+            .calendar-header {
+                font-size: 0.7em;
+                padding: 5px 2px;
             }
 
             .blackout-date-info {
@@ -1161,6 +1177,17 @@
             /* Card adjustments */
             .card {
                 margin: 10px;
+            }
+
+            .card-title {
+                font-size: 1em; /* Smaller title on mobile */
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .card-header {
+                flex-wrap: nowrap; /* Keep header content on one line */
+                gap: 8px;
             }
 
             /* Payments tab mobile */
@@ -2216,8 +2243,8 @@
             // Clear calendar
             container.innerHTML = '';
 
-            // Add day headers
-            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            // Add day headers (Mon-Fri only)
+            const dayHeaders = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
             dayHeaders.forEach(day => {
                 const header = document.createElement('div');
                 header.className = 'calendar-header';
@@ -2231,28 +2258,35 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Add empty cells for days before month starts
-            for (let i = 0; i < firstDay; i++) {
+            // Add empty cells for days before month starts (adjusted for Mon-Fri grid)
+            // 0=Sun, 1=Mon, 2=Tue, etc. We want Mon=0 position
+            const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1; // Convert Sun=0 to be after Fri
+            for (let i = 0; i < adjustedFirstDay; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.className = 'empty-day';
                 container.appendChild(emptyDay);
             }
 
-            // Add days of month
+            // Add days of month (Mon-Fri only)
             for (let day = 1; day <= daysInMonth; day++) {
                 const currentDate = new Date(year, month, day);
+                const dayOfWeek = currentDate.getDay();
+
+                // Skip weekends (0=Sun, 6=Sat)
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    continue;
+                }
+
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const blackoutInfo = blackoutDates.find(bd => bd.date === dateStr);
                 const isBlackout = !!blackoutInfo;
-                const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
                 const isPast = currentDate < today;
                 const isToday = currentDate.getTime() === today.getTime();
 
                 const dayElement = document.createElement('div');
                 dayElement.className = 'calendar-day';
-                
+
                 if (isBlackout) dayElement.classList.add('blackout');
-                if (isWeekend) dayElement.classList.add('weekend');
                 if (isPast) dayElement.classList.add('past');
                 if (isToday) dayElement.classList.add('today');
 
