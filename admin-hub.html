@@ -10,18 +10,51 @@
     <link rel="apple-touch-icon" href="artios-logo.png">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --danger-gradient: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
-            --success-gradient: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-            --warning-gradient: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            --info-gradient: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            /* Artios Brand Colors */
+            --artios-green: #8B9F3C;
+            --artios-green-dark: #6d7d2f;
+            --artios-green-light: #a5b85c;
+            --artios-green-pale: #f4f6ed;
+
+            /* Primary gradient using Artios green */
+            --primary-gradient: linear-gradient(135deg, #8B9F3C 0%, #6d7d2f 100%);
+            --accent-gradient: linear-gradient(135deg, #a5b85c 0%, #8B9F3C 100%);
+
+            /* Semantic gradients */
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+
+            /* Text colors */
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
+            --text-on-primary: #ffffff;
+
+            /* Background colors */
             --bg-primary: #ffffff;
             --bg-secondary: #f9fafb;
-            --border-color: #e5e7eb;
-        }
+            --bg-tertiary: #f4f6ed;
 
+            /* Border and shadows */
+            --border-color: #e5e7eb;
+            --border-accent: #d1d9b0;
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+            --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+
+            /* Border radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+
+            /* Transitions */
+            --transition-fast: 150ms ease-in-out;
+            --transition-normal: 250ms ease-in-out;
+        }
+ 
+        
         * {
             margin: 0;
             padding: 0;

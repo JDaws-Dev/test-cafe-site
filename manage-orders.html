@@ -10,18 +10,40 @@
     <link rel="apple-touch-icon" href="artios-logo.png">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            /* Artios Brand Colors */
+            --artios-green: #8B9F3C;
+            --artios-green-dark: #6d7d2f;
+            --artios-green-light: #a5b85c;
+            --artios-green-pale: #f4f6ed;
+
+            /* Primary gradients using Artios green */
+            --primary-gradient: linear-gradient(135deg, #8B9F3C 0%, #6d7d2f 100%);
+            --accent-gradient: linear-gradient(135deg, #a5b85c 0%, #8B9F3C 100%);
+
+            /* Semantic colors */
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --error-color: #ef4444;
+
+            /* Text colors */
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
+            --text-on-primary: #ffffff;
+
+            /* Background colors */
             --bg-primary: #ffffff;
             --bg-secondary: #f9fafb;
+            --bg-tertiary: #f4f6ed;
+
+            /* Border and shadows */
             --border-color: #e5e7eb;
+            --border-accent: #d1d9b0;
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+            --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
         }
 
+        
         body {
             font-family: 'Inter', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
             margin: 0;
