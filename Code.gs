@@ -1435,10 +1435,11 @@ function saveMultiChildOrderToSheet(orderData) {
  */
 function getDiscountDescription(promoCode) {
   if (!promoCode) return '';
-  
+
   const code = promoCode.toUpperCase();
   if (code === 'STAFF2025') return '10% Staff Discount Applied';
   if (code === 'JOHN') return '25% Special Discount Applied';
+  if (code === 'DAWS') return '100% Complimentary - FREE';
   return 'Discount Applied';
 }
 
