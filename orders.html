@@ -2633,14 +2633,17 @@ const [childId, itemId, day, index] = uniqueId.split('_');
       removeChild(childSection) {
         const childNumber = parseInt(childSection.dataset.child);
 
-        // Uncheck and remove all checkboxes for this child
-        document.querySelectorAll(`input[data-child-id="${childNumber}"]`).forEach(checkbox => {
-          checkbox.checked = false;
-        });
-
-        // Remove orderItems for this child
-        this.state.orderItems = this.state.orderItems.filter(item => {
-          return item.childId !== childNumber;
+        // Save checked items for remaining children before modifying anything
+        const checkedItems = [];
+        document.querySelectorAll('input[type="checkbox"]:checked[data-child-id]').forEach(checkbox => {
+          const childId = parseInt(checkbox.dataset.childId);
+          if (childId !== childNumber) {
+            checkedItems.push({
+              oldChildId: childId,
+              itemId: checkbox.dataset.item,
+              day: checkbox.dataset.day
+            });
+          }
         });
 
         // Remove the child section from DOM
@@ -2665,24 +2668,26 @@ const [childId, itemId, day, index] = uniqueId.split('_');
           removeButton.onclick = () => this.removeChild(child);
         });
 
-        // Update orderItems with new child IDs
-        this.state.orderItems.forEach(item => {
-          if (childMapping.has(item.childId)) {
-            item.childId = childMapping.get(item.childId);
-          }
-        });
-
-        // Update checkbox data attributes with new child IDs
-        document.querySelectorAll('input[data-child-id]').forEach(checkbox => {
-          const oldChildId = parseInt(checkbox.dataset.childId);
-          if (childMapping.has(oldChildId)) {
-            checkbox.dataset.childId = childMapping.get(oldChildId);
-          }
-        });
-
         this.state.childCount = remainingChildren.length;
+
+        // Rebuild all checkboxes with new child numbering
         this.updateChildCheckboxes();
-        this.updateCart(); // Changed from updateCartDisplay to rebuild cart from checkboxes
+
+        // Restore checked state for remaining children with updated IDs
+        checkedItems.forEach(item => {
+          const newChildId = childMapping.get(item.oldChildId);
+          if (newChildId) {
+            const checkbox = document.querySelector(
+              `input[type="checkbox"][data-child-id="${newChildId}"][data-item="${item.itemId}"][data-day="${item.day}"]`
+            );
+            if (checkbox) {
+              checkbox.checked = true;
+            }
+          }
+        });
+
+        // Rebuild cart from current checkbox state
+        this.updateCart();
         this.validateForm();
       }
 
