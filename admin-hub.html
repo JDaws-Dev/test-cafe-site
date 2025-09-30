@@ -1134,7 +1134,15 @@
                     <span class="tab-icon">💳</span>
                     <span>Order Management</span>
                 </button>
-  
+                <button class="tab-btn" onclick="switchTab('financials')" data-tab="financials">
+                    <span class="tab-icon">📊</span>
+                    <span>Financials</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('communications')" data-tab="communications">
+                    <span class="tab-icon">📧</span>
+                    <span>Communications</span>
+                </button>
+
             </div>
         </div>
 
@@ -1253,22 +1261,32 @@
                     
                     <!-- Controls -->
                     <div style="padding: 20px; border-bottom: 1px solid #e9ecef;">
-                        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
                             <div>
-                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Email Filter:</label>
-                                <input type="email" id="email-filter" placeholder="Enter family email..." 
-                                       style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 250px;">
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Search By:</label>
+                                <select id="search-type" onchange="OM.updateSearchPlaceholder()"
+                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 150px;">
+                                    <option value="email">Email</option>
+                                    <option value="student">Student Name</option>
+                                </select>
                             </div>
-                            
+
+                            <div style="flex: 1; min-width: 250px;">
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Search:</label>
+                                <input type="text" id="search-input" placeholder="Enter family email..."
+                                       style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 100%;"
+                                       onkeypress="if(event.key==='Enter') OM.search()">
+                            </div>
+
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
-                                <select id="sort-orders" onchange="OM.sortAndDisplay()" 
+                                <select id="sort-orders" onchange="OM.sortAndDisplay()"
                                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                                     <option value="date">Date (Newest First)</option>
                                     <option value="family">Family Name (A-Z)</option>
                                 </select>
                             </div>
-                            
+
                             <button onclick="OM.search()" class="action-btn btn-primary">
                                 🔍 Search Orders
                             </button>
@@ -1292,14 +1310,359 @@
                     <div style="padding: 20px;">
                         <div id="order-display" style="max-height: 700px; overflow-y: auto;">
                             <div style="text-align: center; padding: 40px; color: #999;">
-                                Enter an email address and click "Search Orders" to begin
+                                Enter an email address or student name and click "Search Orders" to begin
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
- 
+            <!-- Tab 3: Financials -->
+            <div class="tab-content" id="financials">
+                <!-- Financial Summary Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <!-- Revenue Card -->
+                    <div class="card" style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); color: white;">
+                        <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                            <h3 style="margin: 0; font-size: 0.9em; opacity: 0.9;">💰 Total Revenue</h3>
+                        </div>
+                        <div style="padding: 20px; text-align: center;">
+                            <div style="font-size: 2.5em; font-weight: bold;" id="fin-total-revenue">$0.00</div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-top: 5px;" id="fin-revenue-period">All Time</div>
+                        </div>
+                    </div>
+
+                    <!-- Refunds Card -->
+                    <div class="card" style="background: linear-gradient(135deg, #f44336 0%, #e57373 100%); color: white;">
+                        <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                            <h3 style="margin: 0; font-size: 0.9em; opacity: 0.9;">💸 Total Refunds</h3>
+                        </div>
+                        <div style="padding: 20px; text-align: center;">
+                            <div style="font-size: 2.5em; font-weight: bold;" id="fin-total-refunds">$0.00</div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-top: 5px;" id="fin-refund-count">0 items</div>
+                        </div>
+                    </div>
+
+                    <!-- Net Revenue Card -->
+                    <div class="card" style="background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%); color: white;">
+                        <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                            <h3 style="margin: 0; font-size: 0.9em; opacity: 0.9;">📈 Net Revenue</h3>
+                        </div>
+                        <div style="padding: 20px; text-align: center;">
+                            <div style="font-size: 2.5em; font-weight: bold;" id="fin-net-revenue">$0.00</div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-top: 5px;" id="fin-net-margin">0% margin</div>
+                        </div>
+                    </div>
+
+                    <!-- Average Order Value Card -->
+                    <div class="card" style="background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); color: white;">
+                        <div class="card-header" style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                            <h3 style="margin: 0; font-size: 0.9em; opacity: 0.9;">🎯 Avg Order Value</h3>
+                        </div>
+                        <div style="padding: 20px; text-align: center;">
+                            <div style="font-size: 2.5em; font-weight: bold;" id="fin-avg-order">$0.00</div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-top: 5px;" id="fin-total-orders">0 orders</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">📅 Date Range</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <!-- Quick Date Buttons -->
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-size: 0.9em; color: #666;">Quick Select:</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button onclick="FIN.setThisMonth()" class="action-btn" style="background: #9c27b0;">This Month</button>
+                                <button onclick="FIN.setLastMonth()" class="action-btn" style="background: #9c27b0;">Last Month</button>
+                                <button onclick="FIN.setYearToDate()" class="action-btn" style="background: #9c27b0;">Year to Date</button>
+                                <button onclick="FIN.setSchoolYear()" class="action-btn" style="background: #9c27b0;">School Year</button>
+                            </div>
+                        </div>
+
+                        <!-- Date Inputs -->
+                        <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Start Date:</label>
+                                <input type="date" id="fin-start-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">End Date:</label>
+                                <input type="date" id="fin-end-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                            </div>
+                            <div>
+                                <button onclick="FIN.loadFinancials()" class="action-btn btn-primary">📊 Generate Report</button>
+                                <button onclick="FIN.clearDates()" class="action-btn" style="background: #6c757d; margin-left: 10px;">Clear Dates</button>
+                            </div>
+                            <div style="margin-left: auto; display: flex; gap: 10px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Export:</label>
+                                    <select id="export-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-right: 10px;">
+                                        <option value="full">Full Report</option>
+                                        <option value="summary">Summary Only</option>
+                                        <option value="orders">Orders Detail</option>
+                                        <option value="students">Student Breakdown</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">&nbsp;</label>
+                                    <button onclick="FIN.exportData()" class="action-btn" style="background: #4caf50;">📥 Download CSV</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Column Layout -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <!-- Discount Summary Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🎟️ Discounts Applied</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="margin-bottom: 20px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="font-weight: 600;">Total Discounts:</span>
+                                    <span style="font-size: 1.2em; color: #f44336; font-weight: bold;" id="fin-total-discounts">$0.00</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #666;">
+                                    <span>Orders with Discounts:</span>
+                                    <span id="fin-discount-orders">0</span>
+                                </div>
+                            </div>
+                            <div id="fin-discount-breakdown" style="font-size: 0.9em;">
+                                <!-- Discount breakdown will go here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Stats Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">👥 Customer Analytics</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e9ecef;">
+                                <span style="font-weight: 600;">Total Families:</span>
+                                <span style="font-size: 1.2em; font-weight: bold; color: #2196f3;" id="fin-total-families">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em;">
+                                <span>New Customers:</span>
+                                <span id="fin-new-customers">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em;">
+                                <span>Repeat Customers:</span>
+                                <span id="fin-repeat-customers">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em;">
+                                <span>Avg Orders per Family:</span>
+                                <span id="fin-avg-orders-family">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Customers Table -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">🏆 Top Families by Revenue</h2>
+                    </div>
+                    <div style="padding: 20px; max-height: 500px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">#</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Family Email</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Orders</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Items</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Total Revenue</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Avg Order</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fin-top-customers">
+                                <tr>
+                                    <td colspan="6" style="padding: 40px; text-align: center; color: #999;">
+                                        Click "Generate Report" to load financial data
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Item Sales Analysis -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🍽️ Popular Menu Items</h2>
+                    </div>
+                    <div style="padding: 20px; max-height: 500px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Rank</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Item Name</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Quantity Sold</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Revenue</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">% of Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fin-popular-items">
+                                <tr>
+                                    <td colspan="5" style="padding: 40px; text-align: center; color: #999;">
+                                        Click "Generate Report" to load item sales data
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Communications -->
+            <div class="tab-content" id="communications">
+                <!-- Family Contact List -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">📧 Communications Center</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                            <button onclick="COMM.loadFamilies()" class="action-btn btn-primary">🔄 Load Families</button>
+                            <button onclick="COMM.showBulkEmail()" class="action-btn" style="background: #ff9800;">✉️ Send Bulk Email</button>
+                            <button onclick="COMM.exportContacts()" class="action-btn" style="background: #4caf50;">📥 Export All Contacts</button>
+                            <button onclick="COMM.exportSelected()" class="action-btn" style="background: #2196f3;">📥 Export Selected</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Search -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">🔍 Filter & Search</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Search:</label>
+                                <input type="text" id="comm-search" placeholder="Search by name or email..."
+                                       style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 250px;"
+                                       oninput="COMM.filterFamilies()">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Activity Filter:</label>
+                                <select id="comm-activity-filter" onchange="COMM.filterFamilies()"
+                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="all">All Families</option>
+                                    <option value="active">Active (Last 30 days)</option>
+                                    <option value="recent">Recent (Last 60 days)</option>
+                                    <option value="inactive">Inactive (60+ days)</option>
+                                    <option value="hasAccount">Has Account</option>
+                                    <option value="noAccount">No Account</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Grade Filter:</label>
+                                <select id="comm-grade-filter" onchange="COMM.filterFamilies()"
+                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="all">All Grades</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
+                                <select id="comm-sort" onchange="COMM.sortFamilies()"
+                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
+                                    <option value="lastName">Last Name (A-Z)</option>
+                                    <option value="email">Email (A-Z)</option>
+                                    <option value="lastOrder">Last Order Date</option>
+                                    <option value="totalOrders">Total Orders</option>
+                                    <option value="totalSpent">Total Spent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 6px;">
+                            <span id="comm-filter-results">0 families loaded</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Family List Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">👥 Family Contact List</h2>
+                    </div>
+                    <div style="padding: 20px; max-height: 600px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6; position: sticky; top: 0;">
+                                    <th style="padding: 12px;">
+                                        <input type="checkbox" id="comm-select-all" onchange="COMM.toggleSelectAll()">
+                                    </th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Last Name</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600;">Family Email</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Has Account</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Students</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Total Orders</th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600;">Total Spent</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Last Order</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Status</th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comm-family-list">
+                                <tr>
+                                    <td colspan="10" style="padding: 40px; text-align: center; color: #999;">
+                                        Click "Load Families" to populate the contact list
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Email Modal -->
+            <div id="bulk-email-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; padding: 20px; overflow-y: auto;">
+                <div style="max-width: 800px; margin: 50px auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                        <h2 style="margin: 0;">📧 Send Bulk Email</h2>
+                    </div>
+                    <div style="padding: 30px;">
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Recipients:</label>
+                            <div id="bulk-email-recipients" style="padding: 15px; background: #f8f9fa; border-radius: 6px; max-height: 150px; overflow-y: auto;">
+                                <span style="color: #666;">No families selected</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Subject:</label>
+                            <input type="text" id="bulk-email-subject" placeholder="Email subject..."
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em;">
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Message:</label>
+                            <textarea id="bulk-email-message" rows="10" placeholder="Type your message here..."
+                                      style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; font-family: inherit; resize: vertical;"></textarea>
+                            <div style="margin-top: 5px; font-size: 0.85em; color: #666;">
+                                Tip: Use {FAMILY_NAME} to personalize emails
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="COMM.closeBulkEmail()" class="action-btn" style="background: #6c757d;">Cancel</button>
+                            <button onclick="COMM.sendBulkEmail()" class="action-btn btn-primary">Send Email</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Templates Modal -->
+
 
     <script>
         // Configuration
@@ -1385,13 +1748,12 @@
 
         function loadTabData(tabName) {
             console.log(`Loading data for tab: ${tabName}`);
-            
+
             if (tabName === 'blackout-dates') {
                 loadBlackoutDates();
                 generateCalendar();
-            } else if (tabName === 'communications') {
-                COMM.init();
             }
+            // Communications tab loads on-demand when user clicks Load Families button
         }
 
         // ==========================================
@@ -1706,32 +2068,63 @@
             data: [],
             apiUrl: 'https://script.google.com/macros/s/AKfycbzgQFKeMYxYAHH8iP2ASjGk8nGS8KNZ4XbC7tqHYG5TQE04YEwmNh-WFEoSBcHkrvZs/exec',
             
+            updateSearchPlaceholder: function() {
+                var searchType = document.getElementById('search-type').value;
+                var searchInput = document.getElementById('search-input');
+                if (searchType === 'email') {
+                    searchInput.placeholder = 'Enter family email...';
+                    searchInput.type = 'text';
+                } else {
+                    searchInput.placeholder = 'Enter student first or last name...';
+                    searchInput.type = 'text';
+                }
+            },
+
             search: function() {
-                var email = document.getElementById('email-filter').value.trim();
-                if (!email) {
-                    alert('Please enter an email address');
+                var searchType = document.getElementById('search-type').value;
+                var searchInput = document.getElementById('search-input').value.trim();
+                if (!searchInput) {
+                    alert('Please enter a search term');
                     return;
                 }
-                
+
                 var self = this;
                 document.getElementById('order-display').innerHTML = '<div style="text-align: center; padding: 40px;">Loading...</div>';
-                
-                fetch(this.apiUrl + '?action=lookup_orders&email=' + encodeURIComponent(email))
+
+                var url = this.apiUrl + '?action=lookup_orders';
+                if (searchType === 'email') {
+                    url += '&email=' + encodeURIComponent(searchInput);
+                } else {
+                    url += '&student_name=' + encodeURIComponent(searchInput);
+                }
+
+                fetch(url)
                     .then(function(r) { return r.json(); })
                     .then(function(result) {
                         if (result.success && result.orders) {
                             self.data = result.orders;
-                            
+
                             // Debug: Log the first order's structure to console
                             if (self.data.length > 0 && self.data[0].items && self.data[0].items.length > 0) {
                                 console.log('Sample order structure:', self.data[0]);
                                 console.log('Sample item structure:', self.data[0].items[0]);
                             }
-                            
+
                             self.processOrderData();
                             self.sortAndDisplay();
+
+                            // Show search info
+                            if (searchType === 'student' && result.matchedEmails) {
+                                var info = '<div style="background: #e3f2fd; padding: 10px; margin-bottom: 15px; border-radius: 6px;">';
+                                info += '<strong>Found orders for:</strong> ' + result.matchedEmails.join(', ');
+                                info += '</div>';
+                                document.getElementById('order-display').insertAdjacentHTML('afterbegin', info);
+                            }
                         } else {
-                            document.getElementById('order-display').innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No orders found</div>';
+                            var msg = searchType === 'student'
+                                ? 'No orders found for student: ' + searchInput
+                                : 'No orders found for email: ' + searchInput;
+                            document.getElementById('order-display').innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">' + msg + '</div>';
                             self.updateCounts(0, 0, 0);
                         }
                     })
@@ -1945,21 +2338,24 @@
                     }
                 }
                 
-                var pastDeadline = this.isPastCancellationDeadline(itemDate);
+                var pastDeadline = this.isPastCancellationDeadline(itemDate, false);
                 var itemId = (item.id || '').replace(/'/g, '');
                 var safeOrderId = (orderId || '').replace(/'/g, '');
-                
+
                 var html = '<div class="om-item">';
                 html += '<div class="om-item-info">';
                 html += '<div class="om-item-name">' + (item.name || 'Unknown Item') + '</div>';
                 html += '<div class="om-item-details">';
                 html += 'Day: ' + (item.day || item.dayOfWeek || 'Unknown') + ' | ';
                 html += 'Date: ' + displayDate;
+                if (pastDeadline) {
+                    html += ' | <span style="color: #e53e3e; font-weight: 600;">⚠️ Past Deadline</span>';
+                }
                 html += '</div>';
                 html += '</div>';
-                
+
                 html += '<div class="om-item-actions">';
-                
+
                 // Price display
                 if (hasDiscount) {
                     html += '<span class="om-original-price">$' + (item.price || 0).toFixed(2) + '</span>';
@@ -1968,22 +2364,21 @@
                 } else {
                     html += '<span class="om-item-price">$' + displayPrice.toFixed(2) + '</span>';
                 }
-                
+
                 // Status badge
                 html += '<span class="om-item-status om-status-' + (isCancelled ? 'cancelled' : 'active') + '">';
                 html += isCancelled ? 'Cancelled' : 'Active';
                 html += '</span>';
-                
-                // Action button
+
+                // Action button - Admins can always cancel (with override warning)
                 if (isCancelled) {
                     if (item.refundAmount) {
                         html += '<span style="color: #38a169; font-size: 0.9em; margin-left: 10px;">Refunded: $' + item.refundAmount.toFixed(2) + '</span>';
                     }
-                } else if (pastDeadline) {
-                    html += '<button class="om-cancel-item" disabled>Cannot Cancel</button>';
                 } else {
                     var cancelOnclick = 'OM.cancelItem(\'' + itemId + '\', \'' + safeOrderId + '\')';
-                    html += '<button class="om-cancel-item" onclick="' + cancelOnclick + '">Cancel Item</button>';
+                    var buttonLabel = pastDeadline ? 'Cancel (Override)' : 'Cancel Item';
+                    html += '<button class="om-cancel-item" onclick="' + cancelOnclick + '">' + buttonLabel + '</button>';
                 }
                 
                 html += '</div>';
@@ -2030,23 +2425,23 @@
                 if (isCancelled) {
                     html += '<span style="color: #999; font-style: italic;">Order is cancelled</span>';
                 } else {
-                    // Check if any items can still be cancelled (not past deadline)
+                    // Admin can cancel any active items
                     var hasActiveItems = false;
                     if (order.items) {
                         for (var i = 0; i < order.items.length; i++) {
                             var item = order.items[i];
-                            if (item.status !== 'cancelled' && !this.isPastCancellationDeadline(item.date || item.deliveryDate || item.orderDate)) {
+                            if (item.status !== 'cancelled') {
                                 hasActiveItems = true;
                                 break;
                             }
                         }
                     }
-                    
+
                     if (hasActiveItems) {
                         var bulkOnclick = 'OM.cancelEntireOrder(\'' + orderId + '\')';
                         html += '<button class="om-bulk-cancel" onclick="' + bulkOnclick + '">Cancel Entire Order</button>';
                     } else {
-                        html += '<span style="color: #999; font-style: italic;">All items are cancelled or past cancellation deadline</span>';
+                        html += '<span style="color: #999; font-style: italic;">All items are cancelled</span>';
                     }
                 }
                 
@@ -2056,12 +2451,17 @@
                 return html;
             },
             
-            isPastCancellationDeadline: function(dateStr) {
+            isPastCancellationDeadline: function(dateStr, adminBypass) {
+                // Admin bypass: Admins can cancel at any time
+                if (adminBypass === true) {
+                    return false;
+                }
+
                 if (!dateStr || dateStr === 'Unknown') return false;
-                
+
                 try {
                     var itemDate;
-                    
+
                     // Parse the date string
                     if (dateStr.includes('-')) {
                         itemDate = new Date(dateStr + 'T10:00:00'); // Set to 10am on delivery date
@@ -2074,17 +2474,17 @@
                     } else {
                         return false;
                     }
-                    
+
                     if (isNaN(itemDate.getTime())) {
                         return false;
                     }
-                    
+
                     // Get current time
                     var now = new Date();
-                    
+
                     // Check if we're past the cancellation deadline (10am on delivery day)
                     return now > itemDate;
-                    
+
                 } catch (e) {
                     console.error('Error parsing date:', dateStr, e);
                     return false;
@@ -2122,25 +2522,28 @@
                     }
                     if (item) break;
                 }
-                
+
                 if (!item) {
                     alert('Item not found');
                     return;
                 }
-                
+
                 var itemDate = item.date || item.deliveryDate || item.orderDate;
-                if (this.isPastCancellationDeadline(itemDate)) {
-                    alert('Cannot cancel this item. The cancellation deadline (10am on delivery day) has passed.');
-                    return;
+                var pastDeadline = this.isPastCancellationDeadline(itemDate, false);
+
+                // Admin override: Allow cancellation with confirmation
+                var confirmMsg = 'Cancel this item?\n\nItem: ' + item.name + '\nDate: ' + itemDate;
+                if (pastDeadline) {
+                    confirmMsg += '\n\n⚠️ ADMIN OVERRIDE: This item is past the 10am cancellation deadline.\nAre you sure you want to proceed with this cancellation?';
                 }
-                
-                var confirmMsg = 'Cancel this item?\n\nItem: ' + item.name + '\nDate: ' + itemDate + '\n\nThis action cannot be undone.';
+                confirmMsg += '\n\nThis action cannot be undone.';
+
                 if (!confirm(confirmMsg)) return;
-                
+
                 var session = 'session_' + Date.now();
                 var items = [{ itemId: itemId }];
-                var url = this.apiUrl + '?action=cancel_multiple_items&session_id=' + session + '&items=' + encodeURIComponent(JSON.stringify(items));
-                
+                var url = this.apiUrl + '?action=cancel_multiple_items&session_id=' + session + '&items=' + encodeURIComponent(JSON.stringify(items)) + '&admin_override=true';
+
                 fetch(url)
                     .then(function(r) { return r.json(); })
                     .then(function(result) {
@@ -2178,30 +2581,34 @@
             cancelEntireOrder: function(orderId) {
                 var self = this;
                 var order = null;
-                
+
                 for (var i = 0; i < this.data.length; i++) {
                     if (this.data[i].orderId === orderId) {
                         order = this.data[i];
                         break;
                     }
                 }
-                
+
                 if (!order) return;
-                
+
                 var items = [];
                 var pastDeadlineItems = 0;
                 var alreadyCancelledItems = 0;
-                
+
+                // Admin override: Cancel ALL active items regardless of deadline
                 if (order.items) {
                     for (var i = 0; i < order.items.length; i++) {
                         var item = order.items[i];
                         var itemDate = item.date || item.deliveryDate || item.orderDate;
-                        
+
                         if (item.status === 'cancelled') {
                             alreadyCancelledItems++;
-                        } else if (this.isPastCancellationDeadline(itemDate)) {
-                            pastDeadlineItems++;
                         } else {
+                            // Check if past deadline for informational purposes only
+                            if (this.isPastCancellationDeadline(itemDate, false)) {
+                                pastDeadlineItems++;
+                            }
+                            // Add all active items for cancellation
                             var itemId = item.id || (orderId + '-' + (item.rowIndex || ''));
                             if (itemId && itemId !== orderId + '-') {
                                 items.push({ itemId: itemId });
@@ -2209,66 +2616,57 @@
                         }
                     }
                 }
-                
+
                 if (items.length === 0) {
-                    var message = 'No items can be cancelled. ';
-                    if (alreadyCancelledItems > 0) {
-                        message += alreadyCancelledItems + ' item(s) already cancelled. ';
-                    }
-                    if (pastDeadlineItems > 0) {
-                        message += pastDeadlineItems + ' item(s) are past the cancellation deadline (10am on delivery day).';
-                    }
-                    alert(message);
+                    alert('No active items to cancel. All items are already cancelled.');
                     return;
                 }
-                
+
                 var confirmMsg = 'Cancel ' + items.length + ' active item(s) from this order?';
                 if (pastDeadlineItems > 0) {
-                    confirmMsg += '\n\nNote: ' + pastDeadlineItems + ' item(s) are past the cancellation deadline and cannot be cancelled.';
+                    confirmMsg += '\n\n⚠️ ADMIN OVERRIDE: ' + pastDeadlineItems + ' item(s) are past the 10am cancellation deadline.\nProceeding will use admin override privileges.';
                 }
                 if (alreadyCancelledItems > 0) {
                     confirmMsg += '\n\nNote: ' + alreadyCancelledItems + ' item(s) were already cancelled.';
                 }
-                
+                confirmMsg += '\n\nThis action cannot be undone.';
+
                 if (!confirm(confirmMsg)) return;
-                
+
                 var session = 'session_' + Date.now();
-                var url = this.apiUrl + '?action=cancel_multiple_items&session_id=' + session + '&items=' + encodeURIComponent(JSON.stringify(items));
-                
+                var url = this.apiUrl + '?action=cancel_multiple_items&session_id=' + session + '&items=' + encodeURIComponent(JSON.stringify(items)) + '&admin_override=true';
+
                 fetch(url)
                     .then(function(r) { return r.json(); })
                     .then(function(result) {
                         if (result.success) {
-                            // Update local item statuses
+                            // Update all active items to cancelled
                             for (var i = 0; i < order.items.length; i++) {
                                 var item = order.items[i];
-                                var itemDate = item.date || item.deliveryDate || item.orderDate;
-                                if (item.status !== 'cancelled' && !self.isPastCancellationDeadline(itemDate)) {
+                                if (item.status !== 'cancelled') {
                                     item.status = 'cancelled';
                                 }
                             }
-                            
-                            // Check if all items are now inactive
-                            var allInactive = true;
+
+                            // Check if all items are now cancelled
+                            var allCancelled = true;
                             for (var i = 0; i < order.items.length; i++) {
-                                var item = order.items[i];
-                                var itemDate = item.date || item.deliveryDate || item.orderDate;
-                                if (item.status !== 'cancelled' && !self.isPastCancellationDeadline(itemDate)) {
-                                    allInactive = false;
+                                if (order.items[i].status !== 'cancelled') {
+                                    allCancelled = false;
                                     break;
                                 }
                             }
-                            
-                            if (allInactive) {
+
+                            if (allCancelled) {
                                 order.status = 'cancelled';
                             }
-                            
+
                             self.processOrderData();
                             self.render();
-                            
+
                             var successMsg = items.length + ' item(s) cancelled successfully. Refund: $' + (result.totalRefund || 0).toFixed(2);
                             if (pastDeadlineItems > 0) {
-                                successMsg += '\n\n' + pastDeadlineItems + ' item(s) past deadline were not cancelled.';
+                                successMsg += '\n\n✅ Admin override applied for ' + pastDeadlineItems + ' item(s) past deadline.';
                             }
                             alert(successMsg);
                         } else {
@@ -2306,12 +2704,626 @@
             },
             
             refresh: function() {
-                var email = document.getElementById('email-filter').value.trim();
-                if (email) {
+                var searchInput = document.getElementById('search-input').value.trim();
+                if (searchInput) {
                     this.search();
                 } else {
-                    alert('Enter an email first');
+                    alert('Enter a search term first');
                 }
+            }
+        };
+
+        // ==========================================
+        // FINANCIALS TAB
+        // ==========================================
+
+        window.FIN = {
+            allOrders: [],
+
+            loadFinancials: async function() {
+                try {
+                    showMessage('Loading financial data...', 'info');
+
+                    // Get all orders from the sheet
+                    const response = await fetch(API_URL + '?action=get_all_orders_financial');
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        showMessage('Failed to load financial data', 'error');
+                        return;
+                    }
+
+                    this.allOrders = result.orders || [];
+                    this.processFinancials();
+                    showMessage('Financial report generated successfully', 'success');
+
+                } catch (error) {
+                    console.error('Error loading financials:', error);
+                    showMessage('Error loading financial data', 'error');
+                }
+            },
+
+            processFinancials: function() {
+                const startDate = document.getElementById('fin-start-date').value;
+                const endDate = document.getElementById('fin-end-date').value;
+
+                // Filter orders by date range if specified
+                let filteredOrders = this.allOrders;
+                if (startDate || endDate) {
+                    filteredOrders = this.allOrders.filter(order => {
+                        const orderDate = new Date(order.timestamp);
+                        if (startDate && orderDate < new Date(startDate)) return false;
+                        if (endDate && orderDate > new Date(endDate + 'T23:59:59')) return false;
+                        return true;
+                    });
+                }
+
+                // Calculate metrics
+                const metrics = this.calculateMetrics(filteredOrders);
+                const customerData = this.analyzeCustomers(filteredOrders);
+                const itemData = this.analyzeItems(filteredOrders);
+
+                // Update UI
+                this.updateSummaryCards(metrics);
+                this.updateDiscountBreakdown(metrics);
+                this.updateCustomerAnalytics(customerData);
+                this.updateTopCustomers(customerData.families);
+                this.updatePopularItems(itemData);
+
+                // Update period display
+                const periodText = startDate || endDate
+                    ? `${startDate || 'Start'} to ${endDate || 'Now'}`
+                    : 'All Time';
+                document.getElementById('fin-revenue-period').textContent = periodText;
+            },
+
+            calculateMetrics: function(orders) {
+                let totalRevenue = 0;
+                let totalRefunds = 0;
+                let refundCount = 0;
+                let totalDiscounts = 0;
+                let ordersWithDiscounts = 0;
+                const discountCodes = {};
+
+                orders.forEach(order => {
+                    // Revenue
+                    totalRevenue += order.total || 0;
+
+                    // Discounts
+                    if (order.discount > 0) {
+                        totalDiscounts += order.discount;
+                        ordersWithDiscounts++;
+                        const code = order.promoCode || 'Unknown';
+                        discountCodes[code] = (discountCodes[code] || 0) + order.discount;
+                    }
+
+                    // Refunds
+                    if (order.items) {
+                        order.items.forEach(item => {
+                            if (item.status === 'cancelled' && item.refundAmount) {
+                                totalRefunds += item.refundAmount;
+                                refundCount++;
+                            }
+                        });
+                    }
+                });
+
+                const netRevenue = totalRevenue - totalRefunds;
+                const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+                const netMargin = totalRevenue > 0 ? ((netRevenue / totalRevenue) * 100) : 0;
+
+                return {
+                    totalRevenue,
+                    totalRefunds,
+                    refundCount,
+                    netRevenue,
+                    netMargin,
+                    avgOrderValue,
+                    totalOrders: orders.length,
+                    totalDiscounts,
+                    ordersWithDiscounts,
+                    discountCodes
+                };
+            },
+
+            analyzeCustomers: function(orders) {
+                const familyMap = {};
+
+                orders.forEach(order => {
+                    const email = order.email || order.parentEmail;
+                    if (!familyMap[email]) {
+                        familyMap[email] = {
+                            email: email,
+                            orderCount: 0,
+                            itemCount: 0,
+                            totalRevenue: 0,
+                            firstOrderDate: order.timestamp,
+                            lastOrderDate: order.timestamp
+                        };
+                    }
+
+                    const family = familyMap[email];
+                    family.orderCount++;
+                    family.itemCount += (order.items || []).length;
+                    family.totalRevenue += order.total || 0;
+
+                    const orderDate = new Date(order.timestamp);
+                    if (orderDate < new Date(family.firstOrderDate)) {
+                        family.firstOrderDate = order.timestamp;
+                    }
+                    if (orderDate > new Date(family.lastOrderDate)) {
+                        family.lastOrderDate = order.timestamp;
+                    }
+                });
+
+                const families = Object.values(familyMap);
+                const totalFamilies = families.length;
+                const newCustomers = families.filter(f => f.orderCount === 1).length;
+                const repeatCustomers = families.filter(f => f.orderCount > 1).length;
+                const avgOrdersPerFamily = totalFamilies > 0
+                    ? (families.reduce((sum, f) => sum + f.orderCount, 0) / totalFamilies).toFixed(1)
+                    : 0;
+
+                // Sort by revenue
+                families.sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+                return {
+                    families,
+                    totalFamilies,
+                    newCustomers,
+                    repeatCustomers,
+                    avgOrdersPerFamily
+                };
+            },
+
+            analyzeItems: function(orders) {
+                const itemMap = {};
+                let totalItemRevenue = 0;
+
+                orders.forEach(order => {
+                    if (order.items) {
+                        order.items.forEach(item => {
+                            // Only count non-cancelled items
+                            if (item.status !== 'cancelled') {
+                                const itemName = item.name;
+                                const revenue = item.paidPrice || item.price || 0;
+
+                                if (!itemMap[itemName]) {
+                                    itemMap[itemName] = {
+                                        name: itemName,
+                                        quantity: 0,
+                                        revenue: 0
+                                    };
+                                }
+
+                                itemMap[itemName].quantity++;
+                                itemMap[itemName].revenue += revenue;
+                                totalItemRevenue += revenue;
+                            }
+                        });
+                    }
+                });
+
+                const items = Object.values(itemMap);
+                items.sort((a, b) => b.revenue - a.revenue);
+
+                // Add percentage of total
+                items.forEach(item => {
+                    item.percentOfTotal = totalItemRevenue > 0
+                        ? ((item.revenue / totalItemRevenue) * 100).toFixed(1)
+                        : 0;
+                });
+
+                return items;
+            },
+
+            updateSummaryCards: function(metrics) {
+                document.getElementById('fin-total-revenue').textContent = '$' + metrics.totalRevenue.toFixed(2);
+                document.getElementById('fin-total-refunds').textContent = '$' + metrics.totalRefunds.toFixed(2);
+                document.getElementById('fin-refund-count').textContent = metrics.refundCount + ' items';
+                document.getElementById('fin-net-revenue').textContent = '$' + metrics.netRevenue.toFixed(2);
+                document.getElementById('fin-net-margin').textContent = metrics.netMargin.toFixed(1) + '% margin';
+                document.getElementById('fin-avg-order').textContent = '$' + metrics.avgOrderValue.toFixed(2);
+                document.getElementById('fin-total-orders').textContent = metrics.totalOrders + ' orders';
+                document.getElementById('fin-total-discounts').textContent = '$' + metrics.totalDiscounts.toFixed(2);
+                document.getElementById('fin-discount-orders').textContent = metrics.ordersWithDiscounts;
+            },
+
+            updateDiscountBreakdown: function(metrics) {
+                const container = document.getElementById('fin-discount-breakdown');
+                let html = '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9ecef;">';
+
+                const codes = Object.entries(metrics.discountCodes).sort((a, b) => b[1] - a[1]);
+
+                if (codes.length === 0) {
+                    html += '<div style="color: #999; font-style: italic;">No discounts applied</div>';
+                } else {
+                    codes.forEach(([code, amount]) => {
+                        html += `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #666;">${code}:</span>
+                                <span style="font-weight: 600; color: #f44336;">-$${amount.toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += '</div>';
+                container.innerHTML = html;
+            },
+
+            updateCustomerAnalytics: function(data) {
+                document.getElementById('fin-total-families').textContent = data.totalFamilies;
+                document.getElementById('fin-new-customers').textContent = data.newCustomers;
+                document.getElementById('fin-repeat-customers').textContent = data.repeatCustomers;
+                document.getElementById('fin-avg-orders-family').textContent = data.avgOrdersPerFamily;
+            },
+
+            updateTopCustomers: function(families) {
+                const tbody = document.getElementById('fin-top-customers');
+                const top20 = families.slice(0, 20);
+
+                if (top20.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding: 40px; text-align: center; color: #999;">No customer data available</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                top20.forEach((family, index) => {
+                    const avgOrder = family.orderCount > 0 ? (family.totalRevenue / family.orderCount) : 0;
+                    html += `
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;">${index + 1}</td>
+                            <td style="padding: 12px;">${family.email}</td>
+                            <td style="padding: 12px; text-align: center;">${family.orderCount}</td>
+                            <td style="padding: 12px; text-align: center;">${family.itemCount}</td>
+                            <td style="padding: 12px; text-align: right; font-weight: 600; color: #4caf50;">$${family.totalRevenue.toFixed(2)}</td>
+                            <td style="padding: 12px; text-align: right;">$${avgOrder.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            },
+
+            updatePopularItems: function(items) {
+                const tbody = document.getElementById('fin-popular-items');
+                const top20 = items.slice(0, 20);
+
+                if (top20.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: #999;">No item sales data available</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                top20.forEach((item, index) => {
+                    html += `
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;">${index + 1}</td>
+                            <td style="padding: 12px; font-weight: 500;">${item.name}</td>
+                            <td style="padding: 12px; text-align: center;">${item.quantity}</td>
+                            <td style="padding: 12px; text-align: right; font-weight: 600; color: #4caf50;">$${item.revenue.toFixed(2)}</td>
+                            <td style="padding: 12px; text-align: right; color: #666;">${item.percentOfTotal}%</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            },
+
+            clearDates: function() {
+                document.getElementById('fin-start-date').value = '';
+                document.getElementById('fin-end-date').value = '';
+                if (this.allOrders.length > 0) {
+                    this.processFinancials();
+                }
+            },
+
+            setThisMonth: function() {
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+                document.getElementById('fin-start-date').value = firstDay.toISOString().split('T')[0];
+                document.getElementById('fin-end-date').value = lastDay.toISOString().split('T')[0];
+
+                if (this.allOrders.length > 0) {
+                    this.processFinancials();
+                }
+            },
+
+            setLastMonth: function() {
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+
+                document.getElementById('fin-start-date').value = firstDay.toISOString().split('T')[0];
+                document.getElementById('fin-end-date').value = lastDay.toISOString().split('T')[0];
+
+                if (this.allOrders.length > 0) {
+                    this.processFinancials();
+                }
+            },
+
+            setYearToDate: function() {
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), 0, 1);
+
+                document.getElementById('fin-start-date').value = firstDay.toISOString().split('T')[0];
+                document.getElementById('fin-end-date').value = now.toISOString().split('T')[0];
+
+                if (this.allOrders.length > 0) {
+                    this.processFinancials();
+                }
+            },
+
+            setSchoolYear: function() {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth();
+
+                // School year starts in August
+                // If we're before August, school year started last August
+                // If we're August or later, school year started this August
+                const schoolYearStart = currentMonth < 7
+                    ? new Date(currentYear - 1, 7, 1)  // August 1 of last year
+                    : new Date(currentYear, 7, 1);      // August 1 of this year
+
+                document.getElementById('fin-start-date').value = schoolYearStart.toISOString().split('T')[0];
+                document.getElementById('fin-end-date').value = now.toISOString().split('T')[0];
+
+                if (this.allOrders.length > 0) {
+                    this.processFinancials();
+                }
+            },
+
+            exportData: function() {
+                if (this.allOrders.length === 0) {
+                    showMessage('No data to export. Please generate a report first.', 'error');
+                    return;
+                }
+
+                const startDate = document.getElementById('fin-start-date').value;
+                const endDate = document.getElementById('fin-end-date').value;
+                const exportType = document.getElementById('export-type').value;
+
+                // Filter orders by date range
+                let filteredOrders = this.allOrders;
+                if (startDate || endDate) {
+                    filteredOrders = this.allOrders.filter(order => {
+                        const orderDate = new Date(order.timestamp);
+                        if (startDate && orderDate < new Date(startDate)) return false;
+                        if (endDate && orderDate > new Date(endDate + 'T23:59:59')) return false;
+                        return true;
+                    });
+                }
+
+                if (filteredOrders.length === 0) {
+                    showMessage('No orders in selected date range', 'error');
+                    return;
+                }
+
+                // Build CSV based on export type
+                let csv = '';
+
+                if (exportType === 'full' || exportType === 'students') {
+                    csv += this.buildStudentBreakdownCSV(filteredOrders);
+                }
+
+                if (exportType === 'full' || exportType === 'summary') {
+                    csv += this.buildSummaryCSV(filteredOrders);
+                }
+
+                if (exportType === 'full' || exportType === 'orders') {
+                    csv += this.buildOrderDetailsCSV(filteredOrders);
+                }
+
+                // Create and download file
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+
+                const dateRange = startDate && endDate
+                    ? `${startDate}_to_${endDate}`
+                    : startDate
+                    ? `from_${startDate}`
+                    : endDate
+                    ? `to_${endDate}`
+                    : 'all_time';
+
+                const typeLabel = exportType === 'full' ? 'full' : exportType;
+                link.setAttribute('href', url);
+                link.setAttribute('download', `artios_cafe_${typeLabel}_${dateRange}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showMessage('Financial data exported successfully', 'success');
+            },
+
+            buildStudentBreakdownCSV: function(filteredOrders) {
+                let csv = 'STUDENT BREAKDOWN\n\n';
+
+                // Analyze by grade
+                const gradeStats = {};
+                const uniqueStudents = new Set();
+                const gradeItemStats = {};
+
+                filteredOrders.forEach(order => {
+                    order.items.forEach(item => {
+                        if (item.status === 'cancelled') return;
+
+                        const studentKey = `${item.childName || 'Unknown'}_${order.email}`;
+                        uniqueStudents.add(studentKey);
+
+                        const grade = item.childGrade || 'Unknown';
+
+                        // Grade summary
+                        if (!gradeStats[grade]) {
+                            gradeStats[grade] = {
+                                orderCount: 0,
+                                revenue: 0,
+                                itemCount: 0
+                            };
+                        }
+                        gradeStats[grade].orderCount++;
+                        gradeStats[grade].itemCount++;
+                        gradeStats[grade].revenue += item.paidPrice || item.price || 0;
+
+                        // Item popularity by grade
+                        if (!gradeItemStats[grade]) {
+                            gradeItemStats[grade] = {};
+                        }
+                        if (!gradeItemStats[grade][item.name]) {
+                            gradeItemStats[grade][item.name] = 0;
+                        }
+                        gradeItemStats[grade][item.name]++;
+                    });
+                });
+
+                // Output total students
+                csv += `"Total Unique Students Served",${uniqueStudents.size}\n\n`;
+
+                // Output grade summary
+                csv += 'ORDERS BY GRADE LEVEL\n';
+                csv += 'Grade,Orders,Items,Revenue,Avg per Order\n';
+                Object.keys(gradeStats).sort().forEach(grade => {
+                    const stats = gradeStats[grade];
+                    const avgPerOrder = stats.orderCount > 0 ? (stats.revenue / stats.orderCount) : 0;
+                    csv += `"${grade}",${stats.orderCount},${stats.itemCount},"$${stats.revenue.toFixed(2)}","$${avgPerOrder.toFixed(2)}"\n`;
+                });
+
+                // Most popular items per grade
+                csv += '\n\nMOST POPULAR ITEMS BY GRADE\n';
+                csv += 'Grade,Item Name,Quantity\n';
+                Object.keys(gradeItemStats).sort().forEach(grade => {
+                    const items = gradeItemStats[grade];
+                    const sortedItems = Object.entries(items)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3); // Top 3 per grade
+
+                    sortedItems.forEach(([itemName, count]) => {
+                        csv += `"${grade}","${itemName}",${count}\n`;
+                    });
+                });
+
+                csv += '\n\n';
+                return csv;
+            },
+
+            buildSummaryCSV: function(filteredOrders) {
+                let csv = 'FINANCIAL SUMMARY\n\n';
+
+                const metrics = this.calculateMetrics(filteredOrders);
+                const customerData = this.analyzeCustomers(filteredOrders);
+                const itemData = this.analyzeItems(filteredOrders);
+
+                // Financial Metrics
+                csv += 'REVENUE METRICS\n';
+                csv += 'Metric,Value\n';
+                csv += `"Total Revenue","$${metrics.totalRevenue.toFixed(2)}"\n`;
+                csv += `"Total Refunds","$${metrics.totalRefunds.toFixed(2)}"\n`;
+                csv += `"Net Revenue","$${metrics.netRevenue.toFixed(2)}"\n`;
+                csv += `"Net Margin","${metrics.netMargin.toFixed(1)}%"\n`;
+                csv += `"Total Orders",${metrics.totalOrders}\n`;
+                csv += `"Average Order Value","$${metrics.avgOrderValue.toFixed(2)}"\n`;
+                csv += `"Total Discounts Applied","$${metrics.totalDiscounts.toFixed(2)}"\n`;
+                csv += `"Orders with Discounts",${metrics.ordersWithDiscounts}\n`;
+                csv += `"Refunded Items",${metrics.refundCount}\n`;
+
+                csv += '\n\n';
+
+                // Discount Breakdown
+                csv += 'DISCOUNT BREAKDOWN\n';
+                csv += 'Promo Code,Total Discount\n';
+                Object.keys(metrics.discountCodes).forEach(code => {
+                    csv += `"${code}","$${metrics.discountCodes[code].toFixed(2)}"\n`;
+                });
+
+                csv += '\n\n';
+
+                // Customer Summary
+                csv += 'CUSTOMER SUMMARY\n';
+                csv += 'Metric,Value\n';
+                csv += `"Total Families",${customerData.totalFamilies}\n`;
+                csv += `"New Customers",${customerData.newCustomers}\n`;
+                csv += `"Repeat Customers",${customerData.repeatCustomers}\n`;
+                csv += `"Avg Orders per Family",${customerData.avgOrdersPerFamily}\n`;
+
+                csv += '\n\n';
+
+                // Top Families
+                csv += 'TOP FAMILIES BY REVENUE\n';
+                csv += 'Rank,Email,Orders,Items,Total Revenue,Avg Order Value\n';
+                customerData.families.forEach((family, index) => {
+                    const avgOrder = family.orderCount > 0 ? (family.totalRevenue / family.orderCount) : 0;
+                    csv += `${index + 1},"${family.email}",${family.orderCount},${family.itemCount},"$${family.totalRevenue.toFixed(2)}","$${avgOrder.toFixed(2)}"\n`;
+                });
+
+                csv += '\n\n';
+
+                // Popular Items
+                csv += 'POPULAR MENU ITEMS\n';
+                csv += 'Rank,Item Name,Quantity Sold,Revenue,% of Total\n';
+                itemData.forEach((item, index) => {
+                    csv += `${index + 1},"${item.name}",${item.quantity},"$${item.revenue.toFixed(2)}","${item.percentOfTotal}%"\n`;
+                });
+
+                csv += '\n\n';
+                return csv;
+            },
+
+            buildOrderDetailsCSV: function(filteredOrders) {
+                let csv = 'ORDER DETAILS\n';
+                csv += 'Order ID,Order Date,Order Time,Family Email,Student First,Student Last,Student Grade,Item Name,Quantity,Base Price,Paid Price,Promo Code,Discount,Status,Refund Amount,Lunch Date\n';
+
+                filteredOrders.forEach(order => {
+                    const orderDate = new Date(order.timestamp);
+                    const dateStr = orderDate.toLocaleDateString();
+                    const timeStr = orderDate.toLocaleTimeString();
+
+                    order.items.forEach(item => {
+                        // Extract student name from item's childName or children array
+                        let firstName = '';
+                        let lastName = '';
+                        let grade = '';
+
+                        if (item.childName) {
+                            const nameParts = item.childName.trim().split(' ');
+                            firstName = nameParts[0] || '';
+                            lastName = nameParts.slice(1).join(' ') || '';
+                        }
+
+                        if (item.childGrade) {
+                            grade = item.childGrade;
+                        } else if (order.children && order.children.length > 0) {
+                            const child = order.children[0];
+                            if (!firstName) firstName = child.firstName || '';
+                            if (!lastName) lastName = child.lastName || '';
+                            grade = child.grade || '';
+                        }
+
+                        csv += `"${order.orderId}",`;
+                        csv += `"${dateStr}",`;
+                        csv += `"${timeStr}",`;
+                        csv += `"${order.email || order.parentEmail}",`;
+                        csv += `"${firstName}",`;
+                        csv += `"${lastName}",`;
+                        csv += `"${grade}",`;
+                        csv += `"${item.name}",`;
+                        csv += `${item.quantity || 1},`;
+                        csv += `${item.price || 0},`;
+                        csv += `${item.paidPrice || item.price || 0},`;
+                        csv += `"${order.promoCode || ''}",`;
+                        csv += `${order.discount || 0},`;
+                        csv += `"${item.status}",`;
+                        csv += `${item.refundAmount || 0},`;
+                        csv += `"${item.date}"\n`;
+                    });
+                });
+
+                return csv;
             }
         };
 
@@ -2320,345 +3332,484 @@
         // ==========================================
 
         window.COMM = {
-            contacts: [],
-            filteredContacts: [],
+            allFamilies: [],
+            filteredFamilies: [],
+            familyAccounts: [],
             
-            init: function() {
-                // Load contacts from localStorage
-                var saved = localStorage.getItem('artios_cafe_contacts');
-                if (saved) {
-                    this.contacts = JSON.parse(saved);
-                    this.filteredContacts = this.contacts.slice();
-                    this.displayContacts();
-                }
-            },
-            
-            saveToStorage: function() {
-                localStorage.setItem('artios_cafe_contacts', JSON.stringify(this.contacts));
-            },
-            
-            showAddContact: function() {
-                document.getElementById('comm-add-form').style.display = 'block';
-                document.getElementById('comm-edit-index').value = '-1';
-                document.getElementById('comm-add-parent').value = '';
-                document.getElementById('comm-add-email').value = '';
-                document.getElementById('comm-add-children').value = '';
-                document.getElementById('comm-add-parent').focus();
-            },
-            
-            cancelAdd: function() {
-                document.getElementById('comm-add-form').style.display = 'none';
-            },
-            
-            saveContact: function() {
-                var parentName = document.getElementById('comm-add-parent').value.trim();
-                var email = document.getElementById('comm-add-email').value.trim();
-                var childrenStr = document.getElementById('comm-add-children').value.trim();
-                var editIndex = parseInt(document.getElementById('comm-edit-index').value);
-                
-                if (!parentName || !email) {
-                    alert('Please enter parent name and email');
-                    return;
-                }
-                
-                var children = childrenStr ? childrenStr.split(',').map(function(c) { return c.trim(); }) : [];
-                
-                var contact = {
-                    parentName: parentName,
-                    email: email,
-                    children: children,
-                    childCount: children.length,
-                    selected: true
-                };
-                
-                if (editIndex >= 0) {
-                    // Editing existing contact
-                    this.contacts[editIndex] = contact;
-                } else {
-                    // Adding new contact
-                    this.contacts.push(contact);
-                }
-                
-                this.saveToStorage();
-                this.filteredContacts = this.contacts.slice();
-                this.sortContacts();
-                this.cancelAdd();
-                showMessage('Contact saved successfully', 'success');
-            },
-            
-            editContact: function(index) {
-                var contact = this.filteredContacts[index];
-                var originalIndex = this.contacts.indexOf(contact);
-                
-                document.getElementById('comm-add-form').style.display = 'block';
-                document.getElementById('comm-edit-index').value = originalIndex;
-                document.getElementById('comm-add-parent').value = contact.parentName;
-                document.getElementById('comm-add-email').value = contact.email;
-                document.getElementById('comm-add-children').value = contact.children.join(', ');
-                document.getElementById('comm-add-parent').focus();
-            },
-            
-            deleteContact: function(index) {
-                var contact = this.filteredContacts[index];
-                if (confirm('Delete contact for ' + contact.parentName + '?')) {
-                    var originalIndex = this.contacts.indexOf(contact);
-                    this.contacts.splice(originalIndex, 1);
-                    this.saveToStorage();
-                    this.filterContacts();
-                    showMessage('Contact deleted', 'info');
-                }
-            },
-            
-            sortContacts: function() {
-                var sortBy = document.getElementById('comm-sort').value;
-                
-                this.filteredContacts.sort(function(a, b) {
-                    switch(sortBy) {
-                        case 'parentName':
-                            return a.parentName.localeCompare(b.parentName);
-                        case 'email':
-                            return a.email.localeCompare(b.email);
-                        case 'childCount':
-                            return b.childCount - a.childCount;
-                        default:
-                            return a.parentName.localeCompare(b.parentName);
+            loadFamilies: async function() {
+                try {
+                    showMessage('Loading family data...', 'info');
+
+                    // Load both orders and family accounts
+                    const [ordersResponse, accountsResponse] = await Promise.all([
+                        fetch(API_URL + '?action=get_all_orders_financial'),
+                        fetch(API_URL + '?action=get_family_accounts')
+                    ]);
+
+                    const ordersResult = await ordersResponse.json();
+                    const accountsResult = await accountsResponse.json();
+
+                    if (!ordersResult.success) {
+                        showMessage('Failed to load order data', 'error');
+                        return;
                     }
-                });
-                
-                this.displayContacts();
-            },
-            
-            filterContacts: function() {
-                var searchTerm = document.getElementById('comm-search').value.toLowerCase();
-                
-                if (!searchTerm) {
-                    this.filteredContacts = this.contacts.slice();
-                } else {
-                    this.filteredContacts = this.contacts.filter(function(contact) {
-                        return (contact.parentName && contact.parentName.toLowerCase().includes(searchTerm)) ||
-                               (contact.email && contact.email.toLowerCase().includes(searchTerm)) ||
-                               (contact.children && contact.children.some(function(child) {
-                                   return child.toLowerCase().includes(searchTerm);
-                               }));
-                    });
-                }
-                
-                this.sortContacts();
-            },
-            
-            displayContacts: function() {
-                var container = document.getElementById('comm-contact-list');
-                
-                if (this.filteredContacts.length === 0) {
-                    if (this.contacts.length === 0) {
-                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No contacts yet. Click "Add Contact" to get started.</div>';
-                    } else {
-                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No contacts match your search.</div>';
-                    }
-                    this.updateStats();
-                    return;
-                }
-                
-                var html = '';
-                
-                // Select All checkbox
-                html += '<div class="comm-select-all-row">';
-                html += '<input type="checkbox" id="comm-select-all" class="comm-contact-checkbox" checked onchange="COMM.toggleSelectAll()">';
-                html += '<label for="comm-select-all" style="cursor: pointer; margin-left: 10px;">Select All (' + this.filteredContacts.length + ' families)</label>';
-                html += '</div>';
-                
-                // Contact rows
-                for (var i = 0; i < this.filteredContacts.length; i++) {
-                    var contact = this.filteredContacts[i];
-                    html += '<div class="comm-contact-row">';
-                    html += '<input type="checkbox" class="comm-contact-checkbox" ' + 
-                            (contact.selected ? 'checked' : '') + 
-                            ' onchange="COMM.toggleContact(' + i + ')">';
-                    html += '<div class="comm-contact-info">';
-                    html += '<div class="comm-contact-name">' + contact.parentName + '</div>';
-                    html += '<div class="comm-contact-email">' + contact.email + '</div>';
-                    if (contact.children.length > 0) {
-                        html += '<div class="comm-contact-children">Children: ' + contact.children.join(', ') + '</div>';
-                    }
-                    html += '</div>';
-                    html += '<div class="comm-contact-actions">';
-                    html += '<button class="comm-action-btn comm-edit-btn" onclick="COMM.editContact(' + i + ')">Edit</button>';
-                    html += '<button class="comm-action-btn comm-delete-btn" onclick="COMM.deleteContact(' + i + ')">Delete</button>';
-                    html += '</div>';
-                    html += '</div>';
-                }
-                
-                container.innerHTML = html;
-                this.updateStats();
-            },
-            
-            toggleSelectAll: function() {
-                var isChecked = document.getElementById('comm-select-all').checked;
-                for (var i = 0; i < this.filteredContacts.length; i++) {
-                    this.filteredContacts[i].selected = isChecked;
-                }
-                this.displayContacts();
-            },
-            
-            toggleContact: function(index) {
-                this.filteredContacts[index].selected = !this.filteredContacts[index].selected;
-                this.updateStats();
-            },
-            
-            updateStats: function() {
-                var totalFamilies = this.contacts.length;
-                var selectedCount = 0;
-                
-                for (var i = 0; i < this.contacts.length; i++) {
-                    if (this.contacts[i].selected) selectedCount++;
-                }
-                
-                document.getElementById('comm-total-families').textContent = totalFamilies;
-                document.getElementById('comm-selected-count').textContent = selectedCount;
-                document.getElementById('comm-recipient-count').textContent = selectedCount;
-            },
-            
-            copyEmails: function() {
-                var emails = [];
-                for (var i = 0; i < this.contacts.length; i++) {
-                    if (this.contacts[i].selected) {
-                        emails.push(this.contacts[i].email);
-                    }
-                }
-                
-                if (emails.length === 0) {
-                    alert('No recipients selected');
-                    return;
-                }
-                
-                var emailList = emails.join('; ');
-                
-                // Show email list
-                document.getElementById('comm-email-list-display').style.display = 'block';
-                document.getElementById('comm-email-list-text').value = emailList;
-                
-                // Copy to clipboard
-                document.getElementById('comm-email-list-text').select();
-                document.execCommand('copy');
-                
-                showMessage('Email list copied to clipboard!', 'success');
-            },
-            
-            openEmailClient: function() {
-                var subject = document.getElementById('comm-subject').value.trim();
-                var message = document.getElementById('comm-message').value.trim();
-                
-                if (!subject || !message) {
-                    alert('Please enter both subject and message');
-                    return;
-                }
-                
-                var emails = [];
-                for (var i = 0; i < this.contacts.length; i++) {
-                    if (this.contacts[i].selected) {
-                        emails.push(this.contacts[i].email);
-                    }
-                }
-                
-                if (emails.length === 0) {
-                    alert('No recipients selected');
-                    return;
-                }
-                
-                // Create mailto link (limited by URL length)
-                var mailto = 'mailto:?bcc=' + encodeURIComponent(emails.join(',')) + 
-                             '&subject=' + encodeURIComponent(subject) + 
-                             '&body=' + encodeURIComponent(message);
-                
-                // Warn if too many recipients
-                if (mailto.length > 2000) {
-                    alert('Too many recipients for email client. Please use the "Copy Email List" button and paste into your email client manually.');
-                    this.copyEmails();
-                    return;
-                }
-                
-                window.location.href = mailto;
-            },
-            
-            exportCSV: function() {
-                if (this.contacts.length === 0) {
-                    alert('No contacts to export.');
-                    return;
-                }
-                
-                var csv = 'Parent Name,Email,Children\n';
-                
-                for (var i = 0; i < this.contacts.length; i++) {
-                    var contact = this.contacts[i];
-                    csv += '"' + contact.parentName + '",';
-                    csv += '"' + contact.email + '",';
-                    csv += '"' + contact.children.join('; ') + '"\n';
-                }
-                
-                // Create download
-                var blob = new Blob([csv], { type: 'text/csv' });
-                var url = window.URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = 'artios_cafe_contacts_' + new Date().toISOString().split('T')[0] + '.csv';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                
-                showMessage('Contact list exported successfully', 'success');
-            },
-            
-            importCSV: function() {
-                document.getElementById('comm-csv-input').click();
-            },
-            
-            handleCSVUpload: function(event) {
-                var file = event.target.files[0];
-                if (!file) return;
-                
-                var reader = new FileReader();
-                var self = this;
-                
-                reader.onload = function(e) {
-                    var csv = e.target.result;
-                    var lines = csv.split('\n');
-                    var imported = 0;
-                    
-                    for (var i = 1; i < lines.length; i++) { // Skip header
-                        var line = lines[i].trim();
-                        if (!line) continue;
-                        
-                        // Parse CSV line (handles quoted values)
-                        var parts = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-                        if (parts && parts.length >= 2) {
-                            var parentName = parts[0].replace(/^"|"$/g, '').trim();
-                            var email = parts[1].replace(/^"|"$/g, '').trim();
-                            var childrenStr = parts[2] ? parts[2].replace(/^"|"$/g, '').trim() : '';
-                            
-                            var children = childrenStr ? childrenStr.split(';').map(function(c) { return c.trim(); }) : [];
-                            
-                            self.contacts.push({
-                                parentName: parentName,
+
+                    // Build family map from orders
+                    const familyMap = {};
+                    const orders = ordersResult.orders || [];
+
+                    orders.forEach(order => {
+                        const email = order.email || order.parentEmail;
+                        if (!familyMap[email]) {
+                            familyMap[email] = {
                                 email: email,
-                                children: children,
-                                childCount: children.length,
-                                selected: true
+                                students: new Set(),
+                                grades: new Set(),
+                                totalOrders: 0,
+                                totalSpent: 0,
+                                lastOrderDate: null,
+                                hasAccount: false,
+                                selected: false
+                            };
+                        }
+
+                        const family = familyMap[email];
+                        family.totalOrders++;
+                        family.totalSpent += order.total || 0;
+
+                        const orderDate = new Date(order.timestamp);
+                        if (!family.lastOrderDate || orderDate > family.lastOrderDate) {
+                            family.lastOrderDate = orderDate;
+                        }
+
+                        // Collect unique students (normalize names to avoid duplicates)
+                        if (order.children) {
+                            order.children.forEach(child => {
+                                let studentName = child.name || `${child.firstName} ${child.lastName}`;
+                                // Normalize: trim, remove extra spaces, title case
+                                studentName = studentName.trim().replace(/\s+/g, ' ');
+                                // Store normalized lowercase version as key to check duplicates
+                                const normalizedKey = studentName.toLowerCase();
+
+                                // Check if we already have this student (case-insensitive)
+                                let found = false;
+                                family.students.forEach(existing => {
+                                    if (existing.toLowerCase() === normalizedKey) {
+                                        found = true;
+                                    }
+                                });
+
+                                if (!found) {
+                                    family.students.add(studentName);
+                                }
+
+                                // Track grade
+                                if (child.grade) {
+                                    family.grades.add(child.grade);
+                                }
                             });
-                            imported++;
+                        }
+                    });
+
+                    // Mark families with accounts
+                    if (accountsResult.success && accountsResult.accounts) {
+                        accountsResult.accounts.forEach(account => {
+                            if (familyMap[account.email]) {
+                                familyMap[account.email].hasAccount = true;
+                            }
+                        });
+                    }
+
+                    // Convert to array - FIX: convert students Set to Array BEFORE accessing .length
+                    this.allFamilies = Object.values(familyMap).map(family => {
+                        const studentsArray = Array.from(family.students);
+                        const gradesArray = Array.from(family.grades);
+
+                        // Extract last name from first student
+                        let lastName = '';
+                        if (studentsArray.length > 0) {
+                            const firstStudent = studentsArray[0];
+                            const nameParts = firstStudent.trim().split(' ');
+                            lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
+                        }
+
+                        return {
+                            email: family.email,
+                            lastName: lastName,
+                            students: studentsArray,
+                            grades: gradesArray,
+                            studentCount: studentsArray.length,
+                            totalOrders: family.totalOrders,
+                            totalSpent: family.totalSpent,
+                            lastOrderDate: family.lastOrderDate,
+                            hasAccount: family.hasAccount,
+                            selected: family.selected
+                        };
+                    });
+
+                    // Populate grade filter dropdown
+                    this.populateGradeFilter();
+
+                    this.filteredFamilies = [...this.allFamilies];
+                    this.sortFamilies();
+                    this.displayFamilies();
+
+                    showMessage(`Loaded ${this.allFamilies.length} families`, 'success');
+                } catch (error) {
+                    console.error('Error loading families:', error);
+                    showMessage('Error loading family data', 'error');
+                }
+            },
+
+            populateGradeFilter: function() {
+                const gradeSet = new Set();
+                this.allFamilies.forEach(family => {
+                    family.grades.forEach(grade => gradeSet.add(grade));
+                });
+
+                const gradeFilter = document.getElementById('comm-grade-filter');
+                gradeFilter.innerHTML = '<option value="all">All Grades</option>';
+
+                // Sort grades naturally (K, 1, 2, 3, etc.)
+                const grades = Array.from(gradeSet).sort((a, b) => {
+                    if (a === 'K') return -1;
+                    if (b === 'K') return 1;
+                    return parseInt(a) - parseInt(b);
+                });
+
+                grades.forEach(grade => {
+                    const option = document.createElement('option');
+                    option.value = grade;
+                    option.textContent = `Grade ${grade}`;
+                    gradeFilter.appendChild(option);
+                });
+            },
+
+            filterFamilies: function() {
+                const searchTerm = document.getElementById('comm-search').value.toLowerCase();
+                const activityFilter = document.getElementById('comm-activity-filter').value;
+                const gradeFilter = document.getElementById('comm-grade-filter').value;
+
+                this.filteredFamilies = this.allFamilies.filter(family => {
+                    // Search filter
+                    if (searchTerm) {
+                        const matchesEmail = family.email.toLowerCase().includes(searchTerm);
+                        const matchesStudent = family.students.some(s => s.toLowerCase().includes(searchTerm));
+                        if (!matchesEmail && !matchesStudent) {
+                            return false;
                         }
                     }
-                    
-                    self.saveToStorage();
-                    self.filteredContacts = self.contacts.slice();
-                    self.sortContacts();
-                    showMessage('Imported ' + imported + ' contacts successfully', 'success');
-                    
-                    // Reset file input
-                    event.target.value = '';
-                };
-                
-                reader.readAsText(file);
+
+                    // Grade filter
+                    if (gradeFilter !== 'all') {
+                        if (!family.grades.includes(gradeFilter)) {
+                            return false;
+                        }
+                    }
+
+                    // Activity filter
+                    if (activityFilter !== 'all') {
+                        const now = new Date();
+                        const daysSinceOrder = family.lastOrderDate
+                            ? (now - family.lastOrderDate) / (1000 * 60 * 60 * 24)
+                            : Infinity;
+
+                        switch (activityFilter) {
+                            case 'active':
+                                if (daysSinceOrder > 30) return false;
+                                break;
+                            case 'recent':
+                                if (daysSinceOrder > 60) return false;
+                                break;
+                            case 'inactive':
+                                if (daysSinceOrder <= 60) return false;
+                                break;
+                            case 'hasAccount':
+                                if (!family.hasAccount) return false;
+                                break;
+                            case 'noAccount':
+                                if (family.hasAccount) return false;
+                                break;
+                        }
+                    }
+
+                    return true;
+                });
+
+                this.sortFamilies();
+                this.displayFamilies();
+            },
+
+            sortFamilies: function() {
+                const sortBy = document.getElementById('comm-sort').value;
+
+                this.filteredFamilies.sort((a, b) => {
+                    switch (sortBy) {
+                        case 'lastName':
+                            const lastNameA = a.lastName || '';
+                            const lastNameB = b.lastName || '';
+                            return lastNameA.localeCompare(lastNameB);
+                        case 'email':
+                            return a.email.localeCompare(b.email);
+                        case 'lastOrder':
+                            if (!a.lastOrderDate) return 1;
+                            if (!b.lastOrderDate) return -1;
+                            return b.lastOrderDate - a.lastOrderDate;
+                        case 'totalOrders':
+                            return b.totalOrders - a.totalOrders;
+                        case 'totalSpent':
+                            return b.totalSpent - a.totalSpent;
+                        default:
+                            return a.email.localeCompare(b.email);
+                    }
+                });
+
+                this.displayFamilies();
+            },
+
+            displayFamilies: function() {
+                const tbody = document.getElementById('comm-family-list');
+
+                if (this.filteredFamilies.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10" style="padding: 40px; text-align: center; color: #999;">No families match the current filters</td></tr>';
+                    document.getElementById('comm-filter-results').textContent = '0 families';
+                    return;
+                }
+
+                let html = '';
+                const now = new Date();
+
+                this.filteredFamilies.forEach((family, index) => {
+                    const daysSinceOrder = family.lastOrderDate
+                        ? (now - family.lastOrderDate) / (1000 * 60 * 60 * 24)
+                        : Infinity;
+
+                    let statusColor = '#4caf50';
+                    let statusText = 'Active';
+
+                    if (daysSinceOrder > 60) {
+                        statusColor = '#f44336';
+                        statusText = 'Inactive';
+                    } else if (daysSinceOrder > 30) {
+                        statusColor = '#ff9800';
+                        statusText = 'Recent';
+                    }
+
+                    const lastOrderStr = family.lastOrderDate
+                        ? family.lastOrderDate.toLocaleDateString()
+                        : 'Never';
+
+                    html += `
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px; text-align: center;">
+                                <input type="checkbox" class="family-checkbox" data-index="${index}"
+                                       ${family.selected ? 'checked' : ''}
+                                       onchange="COMM.toggleFamily(${index})">
+                            </td>
+                            <td style="padding: 12px; font-weight: 600;">${family.lastName || ''}</td>
+                            <td style="padding: 12px;">${family.email}</td>
+                            <td style="padding: 12px; text-align: center;">${family.hasAccount ? '✅' : '❌'}</td>
+                            <td style="padding: 12px; text-align: center;">${family.studentCount}</td>
+                            <td style="padding: 12px; text-align: center;">${family.totalOrders}</td>
+                            <td style="padding: 12px; text-align: right; font-weight: 600;">$${family.totalSpent.toFixed(2)}</td>
+                            <td style="padding: 12px; text-align: center;">${lastOrderStr}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: 600; background: ${statusColor}22; color: ${statusColor};">
+                                    ${statusText}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <button onclick="COMM.emailFamily('${family.email}')" class="action-btn" style="padding: 4px 8px; font-size: 0.85em;">
+                                    ✉️ Email
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+
+                const selectedCount = this.filteredFamilies.filter(f => f.selected).length;
+                document.getElementById('comm-filter-results').textContent =
+                    `Showing ${this.filteredFamilies.length} of ${this.allFamilies.length} families (${selectedCount} selected)`;
+            },
+
+            toggleSelectAll: function() {
+                const checked = document.getElementById('comm-select-all').checked;
+                this.filteredFamilies.forEach(family => {
+                    family.selected = checked;
+                });
+                this.displayFamilies();
+            },
+
+            toggleFamily: function(index) {
+                this.filteredFamilies[index].selected = !this.filteredFamilies[index].selected;
+                this.displayFamilies();
+            },
+
+            showBulkEmail: function() {
+                const selected = this.allFamilies.filter(f => f.selected);
+
+                if (selected.length === 0) {
+                    showMessage('Please select at least one family', 'error');
+                    return;
+                }
+
+                // Show recipients
+                const recipientsDiv = document.getElementById('bulk-email-recipients');
+                recipientsDiv.innerHTML = selected.map(f =>
+                    `<span style="display: inline-block; background: #e3f2fd; padding: 4px 8px; margin: 2px; border-radius: 4px; font-size: 0.9em;">${f.email}</span>`
+                ).join('');
+
+                // Clear form
+                document.getElementById('bulk-email-subject').value = '';
+                document.getElementById('bulk-email-message').value = '';
+
+                // Show modal
+                document.getElementById('bulk-email-modal').style.display = 'block';
+            },
+
+            closeBulkEmail: function() {
+                document.getElementById('bulk-email-modal').style.display = 'none';
+            },
+
+            sendBulkEmail: function() {
+                const subject = document.getElementById('bulk-email-subject').value.trim();
+                const message = document.getElementById('bulk-email-message').value.trim();
+                const selected = this.allFamilies.filter(f => f.selected);
+
+                if (!subject || !message) {
+                    showMessage('Please enter subject and message', 'error');
+                    return;
+                }
+
+                if (selected.length === 0) {
+                    showMessage('No families selected', 'error');
+                    return;
+                }
+
+                const confirmed = confirm(`Send email to ${selected.length} families?\n\nThis will open your default email client with all addresses.`);
+
+                if (confirmed) {
+                    // Create mailto link
+                    const emails = selected.map(f => f.email).join(',');
+                    const mailtoLink = `mailto:${emails}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+
+                    // Open email client
+                    window.location.href = mailtoLink;
+
+                    showMessage(`Opening email client for ${selected.length} recipients`, 'success');
+                    this.closeBulkEmail();
+                }
+            },
+
+            emailFamily: function(email) {
+                window.location.href = `mailto:${email}?subject=${encodeURIComponent('Artios Cafe')}`;
+            },
+
+            exportContacts: function() {
+                if (this.filteredFamilies.length === 0) {
+                    showMessage('No families to export', 'error');
+                    return;
+                }
+
+                let csv = 'Family Email,Has Account,Students,Student Count,Total Orders,Total Spent,Last Order Date,Status\n';
+
+                const now = new Date();
+                this.filteredFamilies.forEach(family => {
+                    const daysSinceOrder = family.lastOrderDate
+                        ? (now - family.lastOrderDate) / (1000 * 60 * 60 * 24)
+                        : Infinity;
+
+                    let statusText = 'Active';
+                    if (daysSinceOrder > 60) statusText = 'Inactive';
+                    else if (daysSinceOrder > 30) statusText = 'Recent';
+
+                    const lastOrderStr = family.lastOrderDate
+                        ? family.lastOrderDate.toLocaleDateString()
+                        : 'Never';
+
+                    const studentsStr = family.students.join('; ');
+
+                    csv += `"${family.email}",`;
+                    csv += `"${family.hasAccount ? 'Yes' : 'No'}",`;
+                    csv += `"${studentsStr}",`;
+                    csv += `${family.studentCount},`;
+                    csv += `${family.totalOrders},`;
+                    csv += `$${family.totalSpent.toFixed(2)},`;
+                    csv += `"${lastOrderStr}",`;
+                    csv += `"${statusText}"\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                const date = new Date().toISOString().split('T')[0];
+
+                link.setAttribute('href', url);
+                link.setAttribute('download', `artios_cafe_contacts_${date}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showMessage('Contact list exported successfully', 'success');
+            },
+
+            exportSelected: function() {
+                const selected = this.filteredFamilies.filter(f => f.selected);
+
+                if (selected.length === 0) {
+                    showMessage('Please select at least one family to export', 'error');
+                    return;
+                }
+
+                let csv = 'Family Email,Last Name,Has Account,Students,Grades,Student Count,Total Orders,Total Spent,Last Order Date,Status\n';
+
+                const now = new Date();
+                selected.forEach(family => {
+                    const daysSinceOrder = family.lastOrderDate
+                        ? (now - family.lastOrderDate) / (1000 * 60 * 60 * 24)
+                        : Infinity;
+
+                    let statusText = 'Active';
+                    if (daysSinceOrder > 60) statusText = 'Inactive';
+                    else if (daysSinceOrder > 30) statusText = 'Recent';
+
+                    const lastOrderStr = family.lastOrderDate
+                        ? family.lastOrderDate.toLocaleDateString()
+                        : 'Never';
+
+                    const studentsStr = family.students.join('; ');
+                    const gradesStr = family.grades.join(', ');
+
+                    csv += `"${family.email}",`;
+                    csv += `"${family.lastName || ''}",`;
+                    csv += `"${family.hasAccount ? 'Yes' : 'No'}",`;
+                    csv += `"${studentsStr}",`;
+                    csv += `"${gradesStr}",`;
+                    csv += `${family.studentCount},`;
+                    csv += `${family.totalOrders},`;
+                    csv += `$${family.totalSpent.toFixed(2)},`;
+                    csv += `"${lastOrderStr}",`;
+                    csv += `"${statusText}"\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                const date = new Date().toISOString().split('T')[0];
+
+                link.setAttribute('href', url);
+                link.setAttribute('download', `artios_cafe_selected_contacts_${date}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showMessage(`Exported ${selected.length} selected families successfully`, 'success');
             }
         };
 

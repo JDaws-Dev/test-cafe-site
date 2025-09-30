@@ -189,17 +189,25 @@ function doGet(e) {
     
     if (action === 'lookup_orders') {
       const email = e.parameter.email;
+      const studentName = e.parameter.student_name;
       const orderId = e.parameter.order_id;
-      
-      if (!email) {
+
+      if (!email && !studentName) {
         return createResponse({
           success: false,
-          error: 'Email parameter required'
+          error: 'Email or student_name parameter required'
         });
       }
-      
+
       try {
-        const result = lookupOrders(email, orderId);
+        let result;
+        if (studentName) {
+          // Search by student name - returns all matching orders
+          result = lookupOrdersByStudentName(studentName);
+        } else {
+          // Search by email
+          result = lookupOrders(email, orderId);
+        }
         return createResponse(result);
       } catch (lookupError) {
         console.error('Lookup error:', lookupError);
@@ -239,17 +247,18 @@ function doGet(e) {
       const sessionId = e.parameter.session_id;
       const itemsParam = e.parameter.items;
       const reason = e.parameter.reason || 'Parent requested';
-      
+      const adminOverride = e.parameter.admin_override === 'true'; // Admin bypass parameter
+
       if (!sessionId || !itemsParam) {
         return createResponse({
           success: false,
           error: 'Session ID and items parameters required'
         });
       }
-      
+
       try {
         const items = JSON.parse(itemsParam);
-        const result = processBatchCancellation(items, sessionId, reason);
+        const result = processBatchCancellation(items, sessionId, reason, adminOverride);
         return createResponse(result);
       } catch (batchError) {
         console.error('Batch cancellation error:', batchError);
@@ -384,14 +393,14 @@ if (action === 'update_distribution') {
     
     if (action === 'remove_blackout_date') {
       const date = e.parameter.date;
-      
+
       if (!date) {
         return createResponse({
           success: false,
           error: 'Date parameter required'
         });
       }
-      
+
       try {
         const result = removeBlackoutDate(date);
         return createResponse(result);
@@ -403,7 +412,38 @@ if (action === 'update_distribution') {
         });
       }
     }
-    
+
+    // ============================================
+    // FINANCIAL REPORTING ENDPOINT
+    // ============================================
+
+    if (action === 'get_all_orders_financial') {
+      try {
+        const result = getAllOrdersForFinancials();
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error getting financial data:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to get financial data: ${error.toString()}`
+        });
+      }
+    }
+
+    // Get family accounts for communications
+    if (action === 'get_family_accounts') {
+      try {
+        const result = getFamilyAccounts();
+        return createResponse(result);
+      } catch (error) {
+        console.error('Error getting family accounts:', error);
+        return createResponse({
+          success: false,
+          error: `Failed to get family accounts: ${error.toString()}`
+        });
+      }
+    }
+
     return createResponse({
       success: false,
       error: 'Unknown action: ' + action
@@ -875,40 +915,167 @@ function lookupOrders(email, orderId = null) {
 }
 
 /**
+ * Lookup orders by student name (first or last name)
+ */
+function lookupOrdersByStudentName(studentName) {
+  try {
+    console.log(`Looking up orders for student name: ${studentName}`);
+
+    const sheet = getOrdersSheet();
+    const data = sheet.getDataRange().getValues();
+    const searchTerm = studentName.toLowerCase().trim();
+
+    // Find all emails that have matching student names
+    const matchedEmails = new Set();
+    const orderMap = {};
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const firstName = (row[2] || '').toString().toLowerCase();
+      const lastName = (row[3] || '').toString().toLowerCase();
+
+      // Check if search term matches first or last name
+      if (firstName.includes(searchTerm) || lastName.includes(searchTerm)) {
+        const email = row[1]; // Parent_Email (B)
+        matchedEmails.add(email);
+
+        const currentOrderId = row[0];
+
+        if (!orderMap[currentOrderId]) {
+          orderMap[currentOrderId] = {
+            orderId: currentOrderId,
+            timestamp: row[9], // Timestamp (J)
+            email: row[1],
+            parentEmail: row[1],
+            items: [],
+            children: [],
+            subtotal: row[14] || 0,
+            discount: row[15] || 0,
+            total: row[16] || 0,
+            promoCode: row[17] || ''
+          };
+        }
+
+        try {
+          let itemsArray = [];
+          if (row[5]) {
+            itemsArray = typeof row[5] === 'string' ? JSON.parse(row[5]) : row[5];
+          }
+
+          if (itemsArray.length > 0) {
+            const itemData = itemsArray[0];
+            const normalizedDate = normalizeDateToString(row[12]);
+            const originalPrice = parseFloat(row[6]) || 0;
+            const paidPrice = parseFloat(row[7]) || originalPrice;
+            const itemStatus = row[18] || 'active';
+            const cancellationDate = row[19] || null;
+            const refundAmount = parseFloat(row[20]) || 0;
+            const cancellationReason = row[21] || null;
+            const sessionId = row[22] || null;
+
+            const item = {
+              id: `${currentOrderId}-${i}`,
+              rowIndex: i,
+              name: itemData.name,
+              price: originalPrice,
+              paidPrice: paidPrice,
+              hasDiscount: paidPrice < originalPrice,
+              category: itemData.category,
+              day: itemData.day,
+              orderDate: row[8],
+              deliveryDate: row[12],
+              childName: `${row[2]} ${row[3]}`,
+              childFirstName: row[2],
+              childLastName: row[3],
+              childGrade: row[4],
+              date: normalizedDate,
+              status: itemStatus,
+              cancellationDate: cancellationDate,
+              refundAmount: refundAmount,
+              cancellationReason: cancellationReason,
+              sessionId: sessionId
+            };
+
+            orderMap[currentOrderId].items.push(item);
+
+            const childKey = item.childName;
+            if (!orderMap[currentOrderId].children.find(c => c.name === childKey)) {
+              orderMap[currentOrderId].children.push({
+                id: row[11] || '1',
+                firstName: row[2],
+                lastName: row[3],
+                name: childKey,
+                grade: row[4]
+              });
+            }
+          }
+        } catch (parseError) {
+          console.error(`Error parsing item data for row ${i}:`, parseError);
+        }
+      }
+    }
+
+    const orders = Object.values(orderMap);
+
+    // Add discount percentage to each order
+    orders.forEach(order => {
+      if (order.discount > 0 && order.subtotal > 0) {
+        order.discountPercent = (order.discount / order.subtotal * 100).toFixed(1);
+      } else {
+        order.discountPercent = 0;
+      }
+    });
+
+    console.log(`Found ${orders.length} orders for student name: ${studentName}`);
+
+    return {
+      success: true,
+      orders,
+      count: orders.length,
+      matchedEmails: Array.from(matchedEmails)
+    };
+
+  } catch (error) {
+    console.error('Error in lookupOrdersByStudentName:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Process multiple item cancellations with discount-aware refunds
  */
-function processBatchCancellation(items, sessionId, reason) {
+function processBatchCancellation(items, sessionId, reason, adminOverride = false) {
   try {
-    console.log(`Processing batch cancellation for session: ${sessionId}, items: ${items.length}`);
-    
+    console.log(`Processing batch cancellation for session: ${sessionId}, items: ${items.length}, adminOverride: ${adminOverride}`);
+
     const sheet = getOrdersSheet();
     const data = sheet.getDataRange().getValues();
     const cancelledItems = [];
     const now = new Date();
-    
+
     for (const itemRequest of items) {
       const itemId = itemRequest.itemId;
       const itemReason = itemRequest.reason || reason;
-      
+
       // Extract row index from itemId (format: ORDERID-ROWINDEX)
       const parts = itemId.split('-');
       const rowIndex = parseInt(parts[parts.length - 1]);
-      
+
       if (!rowIndex || rowIndex >= data.length || rowIndex < 1) {
         console.error(`Invalid item ID: ${itemId}`);
         continue;
       }
-      
+
       const row = data[rowIndex];
-      
+
       // Check if item is already cancelled (column S - shifted to 18)
       const currentStatus = row[18] || 'active';
       if (currentStatus === 'cancelled') {
         console.log(`Item ${itemId} already cancelled`);
         continue;
       }
-      
-      // Validate deadline (column M - shifted to 12)
+
+      // Validate deadline (column M - shifted to 12) - UNLESS admin override
       let itemDateStr = row[12];
       let itemDate;
       if (itemDateStr instanceof Date) {
@@ -925,23 +1092,27 @@ function processBatchCancellation(items, sessionId, reason) {
         console.error(`Invalid item date format for ${itemId}: ${itemDateStr}`);
         continue;
       }
-      
+
       if (isNaN(itemDate.getTime())) {
         console.error(`Could not parse item date for ${itemId}: ${itemDateStr}`);
         continue;
       }
-      
-      // Check deadline at 10:05 AM
-      const cutoffTime = new Date(
-        itemDate.getFullYear(),
-        itemDate.getMonth(), 
-        itemDate.getDate(),
-        10, 5, 0, 0
-      );
-      
-      if (now > cutoffTime) {
-        console.log(`Item ${itemId} past deadline, skipping`);
-        continue;
+
+      // Check deadline at 10:05 AM - Admin override bypasses this check
+      if (!adminOverride) {
+        const cutoffTime = new Date(
+          itemDate.getFullYear(),
+          itemDate.getMonth(),
+          itemDate.getDate(),
+          10, 5, 0, 0
+        );
+
+        if (now > cutoffTime) {
+          console.log(`Item ${itemId} past deadline, skipping`);
+          continue;
+        }
+      } else {
+        console.log(`Item ${itemId} - Admin override enabled, bypassing deadline check`);
       }
       
       // Get item details
@@ -1548,6 +1719,139 @@ function removeBlackoutDate(dateStr) {
   }
 }
 
+// ============================================
+// FINANCIAL REPORTING FUNCTION
+// ============================================
+
+/**
+ * Get all orders for financial reporting
+ */
+function getAllOrdersForFinancials() {
+  try {
+    console.log('Getting all orders for financial reporting');
+
+    const sheet = getOrdersSheet();
+    const data = sheet.getDataRange().getValues();
+    const orderMap = {};
+
+    // Process all rows
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const currentOrderId = row[0];
+
+      if (!orderMap[currentOrderId]) {
+        orderMap[currentOrderId] = {
+          orderId: currentOrderId,
+          timestamp: row[9], // Timestamp (J)
+          email: row[1],
+          parentEmail: row[1],
+          items: [],
+          children: [],
+          subtotal: row[14] || 0,
+          discount: row[15] || 0,
+          total: row[16] || 0,
+          promoCode: row[17] || ''
+        };
+      }
+
+      try {
+        let itemsArray = [];
+        if (row[5]) {
+          itemsArray = typeof row[5] === 'string' ? JSON.parse(row[5]) : row[5];
+        }
+
+        if (itemsArray.length > 0) {
+          const itemData = itemsArray[0];
+          const normalizedDate = normalizeDateToString(row[12]);
+          const originalPrice = parseFloat(row[6]) || 0;
+          const paidPrice = parseFloat(row[7]) || originalPrice;
+          const itemStatus = row[18] || 'active';
+          const refundAmount = parseFloat(row[20]) || 0;
+
+          const item = {
+            id: `${currentOrderId}-${i}`,
+            name: itemData.name,
+            price: originalPrice,
+            paidPrice: paidPrice,
+            category: itemData.category,
+            day: itemData.day,
+            date: normalizedDate,
+            status: itemStatus,
+            refundAmount: refundAmount,
+            childName: `${row[2]} ${row[3]}`,
+            childGrade: row[4]
+          };
+
+          orderMap[currentOrderId].items.push(item);
+
+          const childKey = item.childName;
+          if (!orderMap[currentOrderId].children.find(c => c.name === childKey)) {
+            orderMap[currentOrderId].children.push({
+              firstName: row[2],
+              lastName: row[3],
+              name: childKey,
+              grade: row[4]
+            });
+          }
+        }
+      } catch (parseError) {
+        console.error(`Error parsing item data for row ${i}:`, parseError);
+      }
+    }
+
+    const orders = Object.values(orderMap);
+
+    console.log(`Retrieved ${orders.length} orders for financial reporting`);
+
+    return {
+      success: true,
+      orders: orders,
+      count: orders.length
+    };
+
+  } catch (error) {
+    console.error('Error in getAllOrdersForFinancials:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all family accounts for communications
+ */
+function getFamilyAccounts() {
+  try {
+    console.log('Getting family accounts for communications');
+
+    const familySheet = getFamilyAccountsSheet();
+    const data = familySheet.getDataRange().getValues();
+    const accounts = [];
+
+    // Skip header row
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[0]) { // Has email
+        accounts.push({
+          email: row[0],
+          createdDate: row[2],
+          lastLogin: row[3],
+          accountType: row[4] || 'new'
+        });
+      }
+    }
+
+    console.log(`Retrieved ${accounts.length} family accounts`);
+
+    return {
+      success: true,
+      accounts: accounts,
+      count: accounts.length
+    };
+
+  } catch (error) {
+    console.error('Error in getFamilyAccounts:', error);
+    throw error;
+  }
+}
 
 
 // ============================================

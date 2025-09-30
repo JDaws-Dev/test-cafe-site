@@ -2078,19 +2078,22 @@ const [childId, itemId, day, index] = uniqueId.split('_');
       }
 
       calculateTotals() {
-        this.state.currentSubtotal = this.state.orderItems.reduce((sum, item) => sum + item.basePrice, 0);
-        
+        // Calculate subtotal from actual prices (after combo discounts)
+        const cartTotal = this.state.orderItems.reduce((sum, item) => sum + item.price, 0);
+        this.state.currentSubtotal = cartTotal;
+
+        // Apply promo code discount to the subtotal (after combo discounts)
         const promoCode = document.getElementById('promo-code')?.value.toUpperCase() || '';
         const discountRate = this.constants.discountCodes[promoCode] || 0;
-        this.state.currentDiscount = this.state.currentSubtotal * discountRate;
-        
-        const cartTotal = this.state.orderItems.reduce((sum, item) => sum + item.price, 0);
-        this.state.currentTotal = cartTotal - this.state.currentDiscount;
-        
+        this.state.currentDiscount = Math.round(cartTotal * discountRate * 100) / 100;
+
+        // Final total = subtotal - promo discount
+        this.state.currentTotal = Math.round((cartTotal - this.state.currentDiscount) * 100) / 100;
+
         // Update display
         document.getElementById('total-amount').textContent = this.state.currentTotal.toFixed(2);
         document.getElementById('checkout-total').textContent = this.state.currentTotal.toFixed(2);
-        
+
         if (this.state.currentDiscount > 0) {
           document.getElementById('discount-line').style.display = 'block';
           document.getElementById('discount-amount').textContent = this.state.currentDiscount.toFixed(2);
@@ -2263,16 +2266,25 @@ const [childId, itemId, day, index] = uniqueId.split('_');
           child.querySelector('.child-last-name').value = '';
           child.querySelector('.child-grade').value = '';
         });
-        
+
         // Clear checkboxes
         document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        
+
+        // Clear promo code field and status
+        const promoCodeField = document.getElementById('promo-code');
+        const promoStatus = document.getElementById('promo-status');
+        if (promoCodeField) promoCodeField.value = '';
+        if (promoStatus) {
+          promoStatus.textContent = '';
+          promoStatus.className = 'promo-status';
+        }
+
         // Reset state
         this.state.orderItems = [];
         this.state.currentTotal = 0;
         this.state.currentSubtotal = 0;
         this.state.currentDiscount = 0;
-        
+
         // Update display
         this.updateCart();
         this.validateForm();
