@@ -2282,8 +2282,17 @@
             today.setHours(0, 0, 0, 0);
 
             // Add empty cells for days before month starts (adjusted for Mon-Fri grid)
-            // 0=Sun, 1=Mon, 2=Tue, etc. We want Mon=0 position
-            const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1; // Convert Sun=0 to be after Fri
+            // We need to find the first weekday (Mon-Fri) and its position in our 5-column grid
+            // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+            // Grid positions: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4
+            let adjustedFirstDay = 0;
+            if (firstDay >= 1 && firstDay <= 5) {
+                // Mon-Fri: position is firstDay - 1 (Mon=0, Tue=1, etc.)
+                adjustedFirstDay = firstDay - 1;
+            } else {
+                // Sat (6) or Sun (0): first displayed day is Monday, position 0
+                adjustedFirstDay = 0;
+            }
             for (let i = 0; i < adjustedFirstDay; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.className = 'empty-day';
