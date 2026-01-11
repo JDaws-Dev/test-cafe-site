@@ -149,23 +149,37 @@
       opacity: 0.9;
     }
 
-    /* Enhanced notice with better accessibility */
-    .notice {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-      border: 2px solid var(--warning-color);
-      border-radius: var(--radius-md);
-      padding: 1.25rem 1.75rem;
-      margin: 1.5rem 0;
-      text-align: center;
-      font-weight: 500;
-      color: #92400e;
-      box-shadow: var(--shadow-sm);
+    /* Header info bar - clean inline style */
+    .header-info {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding-top: 1rem;
+      margin-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      font-size: 0.9rem;
+      opacity: 0.95;
     }
 
-    .notice a {
-      color: #92400e;
+    .header-info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-info-item .icon {
+      font-size: 1rem;
+    }
+
+    .header-info a {
+      color: white;
       text-decoration: underline;
-      font-weight: 600;
+      text-underline-offset: 2px;
+    }
+
+    .header-info a:hover {
+      opacity: 0.8;
     }
 
     /* Modern main content with CSS Grid */
@@ -1953,6 +1967,12 @@
         text-align: center;
       }
 
+      .header-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+      }
+
       .main-content {
         padding: 1rem;
         gap: 1.5rem;
@@ -2110,9 +2130,10 @@
         font-size: 10pt;
       }
 
-      .notice {
+      .header-info {
         font-size: 10pt;
         margin-top: 0.5rem;
+        border-top-color: rgba(255,255,255,0.3);
       }
 
       /* Form section adjustments */
@@ -2263,9 +2284,15 @@
         </div>
       </div>
 
-      <div class="notice">
-        <strong>⏰ Order Cutoff: Daily at 10:00 AM</strong><br>
-        Questions? Email <a href="mailto:CRivers@artiosacademies.com">CRivers@artiosacademies.com</a>
+      <div class="header-info">
+        <div class="header-info-item">
+          <span class="icon">⏰</span>
+          <span>Order cutoff: <strong>10:00 AM daily</strong></span>
+        </div>
+        <div class="header-info-item">
+          <span class="icon">✉️</span>
+          <span>Questions? <a href="mailto:CRivers@artiosacademies.com">CRivers@artiosacademies.com</a></span>
+        </div>
       </div>
     </div>
 
