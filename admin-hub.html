@@ -11,14 +11,14 @@
     <style>
         :root {
             /* Artios Brand Colors */
-            --artios-green: #8B9F3C;
-            --artios-green-dark: #6d7d2f;
-            --artios-green-light: #a5b85c;
+            --artios-green: #E51636;
+            --artios-green-dark: #c41230;
+            --artios-green-light: #ff3d5a;
             --artios-green-pale: #f4f6ed;
 
             /* Primary gradient using Artios green */
-            --primary-gradient: linear-gradient(135deg, #8B9F3C 0%, #6d7d2f 100%);
-            --accent-gradient: linear-gradient(135deg, #a5b85c 0%, #8B9F3C 100%);
+            --primary-gradient: linear-gradient(135deg, #E51636 0%, #c41230 100%);
+            --accent-gradient: linear-gradient(135deg, #ff3d5a 0%, #E51636 100%);
 
             /* Semantic gradients */
             --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
@@ -98,7 +98,7 @@
             background: var(--primary-gradient);
             border-radius: 20px;
             padding: 18px;
-            box-shadow: 0 8px 25px rgba(139, 159, 60, 0.3);
+            box-shadow: 0 8px 25px rgba(229, 22, 54, 0.3);
         }
 
         .login-logo img {
@@ -1245,6 +1245,154 @@
                 min-height: 44px;
             }
         }
+
+        /* Print styles for admin reports */
+        @media print {
+            /* Hide navigation and controls */
+            .login-container,
+            .admin-header,
+            .tab-navigation,
+            .logout-btn,
+            .action-btn,
+            .card-header button,
+            #month-year-selectors,
+            input[type="text"],
+            input[type="month"],
+            select,
+            input[type="radio"],
+            input[type="checkbox"],
+            .status-message {
+                display: none !important;
+            }
+
+            /* Reset layout */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            body {
+                background: white;
+                font-size: 10pt;
+            }
+
+            .admin-container {
+                display: block !important;
+                background: white;
+            }
+
+            .content-area {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .tab-content {
+                display: none !important;
+            }
+
+            .tab-content.active {
+                display: block !important;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                margin-bottom: 0.75rem;
+            }
+
+            .card-header {
+                background: #f4f6ed !important;
+                padding: 0.5rem 0.75rem;
+                border-bottom: 2px solid #E51636;
+            }
+
+            .card-title {
+                font-size: 12pt;
+            }
+
+            /* Tables */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 9pt;
+            }
+
+            th, td {
+                border: 1px solid #ddd;
+                padding: 0.25rem 0.5rem;
+                text-align: left;
+            }
+
+            th {
+                background: #f4f6ed !important;
+                font-weight: 600;
+            }
+
+            /* Order cards in Order Management */
+            .om-order-card {
+                border: 1px solid #ddd;
+                margin-bottom: 0.5rem;
+                page-break-inside: avoid;
+            }
+
+            .om-order-header {
+                background: #f4f6ed !important;
+                padding: 0.5rem;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .om-order-details {
+                display: block !important;
+                padding: 0.5rem;
+            }
+
+            .om-expand-icon {
+                display: none;
+            }
+
+            /* Blackout dates */
+            .blackout-date-item {
+                border: 1px solid #ddd;
+                margin-bottom: 0.25rem;
+                padding: 0.5rem;
+            }
+
+            /* Print header */
+            .content-area::before {
+                content: "Artios Academies Cafe - Admin Report";
+                display: block;
+                font-size: 14pt;
+                font-weight: bold;
+                text-align: center;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+                border-bottom: 3px solid #E51636;
+                color: #1f2937;
+            }
+
+            .content-area::after {
+                content: "Printed: " attr(data-print-date);
+                display: block;
+                text-align: center;
+                font-size: 8pt;
+                color: #6b7280;
+                margin-top: 1rem;
+                padding-top: 0.5rem;
+                border-top: 1px solid #ddd;
+            }
+
+            /* Page setup */
+            @page {
+                margin: 0.4in;
+                size: letter landscape;
+            }
+
+            @page :first {
+                margin-top: 0.25in;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1379,7 +1527,24 @@
                     <div class="calendar-container">
                         <div class="month-navigation">
                             <button onclick="changeMonth(-1)">← Previous</button>
-                            <span class="current-month" id="current-month-display"></span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <select id="month-picker" onchange="jumpToMonth()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; cursor: pointer;">
+                                    <option value="0">January</option>
+                                    <option value="1">February</option>
+                                    <option value="2">March</option>
+                                    <option value="3">April</option>
+                                    <option value="4">May</option>
+                                    <option value="5">June</option>
+                                    <option value="6">July</option>
+                                    <option value="7">August</option>
+                                    <option value="8">September</option>
+                                    <option value="9">October</option>
+                                    <option value="10">November</option>
+                                    <option value="11">December</option>
+                                </select>
+                                <select id="year-picker" onchange="jumpToMonth()" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; cursor: pointer;">
+                                </select>
+                            </div>
                             <button onclick="changeMonth(1)">Next →</button>
                         </div>
                         <div class="calendar-grid" id="calendar-grid">
@@ -1436,7 +1601,7 @@
                         <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Search By:</label>
-                                <select id="search-type" onchange="OM.updateSearchPlaceholder()"
+                                <select id="search-type" onchange="OM.updateSearchPlaceholder(); FilterPersistence.save('orders', 'searchType', this.value);"
                                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 150px;">
                                     <option value="email">Email</option>
                                     <option value="student">Student Name</option>
@@ -1447,12 +1612,13 @@
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Search:</label>
                                 <input type="text" id="search-input" placeholder="Enter family email..."
                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 100%;"
-                                       onkeypress="if(event.key==='Enter') OM.search()">
+                                       onkeypress="if(event.key==='Enter') OM.search()"
+                                       oninput="FilterPersistence.save('orders', 'searchInput', this.value)">
                             </div>
 
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
-                                <select id="sort-orders" onchange="OM.sortAndDisplay()"
+                                <select id="sort-orders" onchange="OM.sortAndDisplay(); FilterPersistence.save('orders', 'sort', this.value);"
                                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                                     <option value="date">Date (Newest First)</option>
                                     <option value="family">Family Name (A-Z)</option>
@@ -1765,11 +1931,11 @@
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Search:</label>
                                 <input type="text" id="comm-search" placeholder="Search by name or email..."
                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 250px;"
-                                       oninput="COMM.filterFamilies()">
+                                       oninput="COMM.filterFamilies(); FilterPersistence.save('communications', 'search', this.value);">
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Activity Filter:</label>
-                                <select id="comm-activity-filter" onchange="COMM.filterFamilies()"
+                                <select id="comm-activity-filter" onchange="COMM.filterFamilies(); FilterPersistence.save('communications', 'activity', this.value);"
                                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                                     <option value="all">All Families</option>
                                     <option value="active">Active (Last 30 days)</option>
@@ -1781,14 +1947,14 @@
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Grade Filter:</label>
-                                <select id="comm-grade-filter" onchange="COMM.filterFamilies()"
+                                <select id="comm-grade-filter" onchange="COMM.filterFamilies(); FilterPersistence.save('communications', 'grade', this.value);"
                                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                                     <option value="all">All Grades</option>
                                 </select>
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
-                                <select id="comm-sort" onchange="COMM.sortFamilies()"
+                                <select id="comm-sort" onchange="COMM.sortFamilies(); FilterPersistence.save('communications', 'sort', this.value);"
                                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                                     <option value="lastName">Last Name (A-Z)</option>
                                     <option value="email">Email (A-Z)</option>
@@ -1904,21 +2070,21 @@
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Month:</label>
                                 <input type="month" id="payment-month-filter"
                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;"
-                                       onchange="PAYMENTS.filterOrders()">
+                                       onchange="PAYMENTS.filterOrders(); FilterPersistence.save('payments', 'month', this.value);">
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Payment Status:</label>
                                 <div style="display: flex; gap: 10px;">
                                     <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                        <input type="radio" name="payment-filter" value="unpaid" checked onchange="PAYMENTS.filterOrders()">
+                                        <input type="radio" name="payment-filter" value="unpaid" checked onchange="PAYMENTS.filterOrders(); FilterPersistence.save('payments', 'status', this.value);">
                                         <span>Unpaid Only</span>
                                     </label>
                                     <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                        <input type="radio" name="payment-filter" value="all" onchange="PAYMENTS.filterOrders()">
+                                        <input type="radio" name="payment-filter" value="all" onchange="PAYMENTS.filterOrders(); FilterPersistence.save('payments', 'status', this.value);">
                                         <span>All</span>
                                     </label>
                                     <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-                                        <input type="radio" name="payment-filter" value="paid" onchange="PAYMENTS.filterOrders()">
+                                        <input type="radio" name="payment-filter" value="paid" onchange="PAYMENTS.filterOrders(); FilterPersistence.save('payments', 'status', this.value);">
                                         <span>Paid Only</span>
                                     </label>
                                 </div>
@@ -1927,11 +2093,11 @@
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Search:</label>
                                 <input type="text" id="payment-search" placeholder="Search by name or email..."
                                        style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 250px;"
-                                       oninput="PAYMENTS.filterOrders()">
+                                       oninput="PAYMENTS.filterOrders(); FilterPersistence.save('payments', 'search', this.value);">
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Sort By:</label>
-                                <select id="payment-sort" onchange="PAYMENTS.sortOrders()"
+                                <select id="payment-sort" onchange="PAYMENTS.sortOrders(); FilterPersistence.save('payments', 'sort', this.value);"
                                         style="padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
                                     <option value="lastName">Last Name (A-Z)</option>
                                     <option value="orderDateNewest">Order Date (Newest First)</option>
@@ -1990,8 +2156,159 @@
         let blackoutDates = [];
         let currentCalendarMonth = new Date();
 
+        // ==========================================
+        // FILTER PERSISTENCE
+        // ==========================================
+
+        const FilterPersistence = {
+            storageKey: 'artios_admin_filters',
+
+            // Get all saved filters
+            getAll: function() {
+                try {
+                    const saved = localStorage.getItem(this.storageKey);
+                    return saved ? JSON.parse(saved) : {};
+                } catch (e) {
+                    return {};
+                }
+            },
+
+            // Save a filter value
+            save: function(section, key, value) {
+                const filters = this.getAll();
+                if (!filters[section]) filters[section] = {};
+                filters[section][key] = value;
+                localStorage.setItem(this.storageKey, JSON.stringify(filters));
+                this.updateUrl();
+            },
+
+            // Get a filter value
+            get: function(section, key, defaultValue) {
+                const filters = this.getAll();
+                if (filters[section] && filters[section][key] !== undefined) {
+                    return filters[section][key];
+                }
+                return defaultValue;
+            },
+
+            // Update URL with current tab and key filters (for bookmarking)
+            updateUrl: function() {
+                const params = new URLSearchParams();
+                params.set('tab', currentTab);
+
+                // Add key filter values to URL for sharing/bookmarking
+                const filters = this.getAll();
+                if (currentTab === 'payments' && filters.payments) {
+                    if (filters.payments.month) params.set('month', filters.payments.month);
+                    if (filters.payments.status) params.set('status', filters.payments.status);
+                }
+                if (currentTab === 'communications' && filters.communications) {
+                    if (filters.communications.activity) params.set('activity', filters.communications.activity);
+                    if (filters.communications.grade) params.set('grade', filters.communications.grade);
+                }
+
+                const newUrl = window.location.pathname + '?' + params.toString();
+                history.replaceState(null, '', newUrl);
+            },
+
+            // Load filters from URL on page load
+            loadFromUrl: function() {
+                const params = new URLSearchParams(window.location.search);
+
+                // Tab
+                if (params.get('tab')) {
+                    currentTab = params.get('tab');
+                }
+
+                // Payments filters
+                if (params.get('month')) {
+                    this.save('payments', 'month', params.get('month'));
+                }
+                if (params.get('status')) {
+                    this.save('payments', 'status', params.get('status'));
+                }
+
+                // Communications filters
+                if (params.get('activity')) {
+                    this.save('communications', 'activity', params.get('activity'));
+                }
+                if (params.get('grade')) {
+                    this.save('communications', 'grade', params.get('grade'));
+                }
+            },
+
+            // Restore filters to UI elements
+            restoreFilters: function(section) {
+                const filters = this.getAll()[section] || {};
+
+                if (section === 'orders') {
+                    if (filters.searchType) {
+                        const el = document.getElementById('search-type');
+                        if (el) el.value = filters.searchType;
+                    }
+                    if (filters.searchInput) {
+                        const el = document.getElementById('search-input');
+                        if (el) el.value = filters.searchInput;
+                    }
+                    if (filters.sort) {
+                        const el = document.getElementById('sort-orders');
+                        if (el) el.value = filters.sort;
+                    }
+                }
+
+                if (section === 'communications') {
+                    if (filters.search) {
+                        const el = document.getElementById('comm-search');
+                        if (el) el.value = filters.search;
+                    }
+                    if (filters.activity) {
+                        const el = document.getElementById('comm-activity-filter');
+                        if (el) el.value = filters.activity;
+                    }
+                    if (filters.grade) {
+                        const el = document.getElementById('comm-grade-filter');
+                        if (el) el.value = filters.grade;
+                    }
+                    if (filters.sort) {
+                        const el = document.getElementById('comm-sort');
+                        if (el) el.value = filters.sort;
+                    }
+                }
+
+                if (section === 'payments') {
+                    if (filters.month) {
+                        const el = document.getElementById('payment-month-filter');
+                        if (el) el.value = filters.month;
+                    }
+                    if (filters.status) {
+                        const radios = document.querySelectorAll('input[name="payment-filter"]');
+                        radios.forEach(r => {
+                            r.checked = r.value === filters.status;
+                        });
+                    }
+                    if (filters.search) {
+                        const el = document.getElementById('payment-search');
+                        if (el) el.value = filters.search;
+                    }
+                    if (filters.sort) {
+                        const el = document.getElementById('payment-sort');
+                        if (el) el.value = filters.sort;
+                    }
+                }
+            },
+
+            // Clear all filters for a section
+            clear: function(section) {
+                const filters = this.getAll();
+                delete filters[section];
+                localStorage.setItem(this.storageKey, JSON.stringify(filters));
+            }
+        };
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Load filters from URL first
+            FilterPersistence.loadFromUrl();
             // Check if already authenticated (session storage)
             const authStatus = sessionStorage.getItem('admin_authenticated');
             if (authStatus === 'true') {
@@ -2056,7 +2373,10 @@
             });
 
             currentTab = tabName;
-            
+
+            // Update URL with current tab
+            FilterPersistence.updateUrl();
+
             // Load data for the selected tab
             loadTabData(tabName);
         }
@@ -2066,9 +2386,21 @@
 
             if (tabName === 'blackout-dates') {
                 loadBlackoutDates();
+                initMonthYearPickers();
                 generateCalendar();
             }
-            // Communications tab loads on-demand when user clicks Load Families button
+
+            // Restore filters for each section
+            if (tabName === 'order-management') {
+                FilterPersistence.restoreFilters('orders');
+                OM.updateSearchPlaceholder();
+            }
+            if (tabName === 'communications') {
+                FilterPersistence.restoreFilters('communications');
+            }
+            if (tabName === 'payments') {
+                FilterPersistence.restoreFilters('payments');
+            }
         }
 
         // ==========================================
@@ -2353,7 +2685,44 @@
 
         function changeMonth(direction) {
             currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + direction);
+            updateMonthYearPickers();
             generateCalendar();
+        }
+
+        function jumpToMonth() {
+            const monthPicker = document.getElementById('month-picker');
+            const yearPicker = document.getElementById('year-picker');
+            if (monthPicker && yearPicker) {
+                currentCalendarMonth.setMonth(parseInt(monthPicker.value));
+                currentCalendarMonth.setFullYear(parseInt(yearPicker.value));
+                generateCalendar();
+            }
+        }
+
+        function initMonthYearPickers() {
+            const yearPicker = document.getElementById('year-picker');
+            if (!yearPicker) return;
+
+            // Populate year picker (current year - 1 to current year + 2)
+            const currentYear = new Date().getFullYear();
+            yearPicker.innerHTML = '';
+            for (let year = currentYear - 1; year <= currentYear + 2; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearPicker.appendChild(option);
+            }
+
+            updateMonthYearPickers();
+        }
+
+        function updateMonthYearPickers() {
+            const monthPicker = document.getElementById('month-picker');
+            const yearPicker = document.getElementById('year-picker');
+            if (monthPicker && yearPicker) {
+                monthPicker.value = currentCalendarMonth.getMonth();
+                yearPicker.value = currentCalendarMonth.getFullYear();
+            }
         }
 
         async function toggleCalendarDate(dateStr, isCurrentlyBlackout) {

@@ -8,38 +8,47 @@
   <title>Artios Academies of Sugar Hill - Cafe Lunch Order System</title>
   <link rel="icon" type="image/png" href="artios-logo.png">
   <link rel="apple-touch-icon" href="artios-logo.png">
+  <!-- Load Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* Modern CSS reset and custom properties */
     :root {
-      /* Artios Brand Colors */
-      --artios-green: #8B9F3C;
-      --artios-green-dark: #6d7d2f;
-      --artios-green-light: #a5b85c;
-      --artios-green-pale: #f4f6ed;
+      /* CFA-Inspired Warm Brand Colors */
+      --brand-primary: #E51636;      /* CFA Red */
+      --brand-primary-dark: #c41230;
+      --brand-primary-light: #ff3d5a;
+      --brand-secondary: #004F71;    /* Deep blue accent */
+      --brand-warm: #8B4513;         /* Warm brown */
+      --brand-cream: #FFF8F0;        /* Warm cream background */
+      --brand-gold: #D4A574;         /* Warm gold accent */
 
-      /* Primary gradients using Artios green */
-      --primary-gradient: linear-gradient(135deg, #8B9F3C 0%, #6d7d2f 100%);
-      --accent-gradient: linear-gradient(135deg, #a5b85c 0%, #8B9F3C 100%);
+      /* Primary gradients */
+      --primary-gradient: linear-gradient(135deg, #E51636 0%, #c41230 100%);
+      --accent-gradient: linear-gradient(135deg, #ff3d5a 0%, #E51636 100%);
+      --warm-gradient: linear-gradient(135deg, #FFF8F0 0%, #FFE8D6 100%);
 
       /* Semantic colors */
-      --success-color: #10b981;
-      --warning-color: #f59e0b;
-      --error-color: #ef4444;
-      --info-color: #3b82f6;
+      --success-color: #059669;
+      --warning-color: #d97706;
+      --error-color: #dc2626;
+      --info-color: #0284c7;
 
       /* Text colors */
-      --text-primary: #1f2937;
-      --text-secondary: #6b7280;
+      --text-primary: #1a1a1a;
+      --text-secondary: #525252;
       --text-on-primary: #ffffff;
 
       /* Background colors */
       --bg-primary: #ffffff;
-      --bg-secondary: #f9fafb;
-      --bg-tertiary: #f4f6ed;
+      --bg-secondary: #fafafa;
+      --bg-tertiary: #FFF8F0;
+      --bg-warm: #FFF5EB;
 
       /* Border and shadows */
-      --border-color: #e5e7eb;
-      --border-accent: #d1d9b0;
+      --border-color: #e5e5e5;
+      --border-accent: #E51636;
       --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
       --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
@@ -66,7 +75,7 @@
 
     body {
       font-family: 'Inter', 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-      background: var(--bg-secondary);
+      background: var(--bg-tertiary);
       color: var(--text-primary);
       line-height: 1.6;
       font-size: 16px;
@@ -209,8 +218,8 @@
     }
 
     .shared-email:focus-within {
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.15);
     }
 
     .shared-email h3 {
@@ -250,8 +259,8 @@
     .form-group input:focus,
     .form-group select:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.15);
     }
 
     .form-row {
@@ -386,13 +395,30 @@
       transition: all var(--transition-fast);
       font-weight: 500;
       background: transparent;
-      color: var(--text-secondary);
+      color: var(--text-primary); /* Improved contrast from --text-secondary */
       position: relative;
     }
 
     .day-tab:hover:not(.disabled):not(.blackout) {
-      background: rgba(102, 126, 234, 0.1);
-      color: var(--text-primary);
+      background: var(--bg-tertiary);
+      color: var(--brand-primary-dark);
+    }
+
+    /* Order indicator dot for days with items */
+    .day-tab.has-orders::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: var(--success-color);
+      border-radius: 50%;
+    }
+
+    .day-tab.active.has-orders::after {
+      background: white;
     }
 
     .day-tab.active {
@@ -456,10 +482,11 @@
     /* Collapsible menu categories */
     .menu-category {
       margin-bottom: 2rem;
-      border: 1px solid var(--border-color);
+      border: 2px solid var(--border-color);
       border-radius: var(--radius-lg);
       overflow: hidden;
       transition: all var(--transition-normal);
+      box-shadow: var(--shadow-sm);
     }
 
     .menu-category-header {
@@ -484,12 +511,36 @@
 
     .collapse-icon {
       transition: transform var(--transition-fast);
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: var(--text-secondary);
+      background: var(--bg-primary);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-color);
     }
 
     .menu-category.collapsed .collapse-icon {
       transform: rotate(-90deg);
+      background: var(--bg-tertiary);
+      border-color: var(--border-accent);
+    }
+
+    .menu-category-header:focus {
+      outline: none;
+      box-shadow: inset 0 0 0 2px var(--brand-primary);
+    }
+
+    /* Add item count badge to collapsed categories */
+    .menu-category-header .item-count {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-left: auto;
+      margin-right: 0.75rem;
     }
 
     .menu-items {
@@ -499,6 +550,50 @@
 
     .menu-category.collapsed .menu-items {
       display: none;
+    }
+
+    /* Sticky category navigation */
+    .category-nav {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+    }
+
+    .category-nav-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .category-nav-btn:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--border-accent);
+    }
+
+    .category-nav-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--brand-primary);
+    }
+
+    .category-nav-btn.active {
+      background: var(--brand-primary);
+      color: white;
+      border-color: var(--brand-primary);
     }
 
     .menu-for-day {
@@ -557,7 +652,7 @@
 
     .menu-item:hover {
       box-shadow: var(--shadow-sm);
-      border-color: #667eea;
+      border-color: var(--brand-primary-light);
     }
 
     .menu-item-image {
@@ -590,7 +685,7 @@
     .item-price {
       font-weight: 700;
       font-size: 1.125rem;
-      color: var(--success-color);
+      color: var(--brand-primary);
       white-space: nowrap;
     }
 
@@ -626,7 +721,7 @@
     .child-checkbox input[type="checkbox"] {
       width: 1.25rem;
       height: 1.25rem;
-      accent-color: #667eea;
+      accent-color: var(--brand-primary);
       cursor: pointer;
     }
 
@@ -672,12 +767,70 @@
       font-size: 1.25rem;
       font-weight: 700;
       text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .cart-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      min-width: 1.5rem;
+      text-align: center;
+    }
+
+    .cart-count.has-items {
+      background: white;
+      color: var(--brand-primary-dark);
     }
 
     .cart-items {
       padding: 1.5rem;
       max-height: 400px;
       overflow-y: auto;
+      position: relative;
+    }
+
+    /* Scroll indicator - visible bar at bottom when more content exists */
+    .cart-items-wrapper {
+      position: relative;
+    }
+
+    /* Visual scroll hint - prominent bar */
+    .scroll-hint {
+      display: none;
+      background: linear-gradient(to top, rgba(229, 22, 54, 0.1) 0%, transparent 100%);
+      padding: 12px 16px 8px;
+      text-align: center;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .scroll-hint-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--brand-primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      animation: bounceDown 1.5s ease-in-out infinite;
+    }
+
+    @keyframes bounceDown {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(3px); }
+    }
+
+    .cart-items-wrapper.has-overflow .scroll-hint {
+      display: block;
+    }
+
+    .cart-items-wrapper.scrolled-to-bottom .scroll-hint {
+      display: none;
     }
 
     .empty-cart {
@@ -745,7 +898,7 @@
 
     .cart-item-price {
       font-weight: 700;
-      color: var(--success-color);
+      color: var(--brand-primary);
     }
 
     .discount-line {
@@ -756,7 +909,7 @@
     }
 
     .remove-item-btn {
-      background: var(--error-color);
+      background: #9ca3af; /* Muted gray - differentiated from error red */
       color: white;
       border: none;
       width: 1.5rem;
@@ -769,7 +922,7 @@
     }
 
     .remove-item-btn:hover {
-      background: #dc2626;
+      background: #6b7280;
       transform: scale(1.1);
     }
 
@@ -798,8 +951,8 @@
 
     .promo-input:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.15);
     }
 
     .promo-status {
@@ -833,7 +986,7 @@
     .total-amount {
       font-size: 2rem;
       font-weight: 700;
-      color: var(--success-color);
+      color: var(--brand-primary);
       margin-bottom: 1rem;
     }
 
@@ -870,6 +1023,181 @@
       opacity: 0.95;
       font-weight: 500;
       margin-top: 0.25rem;
+    }
+
+    /* Mobile floating cart button - hidden on desktop */
+    .mobile-cart-btn {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(229, 22, 54, 0.4);
+      z-index: 1000;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .mobile-cart-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(229, 22, 54, 0.5);
+    }
+
+    .mobile-cart-btn .cart-icon {
+      font-size: 1.1rem;
+    }
+
+    .mobile-cart-btn .mobile-cart-count {
+      background: white;
+      color: var(--brand-primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    /* Cart Modal for mobile */
+    .cart-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 2000;
+      backdrop-filter: blur(4px);
+    }
+
+    .cart-modal-backdrop.show {
+      display: block;
+    }
+
+    .cart-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 85vh;
+      background: var(--bg-primary);
+      border-radius: 20px 20px 0 0;
+      z-index: 2001;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+    }
+
+    .cart-modal-backdrop.show .cart-modal {
+      transform: translateY(0);
+    }
+
+    .cart-modal-header {
+      background: var(--primary-gradient);
+      color: white;
+      padding: 16px 20px;
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .cart-modal-header h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .cart-modal-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .cart-modal-close:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .cart-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      max-height: calc(85vh - 180px);
+    }
+
+    .cart-modal-footer {
+      border-top: 2px solid var(--border-color);
+      padding: 16px;
+      background: var(--bg-secondary);
+      flex-shrink: 0;
+    }
+
+    .cart-modal-footer .modal-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .cart-modal-footer .modal-total-label {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .cart-modal-footer .modal-total-amount {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--brand-primary);
+    }
+
+    .cart-modal-footer .modal-checkout-btn {
+      width: 100%;
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cart-modal-footer .modal-checkout-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .cart-modal-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+
+    .cart-modal-empty .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
     }
 
     /* Enhanced modal styling */
@@ -1107,6 +1435,521 @@
       50% { transform: scale(1.02); }
     }
 
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Skeleton Loading States */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-md);
+    }
+
+    .skeleton-text {
+      height: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    .skeleton-text.short { width: 40%; }
+    .skeleton-text.medium { width: 70%; }
+    .skeleton-text.long { width: 100%; }
+
+    .skeleton-button {
+      height: 44px;
+      width: 120px;
+    }
+
+    .skeleton-card {
+      padding: 1.5rem;
+      border: 2px solid #e5e7eb;
+      border-radius: var(--radius-lg);
+    }
+
+    .skeleton-menu-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius-md);
+      margin-bottom: 0.5rem;
+    }
+
+    .skeleton-menu-item .skeleton-image {
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius-md);
+      flex-shrink: 0;
+    }
+
+    .skeleton-menu-item .skeleton-content {
+      flex: 1;
+    }
+
+    /* Empty States */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      margin-bottom: 1.5rem;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Undo Toast */
+    .undo-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: var(--shadow-xl);
+      z-index: 10001;
+      animation: slideUp 0.3s ease;
+    }
+
+    .undo-toast button {
+      background: white;
+      color: #1f2937;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .undo-toast button:hover {
+      background: #e5e7eb;
+    }
+
+    .undo-toast .countdown {
+      font-size: 0.875rem;
+      opacity: 0.7;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Add-to-cart toast notification */
+    .cart-toast {
+      position: fixed;
+      bottom: 5rem;
+      right: 1.5rem;
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-lg);
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: var(--shadow-lg);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: toastSlideIn 0.3s ease, toastFadeOut 0.3s ease 1.7s forwards;
+      pointer-events: none;
+    }
+
+    .cart-toast.removed {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .cart-toast svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    @keyframes toastSlideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes toastFadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    /* Menu item selection animation */
+    .menu-item.just-added {
+      animation: itemPulse 0.4s ease;
+    }
+
+    .menu-item.just-removed {
+      animation: itemFade 0.3s ease;
+    }
+
+    @keyframes itemPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.3); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes itemFade {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    /* Checkbox larger tap target */
+    .menu-item input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: var(--brand-primary);
+    }
+
+    .menu-item label {
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    /* Offline Banner */
+    .offline-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #78350f;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      font-weight: 600;
+      z-index: 10002;
+      display: none;
+    }
+
+    .offline-banner.show {
+      display: block;
+    }
+
+    body.offline .offline-banner {
+      display: block;
+    }
+
+    body.offline .container {
+      margin-top: 48px;
+    }
+
+    /* Enhanced Focus States for Accessibility */
+    *:focus-visible {
+      outline: 3px solid var(--brand-primary);
+      outline-offset: 2px;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid var(--brand-primary);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px rgba(229, 22, 54, 0.2);
+    }
+
+    /* Error State with Retry */
+    .error-state {
+      text-align: center;
+      padding: 2rem;
+      background: #fef2f2;
+      border: 2px solid #fecaca;
+      border-radius: var(--radius-lg);
+      color: #991b1b;
+    }
+
+    .error-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .error-state h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .error-state p {
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+
+    .retry-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .retry-btn:hover {
+      background: #dc2626;
+    }
+
+    /* Cutoff Countdown Timer */
+    .cutoff-banner {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 2px solid var(--warning-color);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      color: #92400e;
+    }
+
+    .cutoff-banner.urgent {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border-color: var(--error-color);
+      color: #991b1b;
+      animation: pulse 2s infinite;
+    }
+
+    .cutoff-banner.closed {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-color: #9ca3af;
+      color: #6b7280;
+    }
+
+    .cutoff-timer {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    }
+
+    .cutoff-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Button Loading States */
+    .btn-loading {
+      position: relative;
+      color: transparent !important;
+      pointer-events: none;
+    }
+
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Inline Form Validation */
+    .form-field {
+      position: relative;
+    }
+
+    .form-field input,
+    .form-field select {
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.15);
+    }
+
+    .form-field input.valid,
+    .form-field select.valid {
+      border-color: var(--success-color);
+    }
+
+    .form-field input.invalid,
+    .form-field select.invalid {
+      border-color: var(--error-color);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .validation-message {
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    .validation-message.error {
+      color: var(--error-color);
+      display: block;
+    }
+
+    .validation-message.success {
+      color: var(--success-color);
+      display: block;
+    }
+
+    .form-field input.invalid + .validation-message.error,
+    .form-field select.invalid + .validation-message.error {
+      display: block;
+    }
+
+    /* Order Progress Indicator */
+    .progress-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .progress-step.active {
+      color: var(--brand-primary);
+    }
+
+    .progress-step.completed {
+      color: var(--success-color);
+    }
+
+    .progress-step-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--border-color);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .progress-step.active .progress-step-number {
+      background: var(--brand-primary);
+      color: white;
+    }
+
+    .progress-step.completed .progress-step-number {
+      background: var(--success-color);
+      color: white;
+    }
+
+    .progress-connector {
+      width: 30px;
+      height: 2px;
+      background: var(--border-color);
+    }
+
+    .progress-connector.completed {
+      background: var(--success-color);
+    }
+
+    @media (max-width: 640px) {
+      .progress-indicator {
+        padding: 0.75rem 1rem;
+        gap: 0.25rem;
+      }
+
+      .progress-step span:not(.progress-step-number) {
+        display: none;
+      }
+
+      .progress-connector {
+        width: 20px;
+      }
+    }
+
+    /* Mobile Touch Target Improvements - minimum 44px */
+    @media (max-width: 640px) {
+      button,
+      .day-tab,
+      input[type="checkbox"],
+      input[type="radio"],
+      select,
+      .menu-item-checkbox,
+      a.action-btn {
+        min-height: 44px;
+        min-width: 44px;
+      }
+
+      /* Larger checkbox touch area */
+      input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+      }
+
+      /* Make form inputs easier to tap */
+      input[type="text"],
+      input[type="email"],
+      input[type="tel"],
+      select {
+        min-height: 48px;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+      }
+    }
+
     /* Mobile-first responsive design */
     @media (max-width: 640px) {
       .header {
@@ -1117,6 +1960,7 @@
         position: static;
         margin-bottom: 1rem;
         width: fit-content;
+        min-height: 44px;
       }
 
       .sync-status {
@@ -1171,11 +2015,50 @@
         left: 1rem;
         max-width: none;
       }
+
+      /* Mobile Cart - Hide sidebar, use floating button + modal */
+      .sidebar {
+        display: none !important;
+      }
+
+      /* Floating cart button */
+      .mobile-cart-btn {
+        display: flex !important;
+      }
+
+      /* Cart Modal Backdrop */
+      .cart-modal-backdrop {
+        display: none;
+      }
+
+      .cart-modal-backdrop.show {
+        display: block;
+      }
+
+      /* Add padding to main content for floating button */
+      .form-section {
+        padding-bottom: 100px;
+      }
+
+      .main-content {
+        padding-bottom: 100px;
+      }
+    }
+
+    /* Very small screens - stack day tabs vertically */
+    @media (max-width: 380px) {
+      .day-tabs {
+        grid-template-columns: 1fr;
+      }
+
+      .day-tab {
+        padding: 0.75rem;
+      }
     }
 
     /* Enhanced focus states for accessibility */
     *:focus {
-      outline: 2px solid #667eea;
+      outline: 2px solid var(--brand-primary);
       outline-offset: 2px;
     }
 
@@ -1183,31 +2066,217 @@
     input:focus,
     select:focus {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.3);
     }
 
     /* Print styles */
     @media print {
+      /* Hide UI elements not needed for print */
       .sidebar,
       .back-btn,
       .sync-status,
       .add-child-btn,
       .remove-child,
-      .checkout-btn {
-        display: none;
+      .checkout-btn,
+      .progress-indicator,
+      .undo-toast,
+      .offline-banner,
+      .cart-drawer-handle,
+      .venmo-btn,
+      .confirmation-close-btn,
+      .print-order-btn,
+      .confirmation-actions,
+      .pay-now-banner,
+      .payment-section,
+      #copy-days-modal,
+      #email-preview-modal {
+        display: none !important;
+      }
+
+      /* Reset page layout */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body {
+        background: white;
+        font-size: 12pt;
+        line-height: 1.4;
       }
 
       .container {
         box-shadow: none;
+        max-width: 100%;
+        display: block;
       }
 
       .main-content {
         grid-template-columns: 1fr;
+        display: block;
+      }
+
+      /* Header styling for print */
+      .header {
+        background: var(--brand-primary) !important;
+        -webkit-print-color-adjust: exact;
+        padding: 1rem 1.5rem;
+        border-bottom: 3px solid var(--brand-primary-dark);
+      }
+
+      .header-brand {
+        margin-bottom: 0.5rem;
+      }
+
+      .header h1 {
+        font-size: 18pt;
+      }
+
+      .subtitle {
+        font-size: 10pt;
+      }
+
+      .notice {
+        font-size: 10pt;
+        margin-top: 0.5rem;
+      }
+
+      /* Form section adjustments */
+      .form-section,
+      .child-card,
+      .section-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      /* Confirmation modal becomes main content for print */
+      .confirmation-modal {
+        position: static !important;
+        display: block !important;
+        background: white !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+
+      .confirmation-modal.show {
+        display: block !important;
+      }
+
+      .confirmation-content {
+        position: static !important;
+        transform: none !important;
+        max-width: 100% !important;
+        padding: 1.5rem !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: 2px solid var(--brand-primary) !important;
+      }
+
+      /* Order details table styling */
+      .confirmation-section {
+        margin: 1rem 0 !important;
+        page-break-inside: avoid;
+      }
+
+      .confirmation-section h4 {
+        background: #f4f6ed !important;
+        padding: 0.5rem 0.75rem !important;
+        margin-bottom: 0.5rem !important;
+        border-left: 4px solid var(--brand-primary) !important;
+        font-size: 11pt;
+      }
+
+      .confirmation-section ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .confirmation-section li {
+        padding: 0.25rem 0.75rem;
+        border-bottom: 1px dashed #e5e7eb;
+        font-size: 10pt;
+      }
+
+      .confirmation-items {
+        border: 1px solid #e5e7eb;
+      }
+
+      .confirmation-item {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 10pt;
+      }
+
+      .confirmation-total {
+        font-size: 14pt !important;
+        font-weight: bold !important;
+        text-align: right !important;
+        padding: 0.75rem !important;
+        background: #f4f6ed !important;
+        border-top: 2px solid var(--brand-primary) !important;
+        margin-top: 1rem !important;
+      }
+
+      /* Order success icon */
+      .order-success-icon {
+        font-size: 36pt !important;
+        margin-bottom: 0.5rem;
+      }
+
+      .confirmation-header {
+        font-size: 16pt !important;
+        margin-bottom: 1rem;
+      }
+
+      /* Print-specific footer */
+      .confirmation-content::after {
+        content: "Artios Academies Cafe | Thank you for your order! | CRivers@artiosacademies.com";
+        display: block;
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: 9pt;
+        color: #6b7280;
+      }
+
+      /* Page setup */
+      @page {
+        margin: 0.5in;
+        size: letter;
+      }
+
+      @page :first {
+        margin-top: 0.25in;
+      }
+
+      /* Force page breaks where needed */
+      .page-break {
+        page-break-before: always;
+      }
+
+      /* Show URLs for links */
+      a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 8pt;
+        color: #6b7280;
+      }
+
+      /* Hide elements that shouldn't print when confirmation isn't shown */
+      body:not(.print-confirmation) .confirmation-modal {
+        display: none !important;
       }
     }
   </style>
 </head>
 <body>
+  <!-- Offline Banner -->
+  <div class="offline-banner" id="offline-banner">
+    ⚠️ You're offline. Your order will be saved and submitted when you're back online.
+  </div>
+
   <div class="container">
     <div class="header">
       <div class="sync-status">
@@ -1231,12 +2300,31 @@
 
     <div class="main-content">
       <div class="form-section">
+        <!-- Order Progress Indicator -->
+        <div class="progress-indicator" id="progress-indicator">
+          <div class="progress-step" id="step-info" data-step="1">
+            <span class="progress-step-number">1</span>
+            <span>Info</span>
+          </div>
+          <div class="progress-connector" id="connector-1"></div>
+          <div class="progress-step" id="step-menu" data-step="2">
+            <span class="progress-step-number">2</span>
+            <span>Menu</span>
+          </div>
+          <div class="progress-connector" id="connector-2"></div>
+          <div class="progress-step" id="step-review" data-step="3">
+            <span class="progress-step-number">3</span>
+            <span>Review</span>
+          </div>
+        </div>
+
         <!-- Enhanced shared email section -->
         <div class="shared-email">
           <h3>📧 Family Email</h3>
-          <div class="form-group">
+          <div class="form-group form-field">
             <label for="family-email">Email Address <span class="required">*</span></label>
             <input type="email" id="family-email" required placeholder="parent@example.com">
+            <div class="validation-message error" id="email-error">Please enter a valid email address</div>
           </div>
         </div>
 
@@ -1279,6 +2367,13 @@
           <span>➕</span> Add Another Child
         </button>
 
+        <!-- Cutoff Countdown Timer -->
+        <div class="cutoff-banner" id="cutoff-banner" style="display: none;">
+          <span class="cutoff-icon">⏰</span>
+          <span id="cutoff-message">Orders due by 10:05 AM</span>
+          <span class="cutoff-timer" id="cutoff-timer"></span>
+        </div>
+
         <div class="menu-section">
           <h3>Select Days & Menu Items</h3>
 
@@ -1287,17 +2382,57 @@
           </div>
 
           <div id="menu-container">
-            <!-- Menu for each day will be generated by JavaScript -->
+            <!-- Skeleton loading state -->
+            <div class="skeleton-loading">
+              <div class="skeleton-menu-item">
+                <div class="skeleton skeleton-image"></div>
+                <div class="skeleton-content">
+                  <div class="skeleton skeleton-text medium"></div>
+                  <div class="skeleton skeleton-text short"></div>
+                </div>
+              </div>
+              <div class="skeleton-menu-item">
+                <div class="skeleton skeleton-image"></div>
+                <div class="skeleton-content">
+                  <div class="skeleton skeleton-text medium"></div>
+                  <div class="skeleton skeleton-text short"></div>
+                </div>
+              </div>
+              <div class="skeleton-menu-item">
+                <div class="skeleton skeleton-image"></div>
+                <div class="skeleton-content">
+                  <div class="skeleton skeleton-text medium"></div>
+                  <div class="skeleton skeleton-text short"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="sidebar">
         <div class="cart-summary">
-          <div class="cart-title">🛒 Your Order</div>
+          <div class="cart-title">
+            🛒 Your Order
+            <span class="cart-count" id="cart-count">0</span>
+          </div>
 
-          <div class="cart-items" id="cart-items">
-            <div class="empty-cart">No items selected</div>
+          <div class="cart-items-wrapper" id="cart-items-wrapper">
+            <div class="cart-items" id="cart-items">
+              <div class="empty-state" style="padding: 2rem 1rem;">
+                <div class="empty-state-icon">🍽️</div>
+                <h3>Your cart is empty</h3>
+                <p style="font-size: 0.9rem;">Select menu items for each day to build your order</p>
+              </div>
+            </div>
+            <div class="scroll-hint">
+              <div class="scroll-hint-inner">
+                <span>More items below</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
           </div>
 
           <!-- Enhanced promo code section -->
@@ -1326,6 +2461,39 @@
     </div>
   </div>
 
+  <!-- Mobile floating cart button -->
+  <button class="mobile-cart-btn" id="mobile-cart-btn" onclick="openCartModal()">
+    <span class="cart-icon">🛒</span>
+    <span class="mobile-cart-count" id="mobile-cart-count">0</span>
+    <span class="mobile-cart-total">$<span id="mobile-cart-total">0.00</span></span>
+  </button>
+
+  <!-- Mobile cart modal -->
+  <div class="cart-modal-backdrop" id="cart-modal-backdrop" onclick="closeCartModal(event)">
+    <div class="cart-modal" onclick="event.stopPropagation()">
+      <div class="cart-modal-header">
+        <h3>🛒 Your Order</h3>
+        <button class="cart-modal-close" onclick="closeCartModal()">&times;</button>
+      </div>
+      <div class="cart-modal-body" id="cart-modal-body">
+        <div class="cart-modal-empty">
+          <div class="empty-icon">🍽️</div>
+          <p>Your cart is empty</p>
+          <p style="font-size: 0.85rem; margin-top: 8px;">Select menu items to get started</p>
+        </div>
+      </div>
+      <div class="cart-modal-footer">
+        <div class="modal-total-row">
+          <span class="modal-total-label">Order Total</span>
+          <span class="modal-total-amount">$<span id="modal-total-amount">0.00</span></span>
+        </div>
+        <button class="modal-checkout-btn" id="modal-checkout-btn" onclick="submitOrderFromModal()">
+          Submit Order - Pay $<span id="modal-checkout-total">0.00</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Enhanced confirmation modal -->
   <div class="confirmation-modal" id="confirmation-modal">
     <div class="confirmation-content">
@@ -1334,6 +2502,9 @@
         Order Submitted Successfully!
       </div>
       <div class="pay-now-banner">✅ Order received – to complete, pay via Venmo below.</div>
+      <div style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin: 1rem 0; text-align: center;">
+        <span style="color: #065f46;">📧 Confirmation email sent to <strong id="conf-email-preview"></strong></span>
+      </div>
       <div class="payment-section">
          <h4>NEXT STEP</h4>
               <button class="venmo-btn" id="venmo-payment-btn">
@@ -1377,16 +2548,22 @@
         <p>Questions? Contact: <strong>CRivers@artiosacademies.com</strong></p>
       </div>
 
-      <button class="confirmation-close-btn" id="confirmation-close-btn">
-        Done - Close Window
-      </button>
+      <div class="confirmation-actions" style="display: flex; gap: 12px; margin-top: 1rem;">
+        <button class="print-order-btn" onclick="window.print()"
+                style="flex: 1; padding: 12px 20px; background: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border-color); border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: all var(--transition-normal);">
+          🖨️ Print Order
+        </button>
+        <button class="confirmation-close-btn" id="confirmation-close-btn" style="flex: 2;">
+          Done - Close Window
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Copy Days Modal -->
   <div class="confirmation-modal" id="copy-days-modal" style="display: none;">
     <div class="confirmation-content" style="max-width: 400px;">
-      <h3 style="margin-bottom: 20px; color: var(--artios-green);">📋 Copy to Other Days</h3>
+      <h3 style="margin-bottom: 20px; color: var(--brand-primary);">📋 Copy to Other Days</h3>
       <p style="margin-bottom: 15px; color: var(--text-secondary);">
         Select which days to copy <strong id="copy-source-day"></strong>'s order to:
       </p>
@@ -1429,19 +2606,31 @@
         if (emailField) {
             emailField.value = authenticatedEmail;
             emailField.readOnly = true;
-            emailField.style.background = '#e8f5e8';
-            emailField.style.color = '#155724';
-            emailField.style.fontWeight = '600';
+            emailField.style.background = 'var(--bg-secondary)';
+            emailField.style.color = 'var(--text-primary)';
+            emailField.style.fontWeight = '500';
             emailField.style.cursor = 'not-allowed';
-            
-            // Add visual indicator
+            emailField.style.border = '2px solid var(--border-color)';
+            emailField.classList.add('valid');
+            emailField.classList.remove('invalid');
+
+            // Hide any validation error message when authenticated
+            const emailError = document.getElementById('email-error');
+            if (emailError) {
+                emailError.style.display = 'none';
+            }
+
+            // Add visual indicator with lock icon
             const indicator = document.createElement('div');
-            indicator.innerHTML = '✅ Authenticated';
-            indicator.style.color = '#28a745';
-            indicator.style.fontSize = '0.9em';
-            indicator.style.marginTop = '5px';
+            indicator.innerHTML = '<svg style="width:14px;height:14px;vertical-align:middle;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>Signed in';
+            indicator.style.color = 'var(--success-color)';
+            indicator.style.fontSize = '0.85em';
+            indicator.style.marginTop = '6px';
+            indicator.style.fontWeight = '500';
+            indicator.style.display = 'flex';
+            indicator.style.alignItems = 'center';
             emailField.parentNode.appendChild(indicator);
-            
+
             console.log('✅ Email locked to authenticated user:', authenticatedEmail);
         }
     });
@@ -1544,11 +2733,75 @@
             const weekDesc = this.getOrderWeekDescription();
             this.showNotification(`Welcome! ${weekDesc}`, 'info');
           }, 1000);
-          
+
+          // Start cutoff countdown timer
+          this.startCutoffTimer();
+
         } catch (error) {
           console.error('Error initializing order system:', error);
           this.showNotification('Error loading menu. Please refresh the page.', 'error');
         }
+      }
+
+      // Cutoff Countdown Timer
+      startCutoffTimer() {
+        const updateTimer = () => {
+          const now = new Date();
+          const banner = document.getElementById('cutoff-banner');
+          const message = document.getElementById('cutoff-message');
+          const timer = document.getElementById('cutoff-timer');
+
+          if (!banner) return;
+
+          // Get today's cutoff time (10:05 AM)
+          const cutoff = new Date(now);
+          cutoff.setHours(10, 5, 0, 0);
+
+          // Check if it's a weekday
+          const dayOfWeek = now.getDay();
+          const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+
+          // If it's after cutoff or weekend, hide banner
+          if (!isWeekday) {
+            banner.style.display = 'none';
+            return;
+          }
+
+          const diff = cutoff - now;
+
+          if (diff <= 0) {
+            // Cutoff passed
+            banner.style.display = 'flex';
+            banner.className = 'cutoff-banner closed';
+            message.textContent = "Today's ordering is closed";
+            timer.textContent = '';
+          } else if (diff <= 30 * 60 * 1000) {
+            // Less than 30 minutes - urgent
+            banner.style.display = 'flex';
+            banner.className = 'cutoff-banner urgent';
+            message.textContent = 'Order now! Closing in';
+
+            const mins = Math.floor(diff / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+          } else if (diff <= 2 * 60 * 60 * 1000) {
+            // Less than 2 hours - show timer
+            banner.style.display = 'flex';
+            banner.className = 'cutoff-banner';
+            message.textContent = 'Orders due by 10:05 AM — Time left:';
+
+            const hours = Math.floor(diff / 3600000);
+            const mins = Math.floor((diff % 3600000) / 60000);
+            timer.textContent = `${hours}h ${mins}m`;
+          } else {
+            // More than 2 hours out, hide
+            banner.style.display = 'none';
+          }
+        };
+
+        // Update immediately and then every second
+        updateTimer();
+        setInterval(updateTimer, 1000);
       }
 
       async loadBlackoutDates() {
@@ -1796,6 +3049,12 @@
           console.error('Menu container or data not found!');
           return;
         }
+
+        // Remove skeleton loading placeholder
+        const skeleton = container.querySelector('.skeleton-loading');
+        if (skeleton) {
+          skeleton.remove();
+        }
         
         this.constants.days.forEach(day => {
           const dayMenu = document.createElement('div');
@@ -1832,12 +3091,34 @@
               <button type="button"
                       onclick="app.showCopyDaysModal('${day}')"
                       style="width: 100%; padding: 12px 20px; background: var(--accent-gradient); color: white; border: none; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; font-size: 1rem; transition: all var(--transition-normal);"
-                      onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(139, 159, 60, 0.3)';"
+                      onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(229, 22, 54, 0.3)';"
                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                 📋 Copy ${this.constants.dayNames[this.constants.days.indexOf(day)]}'s Order to Other Days
               </button>
             `;
             dayMenu.appendChild(copyButtonDiv);
+
+            // Add sticky category navigation
+            const categoryNav = document.createElement('nav');
+            categoryNav.className = 'category-nav';
+            categoryNav.setAttribute('aria-label', 'Jump to category');
+            const categories = Object.keys(this.menuData);
+            categories.forEach(cat => {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'category-nav-btn';
+              btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+              btn.onclick = () => {
+                const catEl = dayMenu.querySelector(`[data-category="${cat}"]`);
+                if (catEl) {
+                  catEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  // Remove collapsed state if collapsed
+                  catEl.classList.remove('collapsed');
+                }
+              };
+              categoryNav.appendChild(btn);
+            });
+            dayMenu.appendChild(categoryNav);
 
             Object.keys(this.menuData).forEach(category => {
               const categoryDiv = document.createElement('div');
@@ -1990,7 +3271,25 @@
                 childCheckbox.appendChild(label);
                 container.appendChild(childCheckbox);
 
-                checkbox.addEventListener('change', () => this.updateCart());
+                checkbox.addEventListener('change', (e) => {
+                  const menuItem = e.target.closest('.menu-item');
+                  const itemName = item.name;
+                  const isAdding = e.target.checked;
+
+                  // Animate the menu item
+                  if (menuItem) {
+                    menuItem.classList.remove('just-added', 'just-removed');
+                    void menuItem.offsetWidth; // Force reflow
+                    menuItem.classList.add(isAdding ? 'just-added' : 'just-removed');
+                    setTimeout(() => menuItem.classList.remove('just-added', 'just-removed'), 400);
+                  }
+
+                  // Show cart toast
+                  this.showCartToast(itemName, isAdding);
+
+                  // Update cart
+                  this.updateCart();
+                });
               }
             });
           }
@@ -2092,9 +3391,42 @@
         }
       }
 
+      showCartToast(itemName, isAdding) {
+        // Remove any existing toast
+        const existing = document.querySelector('.cart-toast');
+        if (existing) existing.remove();
+
+        // Create toast
+        const toast = document.createElement('div');
+        toast.className = 'cart-toast' + (isAdding ? '' : ' removed');
+
+        const icon = isAdding
+          ? '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>'
+          : '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+
+        const message = isAdding ? `${itemName} added` : `${itemName} removed`;
+        toast.innerHTML = icon + '<span>' + message + '</span>';
+
+        document.body.appendChild(toast);
+
+        // Remove after animation
+        setTimeout(() => toast.remove(), 2000);
+      }
+
       updateCartDisplay() {
         const cartItemsContainer = document.getElementById('cart-items');
-        
+
+        // Update cart count badge
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) {
+          const count = this.state.orderItems.length;
+          cartCount.textContent = count;
+          cartCount.classList.toggle('has-items', count > 0);
+        }
+
+        // Update day tab indicators to show which days have orders
+        this.updateDayTabIndicators();
+
         if (this.state.orderItems.length === 0) {
           cartItemsContainer.innerHTML = '<div class="empty-cart">No items selected</div>';
           return;
@@ -2165,6 +3497,35 @@
             }
           });
         });
+
+        // Update scroll indicator for cart overflow
+        this.updateCartScrollIndicator();
+      }
+
+      updateCartScrollIndicator() {
+        const wrapper = document.getElementById('cart-items-wrapper');
+        const cartItems = document.getElementById('cart-items');
+        if (!wrapper || !cartItems) return;
+
+        const hasOverflow = cartItems.scrollHeight > cartItems.clientHeight;
+        wrapper.classList.toggle('has-overflow', hasOverflow);
+
+        // Listen for scroll to hide indicator when at bottom
+        cartItems.onscroll = () => {
+          const isAtBottom = cartItems.scrollTop + cartItems.clientHeight >= cartItems.scrollHeight - 10;
+          wrapper.classList.toggle('scrolled-to-bottom', isAtBottom);
+        };
+      }
+
+      updateDayTabIndicators() {
+        // Get which days have orders
+        const daysWithOrders = new Set(this.state.orderItems.map(item => item.day));
+
+        // Update tab classes
+        document.querySelectorAll('.day-tab').forEach(tab => {
+          const day = tab.dataset.day;
+          tab.classList.toggle('has-orders', daysWithOrders.has(day));
+        });
       }
 
       calculateTotals() {
@@ -2229,12 +3590,87 @@
         
         const isValid = email && hasChildren && allChildrenValid && hasItems;
         const checkoutBtn = document.getElementById('checkout-btn');
-        
+
         if (checkoutBtn) {
           checkoutBtn.disabled = !isValid;
         }
-        
+
+        // Update progress indicator
+        this.updateProgressIndicator(email && hasChildren && allChildrenValid, hasItems, isValid);
+
         return isValid;
+      }
+
+      updateProgressIndicator(infoComplete, menuComplete, readyToSubmit) {
+        const stepInfo = document.getElementById('step-info');
+        const stepMenu = document.getElementById('step-menu');
+        const stepReview = document.getElementById('step-review');
+        const connector1 = document.getElementById('connector-1');
+        const connector2 = document.getElementById('connector-2');
+
+        if (!stepInfo || !stepMenu || !stepReview) return;
+
+        // Reset all states
+        [stepInfo, stepMenu, stepReview].forEach(step => {
+          step.classList.remove('active', 'completed');
+        });
+        [connector1, connector2].forEach(conn => {
+          conn?.classList.remove('completed');
+        });
+
+        if (readyToSubmit) {
+          // All steps complete
+          stepInfo.classList.add('completed');
+          stepMenu.classList.add('completed');
+          stepReview.classList.add('active');
+          connector1?.classList.add('completed');
+          connector2?.classList.add('completed');
+        } else if (menuComplete && infoComplete) {
+          // Info and menu complete, on review
+          stepInfo.classList.add('completed');
+          stepMenu.classList.add('completed');
+          stepReview.classList.add('active');
+          connector1?.classList.add('completed');
+        } else if (infoComplete) {
+          // Info complete, on menu
+          stepInfo.classList.add('completed');
+          stepMenu.classList.add('active');
+          connector1?.classList.add('completed');
+        } else {
+          // Still on info
+          stepInfo.classList.add('active');
+        }
+      }
+
+      validateEmailField(input) {
+        const email = input.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const errorEl = document.getElementById('email-error');
+
+        if (!email) {
+          input.classList.add('invalid');
+          input.classList.remove('valid');
+          if (errorEl) errorEl.textContent = 'Email is required';
+        } else if (!emailRegex.test(email)) {
+          input.classList.add('invalid');
+          input.classList.remove('valid');
+          if (errorEl) errorEl.textContent = 'Please enter a valid email address';
+        } else {
+          input.classList.remove('invalid');
+          input.classList.add('valid');
+        }
+      }
+
+      validateChildField(input) {
+        const value = input.value.trim();
+
+        if (!value) {
+          input.classList.add('invalid');
+          input.classList.remove('valid');
+        } else {
+          input.classList.remove('invalid');
+          input.classList.add('valid');
+        }
       }
 
       showNotification(message, type = 'info') {
@@ -2735,10 +4171,28 @@
           this.validatePromoCode(e.target.value);
         });
 
+        // Inline validation on blur
+        document.getElementById('family-email')?.addEventListener('blur', (e) => {
+          this.validateEmailField(e.target);
+        });
+
+        // Validate child fields on blur
+        document.addEventListener('blur', (e) => {
+          if (e.target.classList.contains('child-first-name') ||
+              e.target.classList.contains('child-last-name') ||
+              e.target.classList.contains('child-grade')) {
+            this.validateChildField(e.target);
+          }
+        }, true);
+
         document.addEventListener('input', (e) => {
-          if (e.target.classList.contains('child-first-name') || 
+          if (e.target.classList.contains('child-first-name') ||
               e.target.classList.contains('child-last-name')) {
             this.updateChildCheckboxes();
+          }
+          // Clear invalid state when user starts typing
+          if (e.target.classList.contains('invalid')) {
+            e.target.classList.remove('invalid');
           }
           this.validateForm();
         });
@@ -2768,7 +4222,8 @@
         const submitBtn = document.getElementById('checkout-btn');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '⏳ Submitting order...';
+        submitBtn.classList.add('btn-loading');
+        submitBtn.innerHTML = 'Submitting order...';
         
         try {
           if (!this.config.useGoogleSheets) {
@@ -2805,6 +4260,7 @@
           console.error('Error submitting order:', error);
           this.showNotification('Failed to submit order. Please try again.', 'error');
           submitBtn.disabled = false;
+          submitBtn.classList.remove('btn-loading');
           submitBtn.innerHTML = originalText;
         }
       }
@@ -2921,6 +4377,11 @@
       }
 
       populateConfirmationDetails() {
+        // Populate email preview
+        const email = document.getElementById('family-email')?.value || '';
+        const emailPreview = document.getElementById('conf-email-preview');
+        if (emailPreview) emailPreview.textContent = email;
+
         const confChildrenList = document.getElementById('conf-children-list');
         confChildrenList.innerHTML = '';
         document.querySelectorAll('.child-section').forEach(child => {
@@ -2974,6 +4435,258 @@
     // Initialize the system
     const app = new OrderSystem();
     window.app = app;
+
+    // ==========================================
+    // OFFLINE HANDLING
+    // ==========================================
+    function updateOnlineStatus() {
+      const banner = document.getElementById('offline-banner');
+      const syncStatus = document.querySelector('.sync-status');
+
+      if (navigator.onLine) {
+        document.body.classList.remove('offline');
+        banner.classList.remove('show');
+        if (syncStatus) syncStatus.innerHTML = '☁️ Cloud Sync Active';
+
+        // Check for pending offline orders
+        const pendingOrder = localStorage.getItem('artios_pending_order');
+        if (pendingOrder) {
+          app.showNotification('You have a saved order. Submitting now...', 'info');
+          // Could auto-submit here
+        }
+      } else {
+        document.body.classList.add('offline');
+        banner.classList.add('show');
+        if (syncStatus) syncStatus.innerHTML = '📴 Offline Mode';
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus(); // Check on load
+
+    // Save form state to localStorage periodically
+    function saveFormState() {
+      const formData = {
+        email: document.getElementById('family-email')?.value || '',
+        children: [],
+        orderItems: app.state.orderItems,
+        timestamp: Date.now()
+      };
+
+      document.querySelectorAll('.child-section').forEach(child => {
+        formData.children.push({
+          firstName: child.querySelector('.child-first-name')?.value || '',
+          lastName: child.querySelector('.child-last-name')?.value || '',
+          grade: child.querySelector('.child-grade')?.value || ''
+        });
+      });
+
+      localStorage.setItem('artios_form_state', JSON.stringify(formData));
+    }
+
+    // Restore form state on load
+    function restoreFormState() {
+      const saved = localStorage.getItem('artios_form_state');
+      if (!saved) return;
+
+      try {
+        const formData = JSON.parse(saved);
+        // Only restore if less than 24 hours old
+        if (Date.now() - formData.timestamp > 24 * 60 * 60 * 1000) {
+          localStorage.removeItem('artios_form_state');
+          return;
+        }
+
+        // Restore email
+        const emailField = document.getElementById('family-email');
+        if (emailField && formData.email && !emailField.value) {
+          emailField.value = formData.email;
+        }
+
+        app.showNotification('Previous session restored', 'info');
+      } catch (e) {
+        console.error('Error restoring form state:', e);
+      }
+    }
+
+    // Save every 5 seconds if there are changes
+    setInterval(saveFormState, 5000);
+
+    // Restore on load (after a short delay to let the form initialize)
+    setTimeout(restoreFormState, 500);
+
+    // ==========================================
+    // UNDO TOAST SYSTEM
+    // ==========================================
+    window.showUndoToast = function(message, undoCallback, duration = 8000) {
+      // Remove any existing toast
+      const existing = document.querySelector('.undo-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = 'undo-toast';
+
+      let remaining = duration / 1000;
+      toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.undoAction()">Undo</button>
+        <span class="countdown">${remaining}s</span>
+      `;
+
+      toast.undoAction = function() {
+        clearInterval(countdownInterval);
+        undoCallback();
+        toast.remove();
+      };
+
+      document.body.appendChild(toast);
+
+      const countdownInterval = setInterval(() => {
+        remaining--;
+        const countdown = toast.querySelector('.countdown');
+        if (countdown) countdown.textContent = remaining + 's';
+
+        if (remaining <= 0) {
+          clearInterval(countdownInterval);
+          toast.remove();
+        }
+      }, 1000);
+
+      return toast;
+    };
+
+    // ==========================================
+    // MOBILE CART DRAWER
+    // ==========================================
+    function initMobileCartDrawer() {
+      const cartTitle = document.querySelector('.cart-title');
+      const sidebar = document.querySelector('.sidebar');
+
+      if (cartTitle && sidebar && window.innerWidth <= 640) {
+        cartTitle.addEventListener('click', () => {
+          sidebar.classList.toggle('expanded');
+        });
+
+        // Close drawer when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!sidebar.contains(e.target) && sidebar.classList.contains('expanded')) {
+            sidebar.classList.remove('expanded');
+          }
+        });
+      }
+    }
+
+    // Init on load and resize
+    initMobileCartDrawer();
+    window.addEventListener('resize', initMobileCartDrawer);
+
+    // Mobile Cart Modal Functions
+    function openCartModal() {
+      const backdrop = document.getElementById('cart-modal-backdrop');
+      backdrop.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      updateCartModalContent();
+    }
+
+    function closeCartModal(event) {
+      // If event is passed, only close if clicking backdrop (not modal content)
+      if (event && event.target !== event.currentTarget) return;
+
+      const backdrop = document.getElementById('cart-modal-backdrop');
+      backdrop.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    function updateCartModalContent() {
+      const modalBody = document.getElementById('cart-modal-body');
+      const items = app.state.orderItems;
+
+      if (items.length === 0) {
+        modalBody.innerHTML = `
+          <div class="cart-modal-empty">
+            <div class="empty-icon">🍽️</div>
+            <p>Your cart is empty</p>
+            <p style="font-size: 0.85rem; margin-top: 8px;">Select menu items to get started</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Group items by child
+      const itemsByChild = {};
+      items.forEach(item => {
+        if (!itemsByChild[item.childId]) {
+          itemsByChild[item.childId] = { name: item.childName, items: [] };
+        }
+        itemsByChild[item.childId].items.push(item);
+      });
+
+      let html = '';
+      for (const [childId, childData] of Object.entries(itemsByChild)) {
+        html += `<div class="child-cart-section">
+          <div class="child-cart-header">${childData.name}</div>`;
+
+        childData.items.forEach((item, index) => {
+          const dayName = app.constants.dayNames[app.constants.days.indexOf(item.day)];
+          html += `
+            <div class="cart-item">
+              <div class="cart-item-content">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-date">${dayName}</div>
+                <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+              </div>
+              <button class="remove-item-btn" onclick="removeItemFromModal('${childId}', '${item.itemId}', '${item.day}')">&times;</button>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      modalBody.innerHTML = html;
+    }
+
+    function removeItemFromModal(childId, itemId, day) {
+      const checkbox = document.querySelector(`input[type="checkbox"][data-child-id="${childId}"][data-item="${itemId}"][data-day="${day}"]`);
+      if (checkbox) {
+        checkbox.checked = false;
+        app.updateCart();
+        updateCartModalContent();
+      }
+    }
+
+    function submitOrderFromModal() {
+      closeCartModal();
+      // Trigger the main checkout button
+      document.getElementById('checkout-btn').click();
+    }
+
+    // Update mobile cart button when cart changes
+    function updateMobileCartButton() {
+      const count = app.state.orderItems.length;
+      const total = app.state.currentTotal || 0;
+
+      document.getElementById('mobile-cart-count').textContent = count;
+      document.getElementById('mobile-cart-total').textContent = total.toFixed(2);
+      document.getElementById('modal-total-amount').textContent = total.toFixed(2);
+      document.getElementById('modal-checkout-total').textContent = total.toFixed(2);
+
+      // Show/hide button based on items
+      const btn = document.getElementById('mobile-cart-btn');
+      if (window.innerWidth <= 640) {
+        btn.style.display = count > 0 ? 'flex' : 'none';
+      }
+    }
+
+    // Hook into calculateTotals to update mobile elements after totals are ready
+    const originalCalculateTotals = app.calculateTotals.bind(app);
+    app.calculateTotals = function() {
+      originalCalculateTotals();
+      updateMobileCartButton();
+    };
+
+    // Initial update
+    updateMobileCartButton();
   </script>
 </body>
 </html>

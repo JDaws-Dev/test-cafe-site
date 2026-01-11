@@ -33,7 +33,7 @@
 
     /* Header with Authentication */
     .auth-header {
-      background: linear-gradient(135deg, #8B9F3C 0%, #6d7d2f 100%);
+      background: linear-gradient(135deg, #E51636 0%, #c41230 100%);
       color: white;
       padding: 20px 30px;
       display: flex;
@@ -127,7 +127,9 @@
       margin-bottom: 30px;
     }
 
+    /* Action Cards - Now using <a> tags for proper semantics */
     .action-card {
+      display: block;
       background: white;
       border: 2px solid #e0e0e0;
       border-radius: 12px;
@@ -135,18 +137,54 @@
       text-align: center;
       transition: all 0.3s ease;
       cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
     }
 
     .action-card:hover {
-      border-color: #8B9F3C;
-      box-shadow: 0 4px 20px rgba(66, 133, 244, 0.1);
-      transform: translateY(-2px);
+      border-color: #E51636;
+      box-shadow: 0 8px 25px rgba(229, 22, 54, 0.15);
+      transform: translateY(-4px);
+    }
+
+    .action-card:focus {
+      outline: none;
+      border-color: #E51636;
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.3), 0 8px 25px rgba(229, 22, 54, 0.15);
+    }
+
+    .action-card:active {
+      transform: translateY(-1px);
     }
 
     .action-icon {
-      font-size: 3em;
-      margin-bottom: 15px;
-      display: block;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f4f6ed 0%, #e8ebe0 100%);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .action-card:hover .action-icon {
+      background: linear-gradient(135deg, #E51636 0%, #c41230 100%);
+    }
+
+    .action-card:hover .action-icon svg {
+      stroke: white;
+    }
+
+    .action-icon svg {
+      width: 32px;
+      height: 32px;
+      stroke: #E51636;
+      stroke-width: 2;
+      fill: none;
+      transition: all 0.3s ease;
     }
 
     .action-title {
@@ -160,43 +198,59 @@
       color: #666;
       margin-bottom: 20px;
       font-size: 0.95em;
+      line-height: 1.5;
     }
 
-    .action-btn {
-      background: #8B9F3C;
+    .action-cta {
+      background: #E51636;
       color: white;
       border: none;
       padding: 12px 25px;
-      border-radius: 6px;
-      cursor: pointer;
+      border-radius: 8px;
       font-weight: 600;
-      font-size: 16px;
+      font-size: 15px;
       transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .action-btn:hover {
-      background: #3367d6;
-      transform: translateY(-1px);
-      text-decoration: none;
-      color: white;
+    .action-card:hover .action-cta {
+      background: #c41230;
     }
 
-    .action-btn.secondary {
+    .action-cta.secondary {
       background: #ff9800;
     }
 
-    .action-btn.secondary:hover {
+    .action-card:hover .action-cta.secondary {
       background: #f57c00;
     }
 
-    .action-btn.success {
-      background: #4caf50;
+    .action-cta.help {
+      background: #3b82f6;
     }
 
-    .action-btn.success:hover {
-      background: #43a047;
+    .action-card:hover .action-cta.help {
+      background: #2563eb;
+    }
+
+    .action-cta svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    /* View All Link */
+    .view-all-link:hover {
+      background: rgba(229, 22, 54, 0.1);
+    }
+
+    .view-all-link:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.3);
     }
 
     /* Recent Orders Summary */
@@ -209,7 +263,7 @@
     }
 
     .recent-orders h3 {
-      color: #8B9F3C;
+      color: #E51636;
       margin-bottom: 20px;
       display: flex;
       align-items: center;
@@ -268,6 +322,116 @@
       margin-top: 2px;
     }
 
+    /* Skeleton Loading */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+
+    .skeleton-order {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .skeleton-order .skeleton-text {
+      height: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    .skeleton-order .skeleton-text:last-child {
+      margin-bottom: 0;
+    }
+
+    .skeleton-text.short { width: 80px; }
+    .skeleton-text.medium { width: 150px; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 2rem;
+      color: #6b7280;
+    }
+
+    .empty-state-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.25rem;
+      background: linear-gradient(135deg, #f4f6ed 0%, #e8ebe0 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-state-icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: #E51636;
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .empty-state h3 {
+      font-size: 1.1rem;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      margin-bottom: 1.25rem;
+      max-width: 280px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .empty-state-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #E51636;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .empty-state-btn:hover {
+      background: #c41230;
+      transform: translateY(-1px);
+    }
+
+    .empty-state-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(229, 22, 54, 0.3);
+    }
+
+    .empty-state-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .auth-header {
@@ -298,6 +462,87 @@
         text-align: left;
       }
     }
+
+    /* Print styles for dashboard orders */
+    @media print {
+      /* Hide non-essential UI */
+      .auth-header,
+      .quick-actions,
+      .logout-btn,
+      .order-actions,
+      .view-order-btn,
+      .empty-state,
+      .loading-skeleton {
+        display: none !important;
+      }
+
+      /* Reset layout */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body {
+        background: white;
+        font-size: 11pt;
+      }
+
+      .container {
+        box-shadow: none;
+        max-width: 100%;
+      }
+
+      /* Order cards */
+      .order-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-bottom: 0.75rem;
+      }
+
+      .order-header {
+        background: #f4f6ed !important;
+        border-bottom: 2px solid #E51636;
+        padding: 0.5rem 0.75rem;
+      }
+
+      .order-items {
+        padding: 0.5rem 0.75rem;
+      }
+
+      .order-item {
+        padding: 0.25rem 0;
+        border-bottom: 1px dashed #e5e7eb;
+        font-size: 10pt;
+      }
+
+      .order-total {
+        font-weight: bold;
+        background: #f4f6ed !important;
+        padding: 0.5rem 0.75rem;
+        text-align: right;
+      }
+
+      /* Print header */
+      .dashboard-content::before {
+        content: "Artios Academies Cafe - Order History";
+        display: block;
+        font-size: 16pt;
+        font-weight: bold;
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 3px solid #E51636;
+        color: #1f2937;
+      }
+
+      /* Page setup */
+      @page {
+        margin: 0.5in;
+        size: letter;
+      }
+    }
   </style>
 </head>
 <body>
@@ -325,42 +570,89 @@
         </p>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="quick-actions-grid">
-        <div class="action-card" onclick="goToOrdering()">
-          <span class="action-icon">📝</span>
+      <!-- Quick Actions - Using proper <a> tags for accessibility -->
+      <div class="quick-actions-grid" role="navigation" aria-label="Quick actions">
+        <a href="orders.html" class="action-card" aria-label="Place a new lunch order">
+          <div class="action-icon">
+            <!-- Heroicon: pencil-square -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+            </svg>
+          </div>
           <div class="action-title">Place New Order</div>
           <div class="action-desc">Order lunch for your children for this week</div>
-          <div class="action-btn">Start Ordering</div>
-        </div>
+          <span class="action-cta">
+            Start Ordering
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </span>
+        </a>
 
-        <div class="action-card" onclick="viewOrderHistory()">
-          <span class="action-icon">📋</span>
+        <a href="order-history.html" class="action-card" aria-label="View your order history">
+          <div class="action-icon">
+            <!-- Heroicon: clipboard-document-list -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+            </svg>
+          </div>
           <div class="action-title">Order History</div>
           <div class="action-desc">View all past orders, cancel items, or request refunds</div>
-          <div class="action-btn secondary">View Orders</div>
-        </div>
+          <span class="action-cta secondary">
+            View Orders
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </span>
+        </a>
 
-        <div class="action-card" onclick="contactSupport()">
-          <span class="action-icon">❓</span>
+        <a href="mailto:CRivers@artiosacademies.com?subject=Cafe%20Order%20Question" class="action-card" aria-label="Get help with your orders">
+          <div class="action-icon">
+            <!-- Heroicon: chat-bubble-left-right -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+            </svg>
+          </div>
           <div class="action-title">Get Help</div>
           <div class="action-desc">Questions about orders, payments, or menu items</div>
-          <div class="action-btn success">Contact Us</div>
-        </div>
+          <span class="action-cta help">
+            Contact Us
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </span>
+        </a>
       </div>
 
       <!-- Recent Orders Summary -->
       <div class="recent-orders">
         <h3>✅ Recent Order Confirmations</h3>
         <div class="orders-loading" id="orders-loading">
-          Loading your recent orders...
+          <!-- Skeleton loading state -->
+          <div class="skeleton-order">
+            <div>
+              <div class="skeleton skeleton-text medium"></div>
+              <div class="skeleton skeleton-text short"></div>
+            </div>
+            <div class="skeleton skeleton-text short"></div>
+          </div>
+          <div class="skeleton-order">
+            <div>
+              <div class="skeleton skeleton-text medium"></div>
+              <div class="skeleton skeleton-text short"></div>
+            </div>
+            <div class="skeleton skeleton-text short"></div>
+          </div>
         </div>
         <div class="orders-summary" id="orders-summary">
           <!-- Will be populated by JavaScript -->
         </div>
         <div style="text-align: center; margin-top: 15px;">
-          <a href="#" onclick="viewOrderHistory()" style="color: #8B9F3C; text-decoration: none; font-weight: 600;">
-            View All Orders →
+          <a href="order-history.html" class="view-all-link" style="color: #E51636; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; transition: all 0.2s ease;">
+            View All Orders
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
           </a>
         </div>
       </div>
@@ -487,11 +779,20 @@
             document.getElementById('orders-summary').innerHTML = ordersHtml;
           } else {
             document.getElementById('orders-summary').innerHTML = `
-              <div style="text-align: center; color: #666; padding: 20px; background: white; border-radius: 8px;">
-                <p>No orders found.</p>
-                <p style="margin-top: 10px;">
-                  <a href="#" onclick="goToOrdering()" style="color: #8B9F3C;">Place your first order →</a>
-                </p>
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                </div>
+                <h3>No orders yet</h3>
+                <p>Ready to order lunch for your kids? It only takes a minute!</p>
+                <a href="orders.html" class="empty-state-btn">
+                  Place Your First Order
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </a>
               </div>
             `;
           }
@@ -501,9 +802,21 @@
           document.getElementById('orders-loading').style.display = 'none';
           document.getElementById('orders-summary').style.display = 'block';
           document.getElementById('orders-summary').innerHTML = `
-            <p style="text-align: center; color: #f44336; padding: 20px;">
-              Unable to load recent orders. Please try again later.
-            </p>
+            <div class="empty-state">
+              <div class="empty-state-icon" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="stroke: #ef4444;" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3>Unable to load orders</h3>
+              <p>Something went wrong. Please check your connection and try again.</p>
+              <button onclick="loadRecentOrders()" class="empty-state-btn">
+                Try Again
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </button>
+            </div>
           `;
         });
     }
