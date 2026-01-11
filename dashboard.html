@@ -713,10 +713,11 @@
       // Set family info in header
       document.getElementById('family-email').textContent = authenticatedEmail;
       document.getElementById('family-greeting').textContent = 'Welcome back!';
-      
-      // Set family avatar initial
+
+      // Set family avatar initial (if element exists)
       const familyInitial = authenticatedEmail.charAt(0).toUpperCase();
-      document.getElementById('family-avatar').textContent = familyInitial;
+      const avatarEl = document.getElementById('family-avatar');
+      if (avatarEl) avatarEl.textContent = familyInitial;
     }
 
     function loadRecentOrders() {
