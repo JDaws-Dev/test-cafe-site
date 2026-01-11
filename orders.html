@@ -101,37 +101,19 @@
       box-shadow: var(--shadow-lg);
     }
 
-    .sync-status {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: rgba(255,255,255,0.2);
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius-lg);
-      font-size: 0.875rem;
-      font-weight: 500;
-      backdrop-filter: blur(10px);
-    }
-
-    .back-btn {
+    .back-link {
       position: absolute;
       top: 1.25rem;
       left: 1.25rem;
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--radius-lg);
-      cursor: pointer;
-      font-weight: 600;
-      backdrop-filter: blur(10px);
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
       transition: all var(--transition-normal);
-      font-size: 0.875rem;
     }
 
-    .back-btn:hover {
-      background: rgba(255,255,255,0.3);
-      transform: translateY(-2px);
+    .back-link:hover {
+      color: white;
     }
 
     .header-brand {
@@ -1956,17 +1938,10 @@
         padding: 1.5rem 1rem;
       }
 
-      .back-btn {
+      .back-link {
         position: static;
-        margin-bottom: 1rem;
-        width: fit-content;
-        min-height: 44px;
-      }
-
-      .sync-status {
-        position: static;
-        margin-bottom: 1rem;
-        width: fit-content;
+        display: block;
+        margin-bottom: 0.75rem;
       }
 
       .header-brand {
@@ -2073,8 +2048,7 @@
     @media print {
       /* Hide UI elements not needed for print */
       .sidebar,
-      .back-btn,
-      .sync-status,
+      .back-link,
       .add-child-btn,
       .remove-child,
       .checkout-btn,
@@ -2279,19 +2253,16 @@
 
   <div class="container">
     <div class="header">
-      <div class="sync-status">
-        ☁️ Cloud Sync Active
-      </div>
-      <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
-      
+      <a href="dashboard.html" class="back-link">← Dashboard</a>
+
       <div class="header-brand">
         <img class="artios-logo" src="artios-logo.png" alt="Artios Academies Logo">
         <div class="header-text">
           <h1>Artios Academies of Sugar Hill</h1>
-          <div class="subtitle">Cafe Lunch Order System 2025-2026</div>
+          <div class="subtitle">Cafe Lunch Orders</div>
         </div>
       </div>
-      
+
       <div class="notice">
         <strong>⏰ Order Cutoff: Daily at 10:00 AM</strong><br>
         Questions? Email <a href="mailto:CRivers@artiosacademies.com">CRivers@artiosacademies.com</a>
