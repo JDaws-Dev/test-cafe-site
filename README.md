@@ -1,31 +1,45 @@
-# Archive
+# Artios Academies Cafe Lunch Order System
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+School lunch ordering system for Artios Academies of Sugar Hill.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/jeremiahdaws/v0-archive)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/xfMXaJrIPXJ)
+## Tech Stack
+- Static HTML/CSS/JS
+- Google Sheets backend (via Apps Script)
+- Venmo deep links for payment
+- GitHub Pages hosting
 
-## Overview
+## Pages
+- `index.html` - Redirects to login
+- `login.html` - Family login page
+- `dashboard.html` - Family portal (place orders, view history)
+- `orders.html` - Main ordering page with menu and cart
+- `manage-orders.html` - Order history, cancellations, refunds
+- `admin-hub.html` - Admin dashboard for staff
+- `checklist-page.html` - Kitchen prep checklist
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## Recent Updates (Jan 11, 2025)
 
-## Deployment
+### CFA Rebrand
+- Replaced olive green palette with CFA-inspired warm red (#E51636)
+- Updated all pages: orders.html, dashboard.html, login.html, admin-hub.html, manage-orders.html
 
+### Mobile Cart Redesign
+- Replaced ugly drawer with floating cart button + modal
+- Fixed cart total not updating on item add
+- Added scroll indicator for cart overflow on desktop
 
-Your project is live at:
+### Header Cleanup
+- Removed "Cloud Sync Active" badge (unnecessary clutter)
+- Simplified "Back to Dashboard" button to clean text link
+- Redesigned order cutoff/questions section as inline info bar (not yellow warning box)
 
-**[https://vercel.com/jeremiahdaws/v0-archive](https://vercel.com/jeremiahdaws/v0-archive)**
+### Bug Fixes
+- Fixed 404 on Order History (was linking to non-existent order-history.html, now links to manage-orders.html)
+- Fixed null reference error for family-avatar element in dashboard.html
 
-## Build your app
+## TODO / Known Issues
+- Deployment: No auto-deploy configured. Push to main, then manually pull on server or configure GitHub Pages/Netlify
+- manage-orders.html may need additional styling updates to match new branding throughout
 
-Continue building your app on:
-
-**[https://v0.app/chat/projects/xfMXaJrIPXJ](https://v0.app/chat/projects/xfMXaJrIPXJ)**
-
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Contact
+Questions: CRivers@artiosacademies.com
