@@ -1224,12 +1224,70 @@
                 min-width: 600px;
             }
 
-            
+
             #payments-tab input[type="text"],
             #payments-tab select,
             #payments-tab input[type="month"] {
                 width: 100% !important;
                 max-width: none;
+            }
+
+            /* Communications tab mobile - scrollable table */
+            #communications .card {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #communications table {
+                min-width: 700px;
+            }
+
+            /* Filter controls stack on mobile */
+            #communications .card-header,
+            #payments-tab .card-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            #communications .card-header > div,
+            #payments-tab .card-header > div {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            /* Scroll hint shadow for tables */
+            .table-scroll-container {
+                position: relative;
+            }
+
+            .table-scroll-container::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 30px;
+                background: linear-gradient(to right, transparent, rgba(0,0,0,0.05));
+                pointer-events: none;
+            }
+
+            /* Order management mobile */
+            .om-order-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .om-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .om-item-actions {
+                width: 100%;
+                justify-content: flex-end;
             }
 
             /* Larger touch targets */
@@ -1243,6 +1301,48 @@
                 padding: 12px 20px;
                 font-size: 1em;
                 min-height: 44px;
+            }
+        }
+
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        @media (max-width: 768px) {
+            .scroll-to-top {
+                bottom: 15px;
+                right: 15px;
+                width: 44px;
+                height: 44px;
             }
         }
 
@@ -1423,6 +1523,9 @@
 
     <!-- Admin Dashboard -->
     <div class="admin-container" id="admin-dashboard">
+        <!-- Scroll to Top Button -->
+        <button class="scroll-to-top" id="scroll-to-top" onclick="scrollToTop()" title="Scroll to top">↑</button>
+
         <!-- Header -->
         <div class="admin-header">
             <div class="header-content">
@@ -2321,7 +2424,24 @@
                     attemptLogin();
                 }
             });
+
+            // Setup scroll-to-top button visibility
+            window.addEventListener('scroll', function() {
+                const scrollBtn = document.getElementById('scroll-to-top');
+                if (scrollBtn) {
+                    if (window.scrollY > 300) {
+                        scrollBtn.classList.add('visible');
+                    } else {
+                        scrollBtn.classList.remove('visible');
+                    }
+                }
+            });
         });
+
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         // Authentication
         function attemptLogin() {
@@ -2789,7 +2909,7 @@
                 }
 
                 var self = this;
-                document.getElementById('order-display').innerHTML = '<div style="text-align: center; padding: 40px;">Loading...</div>';
+                document.getElementById('order-display').innerHTML = '<div class="loading"><span class="loading-spinner"></span> Searching orders...</div>';
 
                 var url = this.apiUrl + '?action=lookup_orders';
                 if (searchType === 'email') {
