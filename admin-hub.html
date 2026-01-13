@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Admin Hub - Artios Academies Cafe</title>
     <link rel="icon" type="image/png" href="artios-logo.png">
@@ -2703,17 +2703,19 @@
         function generateCalendar() {
             const container = document.getElementById('calendar-grid');
             const monthDisplay = document.getElementById('current-month-display');
-            
+
             if (!container) return;
 
             const year = currentCalendarMonth.getFullYear();
             const month = currentCalendarMonth.getMonth();
-            
-            // Update month display
-            monthDisplay.textContent = currentCalendarMonth.toLocaleDateString('en-US', { 
-                month: 'long', 
-                year: 'numeric' 
-            });
+
+            // Update month display (if element exists)
+            if (monthDisplay) {
+                monthDisplay.textContent = currentCalendarMonth.toLocaleDateString('en-US', {
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
 
             // Clear calendar
             container.innerHTML = '';
