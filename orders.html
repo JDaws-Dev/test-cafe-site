@@ -2067,6 +2067,8 @@
     /* Print styles */
     @media print {
       /* Hide everything except confirmation modal when printing */
+      .header,
+      .main-content,
       .form-section,
       .menu-section,
       .sidebar,
@@ -2107,47 +2109,6 @@
         box-shadow: none;
         max-width: 100%;
         display: block;
-      }
-
-      .main-content {
-        grid-template-columns: 1fr;
-        display: block;
-      }
-
-      /* Header styling for print */
-      .header {
-        background: var(--brand-primary) !important;
-        -webkit-print-color-adjust: exact;
-        padding: 1rem 1.5rem;
-        border-bottom: 3px solid var(--brand-primary-dark);
-      }
-
-      .header-brand {
-        margin-bottom: 0.5rem;
-      }
-
-      .header h1 {
-        font-size: 18pt;
-      }
-
-      .subtitle {
-        font-size: 10pt;
-      }
-
-      .header-info {
-        font-size: 10pt;
-        margin-top: 0.5rem;
-        border-top-color: rgba(255,255,255,0.3);
-      }
-
-      /* Form section adjustments */
-      .form-section,
-      .child-card,
-      .section-card {
-        box-shadow: none;
-        border: 1px solid #ddd;
-        page-break-inside: avoid;
-        break-inside: avoid;
       }
 
       /* Confirmation modal becomes main content for print */
