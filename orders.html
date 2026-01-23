@@ -4204,18 +4204,30 @@
           }
         });
 
+        let isPromoSyncing = false; // Prevent sync loop
+
         document.getElementById('promo-code')?.addEventListener('input', (e) => {
-          this.validatePromoCode(e.target.value);
+          if (isPromoSyncing) return;
+          isPromoSyncing = true;
+
           // Sync with mobile input
           const mobileInput = document.getElementById('promo-code-mobile');
           if (mobileInput) mobileInput.value = e.target.value;
+
+          this.validatePromoCode(e.target.value);
+          isPromoSyncing = false;
         });
 
         document.getElementById('promo-code-mobile')?.addEventListener('input', (e) => {
-          this.validatePromoCode(e.target.value);
+          if (isPromoSyncing) return;
+          isPromoSyncing = true;
+
           // Sync with desktop input
           const desktopInput = document.getElementById('promo-code');
           if (desktopInput) desktopInput.value = e.target.value;
+
+          this.validatePromoCode(e.target.value);
+          isPromoSyncing = false;
         });
 
         // Inline validation on blur
