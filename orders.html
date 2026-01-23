@@ -2480,6 +2480,18 @@
           <p style="font-size: 0.85rem; margin-top: 8px;">Select menu items to get started</p>
         </div>
       </div>
+
+      <!-- Promo code section for mobile -->
+      <div class="promo-section">
+        <h4>🎟️ Discount Codes</h4>
+        <input type="text"
+               id="promo-code-mobile"
+               class="promo-input"
+               placeholder="Enter discount code"
+               maxlength="20">
+        <div class="promo-status" id="promo-status-mobile"></div>
+      </div>
+
       <div class="cart-modal-footer">
         <div class="modal-total-row">
           <span class="modal-total-label">Order Total</span>
@@ -3532,7 +3544,10 @@
         this.state.currentSubtotal = cartTotal;
 
         // Apply promo code discount to the subtotal (after combo discounts)
-        const promoCode = document.getElementById('promo-code')?.value.toUpperCase() || '';
+        // Check both desktop and mobile promo code fields
+        const promoCodeDesktop = document.getElementById('promo-code')?.value.toUpperCase() || '';
+        const promoCodeMobile = document.getElementById('promo-code-mobile')?.value.toUpperCase() || '';
+        const promoCode = promoCodeDesktop || promoCodeMobile;
         const discountRate = this.constants.discountCodes[promoCode] || 0;
         this.state.currentDiscount = Math.round(cartTotal * discountRate * 100) / 100;
 
@@ -3553,20 +3568,34 @@
 
       validatePromoCode(code) {
         const promoStatus = document.getElementById('promo-status');
+        const promoStatusMobile = document.getElementById('promo-status-mobile');
         const upperCode = code.toUpperCase();
-        
+
+        let statusText = '';
+        let statusClass = 'promo-status';
+
         if (code === '') {
-          promoStatus.textContent = '';
-          promoStatus.className = 'promo-status';
+          statusText = '';
+          statusClass = 'promo-status';
         } else if (this.constants.discountCodes[upperCode]) {
           const percentage = (this.constants.discountCodes[upperCode] * 100).toFixed(0);
-          promoStatus.textContent = `✅ ${percentage}% discount applied!`;
-          promoStatus.className = 'promo-status valid';
+          statusText = `✅ ${percentage}% discount applied!`;
+          statusClass = 'promo-status valid';
         } else {
-          promoStatus.textContent = '❌ Invalid code';
-          promoStatus.className = 'promo-status invalid';
+          statusText = '❌ Invalid code';
+          statusClass = 'promo-status invalid';
         }
-        
+
+        // Update both desktop and mobile status displays
+        if (promoStatus) {
+          promoStatus.textContent = statusText;
+          promoStatus.className = statusClass;
+        }
+        if (promoStatusMobile) {
+          promoStatusMobile.textContent = statusText;
+          promoStatusMobile.className = statusClass;
+        }
+
         this.calculateTotals();
       }
 
@@ -3794,13 +3823,20 @@
         // Clear checkboxes
         document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
 
-        // Clear promo code field and status
+        // Clear promo code field and status (both desktop and mobile)
         const promoCodeField = document.getElementById('promo-code');
+        const promoCodeFieldMobile = document.getElementById('promo-code-mobile');
         const promoStatus = document.getElementById('promo-status');
+        const promoStatusMobile = document.getElementById('promo-status-mobile');
         if (promoCodeField) promoCodeField.value = '';
+        if (promoCodeFieldMobile) promoCodeFieldMobile.value = '';
         if (promoStatus) {
           promoStatus.textContent = '';
           promoStatus.className = 'promo-status';
+        }
+        if (promoStatusMobile) {
+          promoStatusMobile.textContent = '';
+          promoStatusMobile.className = 'promo-status';
         }
 
         // Reset state
@@ -4167,6 +4203,16 @@
 
         document.getElementById('promo-code')?.addEventListener('input', (e) => {
           this.validatePromoCode(e.target.value);
+          // Sync with mobile input
+          const mobileInput = document.getElementById('promo-code-mobile');
+          if (mobileInput) mobileInput.value = e.target.value;
+        });
+
+        document.getElementById('promo-code-mobile')?.addEventListener('input', (e) => {
+          this.validatePromoCode(e.target.value);
+          // Sync with desktop input
+          const desktopInput = document.getElementById('promo-code');
+          if (desktopInput) desktopInput.value = e.target.value;
         });
 
         // Inline validation on blur
@@ -4301,9 +4347,12 @@
               });
             });
         });
-        
-        const promoCode = document.getElementById('promo-code')?.value.toUpperCase() || '';
-        
+
+        // Get promo code from either desktop or mobile field
+        const promoCodeDesktop = document.getElementById('promo-code')?.value.toUpperCase() || '';
+        const promoCodeMobile = document.getElementById('promo-code-mobile')?.value.toUpperCase() || '';
+        const promoCode = promoCodeDesktop || promoCodeMobile;
+
         const orderData = {
           orderId: orderId,
           parentEmail: document.getElementById('family-email').value,
