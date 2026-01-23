@@ -2066,8 +2066,7 @@
 
     /* Print styles */
     @media print {
-      /* Hide everything except confirmation modal when printing */
-      .header,
+      /* Hide everything except header and confirmation modal when printing */
       .main-content,
       .form-section,
       .menu-section,
@@ -2091,6 +2090,14 @@
       #copy-days-modal,
       #email-preview-modal {
         display: none !important;
+      }
+
+      /* Keep header visible but simplify it */
+      .header {
+        background: var(--brand-primary) !important;
+        -webkit-print-color-adjust: exact;
+        padding: 1rem 1.5rem;
+        border-bottom: 3px solid var(--brand-primary-dark);
       }
 
       /* Reset page layout */
