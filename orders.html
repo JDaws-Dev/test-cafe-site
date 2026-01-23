@@ -2066,7 +2066,9 @@
 
     /* Print styles */
     @media print {
-      /* Hide UI elements not needed for print */
+      /* Hide everything except confirmation modal when printing */
+      .form-section,
+      .menu-section,
       .sidebar,
       .back-link,
       .add-child-btn,
@@ -2082,6 +2084,8 @@
       .confirmation-actions,
       .pay-now-banner,
       .payment-section,
+      .mobile-cart-btn,
+      .cart-modal-backdrop,
       #copy-days-modal,
       #email-preview-modal {
         display: none !important;
@@ -3548,11 +3552,8 @@
         const promoCodeDesktop = document.getElementById('promo-code')?.value.toUpperCase() || '';
         const promoCodeMobile = document.getElementById('promo-code-mobile')?.value.toUpperCase() || '';
         const promoCode = promoCodeDesktop || promoCodeMobile;
-        console.log('calculateTotals - Desktop code:', promoCodeDesktop, 'Mobile code:', promoCodeMobile, 'Final code:', promoCode);
         const discountRate = this.constants.discountCodes[promoCode] || 0;
-        console.log('Discount rate:', discountRate, 'Cart total:', cartTotal);
         this.state.currentDiscount = Math.round(cartTotal * discountRate * 100) / 100;
-        console.log('Calculated discount:', this.state.currentDiscount);
 
         // Final total = subtotal - promo discount
         this.state.currentTotal = Math.round((cartTotal - this.state.currentDiscount) * 100) / 100;
